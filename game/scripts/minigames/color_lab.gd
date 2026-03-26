@@ -5,7 +5,7 @@ extends BaseMiniGame
 
 const TOTAL_ROUNDS: int = 5
 const IDLE_HINT_DELAY: float = 5.0
-const TUBE_WIDTH: float = 50.0
+const TUBE_WIDTH: float = 62.0
 const TUBE_HEIGHT: float = 90.0
 const BOWL_RADIUS: float = 70.0
 const DEAL_STAGGER: float = 0.12

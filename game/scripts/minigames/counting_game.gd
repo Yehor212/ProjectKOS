@@ -5,9 +5,9 @@ extends BaseMiniGame
 
 const ITEM_SCENE: PackedScene = preload("res://scenes/components/counting_item.tscn")
 const TOTAL_ROUNDS: int = 5
-const ITEM_RADIUS: float = 45.0
-const ANSWER_RADIUS: float = 55.0
-const TAP_RADIUS: float = 65.0
+const ITEM_RADIUS: float = 55.0
+const ANSWER_RADIUS: float = 65.0
+const TAP_RADIUS: float = 75.0
 const DEAL_STAGGER: float = 0.1
 const DEAL_DURATION: float = 0.4
 const IDLE_HINT_DELAY: float = 5.0
@@ -78,7 +78,12 @@ func _input(event: InputEvent) -> void:
 	if _game_over:
 		return
 	if _is_toddler:
-		if not _input_locked:
+		if _input_locked:
+			return
+		## R0-1: tap mode (простіший для 2-3 років), R2+: drag mode
+		if _round < 2:
+			_handle_toddler_tap_input(event)
+		else:
 			_drag.handle_input(event)
 		return
 	## Preschool — tap routing (патерн: odd_one_out)
@@ -102,8 +107,39 @@ func _input(event: InputEvent) -> void:
 			return
 
 
+## Toddler tap mode: тап на фрукт → він летить до кошика (R0-1)
+func _handle_toddler_tap_input(event: InputEvent) -> void:
+	var is_tap: bool = false
+	if event is InputEventMouseButton:
+		is_tap = event.pressed and event.button_index == MOUSE_BUTTON_LEFT
+	elif event is InputEventScreenTouch:
+		if event.index != 0:
+			return
+		is_tap = event.pressed
+	if not is_tap:
+		return
+	var pos: Vector2 = get_global_mouse_position()
+	for item: Node2D in _items:
+		if not is_instance_valid(item):
+			continue
+		if pos.distance_to(item.global_position) < TAP_RADIUS:
+			_on_toddler_tap(item)
+			return
+
+
+## Обробка тапу на фрукт у tap mode
+func _on_toddler_tap(item: Node2D) -> void:
+	if item.fruit_type == _target_fruit.type:
+		## Правильний — летить до кошика
+		_on_dropped_on_target(item, _basket)
+	else:
+		## Неправильний — wobble на місці
+		_register_error(item)
+		_reset_idle_timer()
+
+
 func _process(delta: float) -> void:
-	if _is_toddler and _drag and not _input_locked:
+	if _is_toddler and _drag and not _input_locked and _round >= 2:
 		_drag.handle_process(delta)
 
 
@@ -186,7 +222,7 @@ func _setup_toddler_round() -> void:
 	_counter_label.size = Vector2(120, 35)
 	## Piaget: приховати текстовий лічильник "0/3" для pre-numerate дітей (2-3 роки).
 	## Progress dots залишаються як візуальний індикатор прогресу.
-	_counter_label.visible = _is_preschool
+	_counter_label.visible = not _is_toddler
 	_basket.add_child(_counter_label)
 	## Візуальні крапки прогресу лічби
 	_count_dots.clear()

@@ -7,9 +7,9 @@ extends BaseMiniGame
 
 const ITEM_SCENE: PackedScene = preload("res://scenes/components/counting_item.tscn")
 const TOTAL_ROUNDS: int = 5
-const ITEM_RADIUS: float = 40.0
-const ANSWER_RADIUS: float = 50.0
-const TAP_RADIUS: float = 60.0
+const ITEM_RADIUS: float = 52.0
+const ANSWER_RADIUS: float = 60.0
+const TAP_RADIUS: float = 70.0
 const DEAL_STAGGER: float = 0.08
 const DEAL_DURATION: float = 0.35
 const IDLE_HINT_DELAY: float = 5.0

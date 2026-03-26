@@ -6,8 +6,8 @@ extends BaseMiniGame
 
 const TOTAL_ROUNDS: int = 5
 const IDLE_HINT_DELAY: float = 5.0
-const APPLE_SIZE: float = 50.0
-const PLATE_RADIUS: float = 55.0
+const APPLE_SIZE: float = 60.0
+const PLATE_RADIUS: float = 65.0
 const ANIMAL_DISPLAY_SCALE: Vector2 = Vector2(0.22, 0.22)
 const SAFETY_TIMEOUT_SEC: float = 120.0
 

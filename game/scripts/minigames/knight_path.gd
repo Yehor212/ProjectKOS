@@ -379,7 +379,8 @@ func _move_knight_to(target_pos: Vector2i) -> void:
 	var new_dist: int = _bfs_distance(_knight_pos, _goal_pos)
 	## Субоптимальний хід: не наблизився до цілі → A7 + A11 scaffolding
 	if new_dist > 0 and new_dist >= old_dist:
-		_errors += 1
+		if not _is_toddler:
+			_errors += 1
 		_register_error(_knight_node)
 	else:
 		_register_correct(_knight_node)

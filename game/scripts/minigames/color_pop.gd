@@ -25,7 +25,7 @@ const TODDLER_RADIUS: float = 65.0
 const PRESCHOOL_SPAWN_INTERVAL: float = 0.7
 const PRESCHOOL_SPEED_MIN: float = 120.0
 const PRESCHOOL_SPEED_MAX: float = 200.0
-const PRESCHOOL_RADIUS: float = 45.0
+const PRESCHOOL_RADIUS: float = 55.0
 
 var _is_toddler: bool = false
 var _score: int = 0

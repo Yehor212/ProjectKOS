@@ -198,3 +198,104 @@ static func combo_flash(node: CanvasItem, scene_root: Node) -> void:
 	tw.tween_property(node, "modulate", Color(1.3, 1.3, 1.3, 1.0), 0.06)
 	tw.tween_property(node, "modulate", Color.WHITE, 0.12)\
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+
+
+## Disney #2: Anticipation — невеликий відкат перед великою дією.
+## Використовувати перед drag pickup, перед фінальним celebration.
+static func anticipation_pull(node: CanvasItem, scene_root: Node,
+		direction: Vector2 = Vector2(0, 1), intensity: float = 8.0) -> Tween:
+	if SettingsManager and SettingsManager.reduced_motion:
+		return null
+	if not is_instance_valid(node) or not is_instance_valid(scene_root):
+		return null
+	var original_pos: Vector2 = node.position
+	var original_scale: Vector2 = node.scale
+	var tw: Tween = scene_root.create_tween()
+	## Відкат (pullback) — протилежний напрямку руху
+	tw.tween_property(node, "position",
+		original_pos - direction.normalized() * intensity, 0.08)\
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+	## Легке стиснення (squash перед stretch)
+	tw.parallel().tween_property(node, "scale",
+		original_scale * Vector2(1.08, 0.92), 0.08)
+	## Повернення на місце (для ланцюжка наступної дії)
+	tw.tween_property(node, "position", original_pos, 0.06)
+	tw.parallel().tween_property(node, "scale", original_scale, 0.06)
+	return tw
+
+
+## Disney #5: Follow-through — інерція після приземлення.
+## Елемент "проковзує" трохи далі за ціль і повертається.
+static func follow_through(node: CanvasItem, scene_root: Node,
+		target_pos: Vector2, overshoot: float = 12.0) -> Tween:
+	if SettingsManager and SettingsManager.reduced_motion:
+		if is_instance_valid(node):
+			node.position = target_pos
+		return null
+	if not is_instance_valid(node) or not is_instance_valid(scene_root):
+		return null
+	var direction: Vector2 = (target_pos - node.position).normalized()
+	var tw: Tween = scene_root.create_tween()
+	## Пролетіти трохи далі
+	tw.tween_property(node, "position",
+		target_pos + direction * overshoot, 0.15)\
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	## Повернутись на місце з elastic settle
+	tw.tween_property(node, "position", target_pos, 0.2)\
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	return tw
+
+
+## Cascading celebration — 5-рівнева святкова ескалація.
+## Використовувати в level_complete_overlay або finish_game().
+## Level 1: sparkle, Level 2: +confetti, Level 3: +golden burst,
+## Level 4: +screen shake, Level 5: +rainbow ring.
+static func cascading_celebration(pos: Vector2, star_count: int,
+		scene_root: Node) -> void:
+	if SettingsManager and SettingsManager.reduced_motion:
+		return
+	if not is_instance_valid(scene_root):
+		return
+	## Level 1 (завжди): sparkle
+	VFXManager.spawn_correct_sparkle(pos)
+	## Level 2 (2+ зірки): confetti
+	if star_count >= 2:
+		var tw2: Tween = scene_root.create_tween()
+		tw2.tween_interval(0.15)
+		tw2.tween_callback(func() -> void:
+			VFXManager.spawn_confetti(pos))
+	## Level 3 (3+ зірки): golden burst
+	if star_count >= 3:
+		var tw3: Tween = scene_root.create_tween()
+		tw3.tween_interval(0.3)
+		tw3.tween_callback(func() -> void:
+			VFXManager.spawn_golden_burst(pos))
+	## Level 4 (4+ зірки): screen shake
+	if star_count >= 4:
+		var tw4: Tween = scene_root.create_tween()
+		tw4.tween_interval(0.45)
+		tw4.tween_callback(func() -> void:
+			screen_shake(scene_root, 4.0))
+	## Level 5 (5 зірок): rainbow ring
+	if star_count >= 5:
+		var tw5: Tween = scene_root.create_tween()
+		tw5.tween_interval(0.6)
+		tw5.tween_callback(func() -> void:
+			VFXManager.spawn_rainbow_ring(pos))
+
+
+## Magnetic pull — елемент притягується до цілі при наближенні.
+## Для toddler drag-and-drop (дослідження: magnetic assist збільшує success rate на 40%).
+static func magnetic_attract(node: CanvasItem, target_pos: Vector2,
+		scene_root: Node, duration: float = 0.2) -> Tween:
+	if not is_instance_valid(node) or not is_instance_valid(scene_root):
+		return null
+	var tw: Tween = scene_root.create_tween().set_parallel(true)
+	tw.tween_property(node, "position", target_pos, duration)\
+		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	## Легке зменшення (squish при "приземленні")
+	tw.chain().tween_property(node, "scale",
+		node.scale * Vector2(1.1, 0.9), 0.06)
+	tw.chain().tween_property(node, "scale", node.scale, 0.1)\
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	return tw

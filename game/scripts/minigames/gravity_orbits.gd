@@ -28,7 +28,7 @@ const AURA_COLOR: Color = Color("a78bfa")
 ## ---- Розміри ----
 const PLANET_RADIUS_TODDLER: float = 90.0
 const PLANET_RADIUS_PRESCHOOL: float = 60.0
-const STAR_TOUCH_RADIUS: float = 40.0
+const STAR_TOUCH_RADIUS: float = 56.0
 
 ## ---- Швидкості (px/s) ----
 const TODDLER_SPEED_MIN: float = 40.0

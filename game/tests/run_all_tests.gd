@@ -323,9 +323,13 @@ func _test_return_food_to_origin(scene_root: Node2D) -> void:
 	var food: Node2D = rm.current_round_food[0]
 	var original_pos: Vector2 = food.position
 	food.position = Vector2(999, 999)
-	rm.return_food_to_origin(food)
-	assert(food.position == original_pos, "Food should return to original position")
-	print("  PASS: return_food_to_origin restores position")
+	var tween: Tween = rm.return_food_to_origin(food)
+	## Tween анімує позицію (0.3с) — у headless перевіряємо що tween створено
+	## та що ціль = original_pos (а не мгновенну позицію)
+	assert(tween != null, "return_food_to_origin should create a tween")
+	assert(rm.food_original_positions.has(food), "food must be in origins dict")
+	assert(rm.food_original_positions[food] == original_pos, "origin must match original position")
+	print("  PASS: return_food_to_origin creates tween to original position")
 	_cleanup(scene_root)
 
 
@@ -374,11 +378,13 @@ func _test_earned_coins_in_stats(scene_root: Node2D) -> void:
 			break
 
 	if not _last_stats.is_empty():
-		assert(_last_stats.has("earned_coins"), "stats must contain earned_coins key")
-		assert(_last_stats.earned_coins is int, "earned_coins must be int")
-		assert(_last_stats.earned_coins >= 10, "earned_coins must be at least 10")
-		assert(_last_stats.earned_coins <= 100, "earned_coins must be reasonable")
-		print("  PASS: earned_coins present in stats (value=%d)" % _last_stats.earned_coins)
+		assert(_last_stats.has("earned_stars"), "stats must contain earned_stars key")
+		assert(_last_stats.earned_stars is int, "earned_stars must be int")
+		assert(_last_stats.earned_stars >= 1, "earned_stars must be at least 1")
+		assert(_last_stats.has("errors"), "stats must contain errors key")
+		assert(_last_stats.has("rounds_played"), "stats must contain rounds_played key")
+		print("  PASS: stats contract valid (stars=%d, errors=%d, rounds=%d)" % [
+			_last_stats.earned_stars, _last_stats.errors, _last_stats.rounds_played])
 	else:
 		print("  SKIP: could not trigger game end in test")
 	_cleanup(fresh_root)

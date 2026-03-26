@@ -311,6 +311,25 @@ func _handle_wrong(item: Node2D) -> void:
 		_errors += 1
 		_register_error(item)
 	_drag.snap_back(item, _item_origins.get(item, item.position))
+	## Animated consequence: дропзона "тремтить" показуючи що одяг не підходить
+	_animate_wrong_consequence()
+
+
+## Animated consequence: дропзона тремтить + тимчасово червоніє при неправильному одязі
+func _animate_wrong_consequence() -> void:
+	if not is_instance_valid(_drop_zone) or SettingsManager.reduced_motion:
+		return
+	var orig_x: float = _drop_zone.position.x
+	var tw: Tween = create_tween()
+	## Тремтіння (cold shiver effect)
+	tw.tween_property(_drop_zone, "position:x", orig_x - 5.0, 0.04)
+	tw.tween_property(_drop_zone, "position:x", orig_x + 5.0, 0.04)
+	tw.tween_property(_drop_zone, "position:x", orig_x - 3.0, 0.04)
+	tw.tween_property(_drop_zone, "position:x", orig_x + 3.0, 0.04)
+	tw.tween_property(_drop_zone, "position:x", orig_x, 0.04)
+	## Тимчасовий червоний відтінок (gentle, не страшний)
+	tw.parallel().tween_property(_drop_zone, "modulate", Color(1.2, 0.85, 0.85), 0.1)
+	tw.tween_property(_drop_zone, "modulate", Color.WHITE, 0.3)
 
 
 ## ---- Round management ----

@@ -11,7 +11,7 @@ const BRUSH_PRESCHOOL: float = 12.0
 const NEON_GLOW: float = 3.0
 const COLOR_CYCLE_SPEED: float = 0.4
 const IDLE_HINT_DELAY: float = 6.0
-const PALETTE_SIZE: float = 56.0
+const PALETTE_SIZE: float = 64.0
 const PALETTE_GAP: float = 10.0
 const SAFETY_TIMEOUT_SEC: float = 300.0
 

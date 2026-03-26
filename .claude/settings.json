@@ -12,6 +12,28 @@
         ]
       }
     ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/advisory-warnings.cjs",
+            "timeout": 10000
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/advisory-warnings.cjs",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [
@@ -24,7 +46,18 @@
             "type": "command",
             "command": "node .claude/hooks/preflight-inject.cjs",
             "timeout": 5000,
-            "statusMessage": "Pre-flight protocol injection..."
+            "statusMessage": "Pre-flight check..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/quality-stop-gate.cjs",
+            "timeout": 5000
           }
         ]
       }

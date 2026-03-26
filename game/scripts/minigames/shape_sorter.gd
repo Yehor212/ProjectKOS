@@ -16,7 +16,7 @@ const TODDLER_SHAPES_POOL: Array[Dictionary] = [
 	{"id": "triangle", "type": 2, "color": Color("22c55e"), "size": 50.0},
 	{"id": "diamond", "type": 1, "color": Color("a855f7"), "size": 45.0},
 ]
-## Preschool: деталі ракети
+## Preschool: 3 конструктори (рандомний вибір для replay value)
 const ROCKET_PARTS: Array[Dictionary] = [
 	{"id": "body", "type": 3, "color": Color("3b82f6"), "size": 60.0,
 		"slot_offset": Vector2(0, 0)},
@@ -27,6 +27,27 @@ const ROCKET_PARTS: Array[Dictionary] = [
 	{"id": "wing_r", "type": 2, "color": Color("fb923c"), "size": 30.0,
 		"slot_offset": Vector2(55, 70), "slot_rotation": -0.785},
 ]
+const BOAT_PARTS: Array[Dictionary] = [
+	{"id": "hull", "type": 3, "color": Color("8b5e3c"), "size": 70.0,
+		"slot_offset": Vector2(0, 30)},
+	{"id": "cabin", "type": 1, "color": Color("ef4444"), "size": 40.0,
+		"slot_offset": Vector2(0, -30)},
+	{"id": "mast", "type": 3, "color": Color("ffd166"), "size": 25.0,
+		"slot_offset": Vector2(0, -80)},
+	{"id": "flag", "type": 2, "color": Color("22c55e"), "size": 25.0,
+		"slot_offset": Vector2(20, -100)},
+]
+const HOUSE_PARTS: Array[Dictionary] = [
+	{"id": "walls", "type": 1, "color": Color("fb923c"), "size": 65.0,
+		"slot_offset": Vector2(0, 20)},
+	{"id": "roof", "type": 2, "color": Color("ef4444"), "size": 55.0,
+		"slot_offset": Vector2(0, -55)},
+	{"id": "door", "type": 1, "color": Color("8b5e3c"), "size": 30.0,
+		"slot_offset": Vector2(0, 50)},
+	{"id": "window", "type": 0, "color": Color("3b82f6"), "size": 25.0,
+		"slot_offset": Vector2(-25, 0)},
+]
+const PRESCHOOL_CONSTRUCTORS: Array[Array] = [ROCKET_PARTS, BOAT_PARTS, HOUSE_PARTS]
 
 var _is_toddler: bool = false
 var _drag: UniversalDrag = null
@@ -117,9 +138,11 @@ func _start_toddler_round() -> void:
 func _setup_preschool() -> void:
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var center: Vector2 = Vector2(vp.x * 0.5, vp.y * 0.4)
-	_total = ROCKET_PARTS.size()
-	## Слоти (чертеж ракети)
-	for data: Dictionary in ROCKET_PARTS:
+	## Рандомний вибір конструктора (ракета/кораблик/будиночок)
+	var parts: Array[Dictionary] = PRESCHOOL_CONSTRUCTORS.pick_random().duplicate()
+	_total = parts.size()
+	## Слоти (чертеж конструктора)
+	for data: Dictionary in parts:
 		var slot: Node2D = SLOT_SCENE.instantiate()
 		add_child(slot)
 		slot.position = center + data.slot_offset
@@ -129,7 +152,7 @@ func _setup_preschool() -> void:
 		_slots.append(slot)
 		_drag.drop_targets.append(slot)
 	## Фігури знизу (shuffled)
-	var shuffled: Array[Dictionary] = ROCKET_PARTS.duplicate()
+	var shuffled: Array[Dictionary] = parts.duplicate()
 	shuffled.shuffle()
 	var shape_y: float = vp.y * 0.82
 	var spacing: float = vp.x / (_total + 1)

@@ -14,7 +14,7 @@ const PAUSE_MENU_SCENE: PackedScene = preload(
 const HUB_PATH: String = "res://scenes/ui/game_hub.tscn"
 const REFERENCE_HEIGHT: float = 800.0
 const TODDLER_SCALE: float = 1.4
-const TODDLER_SNAP_RADIUS: float = 120.0
+const TODDLER_SNAP_RADIUS: float = 140.0  ## NNGroup: 2-3yo need 2cm+ touch targets
 ## Стандартизовані тривалості анімацій — замість магічних чисел по всіх іграх
 const ANIM_FAST: float = 0.15
 const ANIM_NORMAL: float = 0.3
@@ -259,6 +259,9 @@ func finish_game(earned_stars: int, stats: Dictionary = {}) -> void:
 	var time_sec: int = int(stats.get("time_sec", 9999))
 	var errors: int = int(stats.get("errors", 9999))
 	ProgressManager.check_new_record(time_sec, errors)
+
+	## Святковий вібровідгук (research: celebration pattern 400+200+400мс)
+	HapticsManager.vibrate_celebration()
 
 	## Аналітика
 	AnalyticsManager.log_level_complete(
