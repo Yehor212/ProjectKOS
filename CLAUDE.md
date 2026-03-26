@@ -12,6 +12,13 @@ Read ARCHITECTURE.md before any code changes. It is the single source of truth.
 `BaseMiniGame` = base class for ALL games. Every game extends it.
 Autoloads: GameData, AudioManager, ProgressManager, SettingsManager, AnalyticsManager, HapticsManager, VFXManager, SceneManager
 
+### Agent System (13 agents, all Opus 4.6)
+BUILDERS: gameplay-architect, vector-animator, sound-designer, asset-pipeline, content-curator
+GUARDIANS: law-enforcer, ux-guardian, i18n-guardian, performance-profiler
+ADVISORS: logic-auditor, accessibility-advisor
+VERIFIER: integration-tester
+TEAM LEAD: release-manager
+
 ## 30 Game Design Laws
 
 Read GAME_DESIGN_LAWS.md — 30 laws, violation = bug. Key laws:
@@ -61,6 +68,17 @@ Hooks in `.claude/hooks/` enforce quality gates:
 PRE-FLIGHT: `<thinking>` block with 11 checks before ANY code change.
 Reasoning types: CHECK 1=DEDUCTION, CHECK 3=ABDUCTION, CHECK 4=INDUCTION.
 POST-FLIGHT: 30-law compliance + 12 axiom checks + evidence.
+
+### Skills (invocable via /command)
+- `/game-qa [file]` — Quick 30 Laws + 12 Axioms check
+- `/postflight` — Automated POST-FLIGHT with evidence
+- `/new-game` — Scaffold new minigame
+- `/add-animal` — Add animal-food pair
+
+### New Hooks
+- PostToolUse: post-edit-validator (advisory warnings for .gd)
+- PostToolUse: scene-validator (blocks GPUParticles2D in .tscn)
+- Stop: stop-guard (blocks stop without postflight if code was changed)
 
 ## Safety
 

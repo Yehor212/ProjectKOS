@@ -46,3 +46,7 @@ build/
 .env
 *.secret
 credentials.json
+
+# Auto-generated hook tokens (not tracked)
+.preflight-token
+.user-requirements

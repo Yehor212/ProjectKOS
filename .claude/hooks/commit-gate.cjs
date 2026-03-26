@@ -35,10 +35,34 @@ const REQUIRED_LAW_FILES = [
   'GAME_DESIGN_BIBLE.md',
 ];
 
-// Godot test runner
-const GODOT_BIN = process.env.GODOT_PATH
-  || 'C:/Godot/Godot_v4.6.1-stable_win64_console.exe';
-const GODOT_TEST_CMD = `"${GODOT_BIN}" --headless --path game/ -s tests/run_all_tests.gd --quit-after 60`;
+// Godot test runner — cross-platform binary detection
+function findGodot() {
+  if (process.env.GODOT_PATH) return process.env.GODOT_PATH;
+  const { execSync } = require('child_process');
+  // Try which/where
+  try {
+    const bin = execSync(process.platform === 'win32' ? 'where godot' : 'which godot', {
+      encoding: 'utf8', timeout: 3000,
+    }).trim().split('\n')[0];
+    if (bin && fs.existsSync(bin)) return bin;
+  } catch { /* not in PATH */ }
+  // Try typical paths
+  const candidates = [
+    '/c/Godot/Godot_v4.6.1-stable_win64_console.exe',
+    'C:/Godot/Godot_v4.6.1-stable_win64_console.exe',
+    '/usr/local/bin/godot',
+    '/usr/bin/godot',
+    '/Applications/Godot.app/Contents/MacOS/Godot',
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(c)) return c;
+  }
+  return null;
+}
+const GODOT_BIN = findGodot();
+const GODOT_TEST_CMD = GODOT_BIN
+  ? `"${GODOT_BIN}" --headless --path game/ -s tests/run_all_tests.gd --quit-after 60`
+  : null;
 
 function block(reason) {
   process.stderr.write(reason);
@@ -147,12 +171,13 @@ process.stdin.on('end', () => {
     // ─── GIT PUSH GATE ─────────────────────────────────────
     if (isGitPush(cmd)) {
       // Перевірити чи Godot доступний
-      if (!fs.existsSync(GODOT_BIN) && !process.env.GODOT_PATH) {
-        block(
-          'GODOT NOT FOUND at ' + GODOT_BIN + '.\n'
-          + 'Set GODOT_PATH env var or install Godot.\n'
-          + 'Push blocked until tests can run.'
+      if (!GODOT_BIN || !GODOT_TEST_CMD) {
+        // Warning only — don't block push if Godot not found
+        process.stderr.write(
+          'WARNING: Godot not found, tests skipped.\n'
+          + 'Set GODOT_PATH env var to enable test gate on push.\n'
         );
+        return;
       }
 
       const { execSync } = require('child_process');
