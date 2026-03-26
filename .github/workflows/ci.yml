@@ -15,7 +15,7 @@ jobs:
     name: GDScript Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install gdtoolkit
         run: pip3 install "gdtoolkit==4.*"
       - name: Check formatting
@@ -29,7 +29,7 @@ jobs:
     container:
       image: barichello/godot-ci:4.6.1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Cache Godot imports
         uses: actions/cache@v4
@@ -48,7 +48,7 @@ jobs:
     name: COPPA Compliance
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check for tracking SDKs
         run: |
@@ -86,7 +86,7 @@ jobs:
     container:
       image: barichello/godot-ci:4.6.1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Import project
         run: godot --headless --import --path game/ --quit 2>&1 || true
