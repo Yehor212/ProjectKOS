@@ -1,0 +1,90 @@
+name: Bug Report
+description: Report a bug in the game
+labels: [bug]
+body:
+  - type: dropdown
+    id: game
+    attributes:
+      label: Which minigame?
+      options:
+        - General / Menu
+        - Hungry Pets (Animal Feeding)
+        - Shadow Match
+        - Memory Cards
+        - Color Pop
+        - Shape Sorter
+        - Counting Game
+        - Magnetic Halves (Puzzle)
+        - Odd One Out
+        - Smart Coloring (Tracing)
+        - Forest Orchestra (Music)
+        - Pattern Builder
+        - Compare Game
+        - Sorting Game
+        - Size Sort
+        - Color Conveyor
+        - Hygiene Game
+        - Weather Dress
+        - Safe Maze
+        - Sensory Sandbox
+        - Algo Robot
+        - Math Scales
+        - Cash Register
+        - Eco Conveyor
+        - Knight Path
+        - Color Lab
+        - Math Bingo
+        - Spelling Blocks
+        - Gravity Orbits
+        - Analog Clock
+        - Nursery
+    validations:
+      required: true
+
+  - type: dropdown
+    id: age-group
+    attributes:
+      label: Age group
+      options:
+        - Toddler (2-4)
+        - Preschool (4-7)
+        - Both
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the game
+        2. Select ...
+        3. Tap on ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or video
+      description: Attach screenshots or screen recordings if possible
+
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      placeholder: e.g., Samsung Galaxy A53, Pixel 7

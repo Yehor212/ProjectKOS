@@ -38,3 +38,11 @@ build/
 .postflight-done
 .fullcycle-active
 .fullcycle-laws-read
+
+# Asset downloads (large binaries, not shipped)
+.asset_downloads/
+
+# Secrets / env
+.env
+*.secret
+credentials.json

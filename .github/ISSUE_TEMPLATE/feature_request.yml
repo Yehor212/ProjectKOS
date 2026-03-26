@@ -1,0 +1,45 @@
+name: Feature Request
+description: Suggest a new feature or improvement
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - New Minigame
+        - Gameplay Mechanics
+        - Visual / Animation
+        - Audio / Music
+        - UI / UX
+        - Collection / Rewards
+        - Accessibility
+        - Performance
+        - Localization
+    validations:
+      required: true
+
+  - type: dropdown
+    id: age-group
+    attributes:
+      label: Target age group
+      options:
+        - Toddler (2-4)
+        - Preschool (4-7)
+        - Both
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      placeholder: What would you like to see?
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Why is this important?
+      placeholder: What educational or engagement goal does this serve?

@@ -37,7 +37,7 @@ const REQUIRED_LAW_FILES = [
 
 // Godot test runner
 const GODOT_BIN = process.env.GODOT_PATH
-  || '/c/Godot/Godot_v4.6.1-stable_win64_console.exe';
+  || 'C:/Godot/Godot_v4.6.1-stable_win64_console.exe';
 const GODOT_TEST_CMD = `"${GODOT_BIN}" --headless --path game/ -s tests/run_all_tests.gd --quit-after 60`;
 
 function block(reason) {

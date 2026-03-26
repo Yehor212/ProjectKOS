@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: GDScript Tests
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.6.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot imports
+        uses: actions/cache@v4
+        with:
+          path: game/.godot/imported/
+          key: imports-${{ hashFiles('game/**/*.import') }}
+
+      - name: Import project
+        run: godot --headless --import --path game/ --quit 2>&1 || true
+
+      - name: Run tests (48+ baseline)
+        run: godot --headless --path game/ -s tests/run_all_tests.gd --quit-after 60
+        timeout-minutes: 3
+
+  compliance:
+    name: COPPA Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for tracking SDKs
+        run: |
+          echo "Checking COPPA compliance..."
+          if grep -rEi "(firebase|admob|adsense|facebook\.sdk|appsflyer|adjust\.io|unity\.ads)" \
+            game/ --include="*.gd" --include="*.cfg" --include="*.tres" -l; then
+            echo "::error::Tracking SDK detected — COPPA violation risk!"
+            exit 1
+          fi
+          echo "✓ No tracking SDKs found."
+
+      - name: Check for personal data collection
+        run: |
+          if grep -rEi "(get_unique_id|device_id|advertising_id|email|phone_number)" \
+            game/scripts/ --include="*.gd" -l | grep -v "settings_manager"; then
+            echo "::error::Potential personal data collection detected!"
+            exit 1
+          fi
+          echo "✓ No personal data collection found."
+
+      - name: Check for hardcoded URLs (external links)
+        run: |
+          URLS=$(grep -rEn "https?://" game/scripts/ --include="*.gd" | grep -v "godotengine\|github\|res://" || true)
+          if [ -n "$URLS" ]; then
+            echo "::warning::External URLs found (verify parental gate):"
+            echo "$URLS"
+          fi
+          echo "✓ URL check complete."
+
+  build-android:
+    name: Build Android AAB
+    needs: [test, compliance]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.6.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Import project
+        run: godot --headless --import --path game/ --quit 2>&1 || true
+
+      - name: Setup keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/release.keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
+      - name: Export AAB
+        run: |
+          mkdir -p build/
+          godot --headless --path game/ --export-release "Android" build/game.aab
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab-${{ github.ref_name }}
+          path: build/game.aab
+          retention-days: 90
