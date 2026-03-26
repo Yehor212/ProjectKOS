@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://boo2wpefd7nvu"]
+
+[ext_resource type="Texture2D" uid="uid://dwbsaj153sl0h" path="res://assets/sprites/food/Cheese.png" id="1_qja08"]
+
+[node name="Cheese" type="Sprite2D"]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("1_qja08")

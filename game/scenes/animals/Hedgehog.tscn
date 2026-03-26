@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://dcxfia8btcgs8"]
+
+[ext_resource type="Texture2D" uid="uid://543i24hbbujd" path="res://assets/sprites/animals/Hedgehog.png" id="1_kqyhl"]
+
+[node name="Hedgehog" type="Sprite2D"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("1_kqyhl")

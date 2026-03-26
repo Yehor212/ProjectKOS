@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://cqv8sypkpfln7"]
+
+[ext_resource type="Texture2D" uid="uid://ba1w7dvkt57ec" path="res://assets/sprites/animals/Bunny.png" id="1_3uiim"]
+
+[node name="Bunny" type="Sprite2D"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("1_3uiim")

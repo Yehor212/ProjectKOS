@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://eyg8s7if4nvq"]
+
+[ext_resource type="Texture2D" uid="uid://b0u8mxl66egvg" path="res://assets/sprites/animals/Chicken.png" id="1_ofpsq"]
+
+[node name="Chicken" type="Sprite2D"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("1_ofpsq")

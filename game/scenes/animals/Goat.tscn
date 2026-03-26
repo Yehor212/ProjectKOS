@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://diyhmto7fq1a6"]
+
+[ext_resource type="Texture2D" uid="uid://bhsx6a5cil1i6" path="res://assets/sprites/animals/Goat.png" id="1_mqhdx"]
+
+[node name="Goat" type="Sprite2D"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("1_mqhdx")

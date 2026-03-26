@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://cel68j4s5xtbe"]
+
+[ext_resource type="Texture2D" uid="uid://06s6ov81e5di" path="res://assets/sprites/food/Honey.png" id="1_wnwxm"]
+
+[node name="Honey" type="Sprite2D"]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("1_wnwxm")

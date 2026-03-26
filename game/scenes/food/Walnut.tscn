@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://bqnw1gq1v0vak"]
+
+[ext_resource type="Texture2D" uid="uid://cxl2ho74ks6ys" path="res://assets/sprites/food/Walnut.png" id="1_rlxn5"]
+
+[node name="Walnut" type="Sprite2D"]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("1_rlxn5")

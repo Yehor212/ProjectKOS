@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://d2r0rri7g6rgo"]
+
+[ext_resource type="Texture2D" uid="uid://bmv6miomogd4e" path="res://assets/sprites/animals/Cat.png" id="1_io30s"]
+
+[node name="Cat" type="Sprite2D"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("1_io30s")

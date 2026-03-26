@@ -1,0 +1,356 @@
+keys,en,uk,fr,es
+BTN_PLAY,Play,Грати,Jouer,Jugar
+BTN_SETTINGS,Settings,Налаштування,Paramètres,Ajustes
+BTN_QUIT,Quit,Вихід,Quitter,Salir
+BTN_RESUME,Resume,Продовжити,Reprendre,Continuar
+BTN_MENU,Main Menu,Головне меню,Menu principal,Menú principal
+MSG_WIN,You fed everyone!!,Ти нагодував усіх тварин!!,Tu as nourri tout le monde!!,¡Alimentaste a todos los animales!!
+MSG_CORRECT,Good job!,Молодець!,Bon travail!,¡Buen trabajo!
+MSG_WRONG,Wrong food,Не та їжа,Mauvaise nourriture,Comida equivocada
+TITLE_GAME,Feed the Animals!,Нагодуй тварин!,Nourris les animaux!,¡Alimenta a los animales!
+TITLE_PAUSE,Paused,Пауза,Pause,Pausa
+LBL_VOLUME,Volume,Гучність,Volume,Volumen
+MSG_BEST_SCORE,Best: %d errors %ds,Найкращий: %d помилок %dс,Meilleur: %d err %ds,Mejor: %d err %ds
+LBL_COINS,Coins: %d,Монети: %d,Pièces: %d,Monedas: %d
+BTN_SHOP,Shop,Магазин,Boutique,Tienda
+BTN_BUY_FOREST,Forest (%d),Ліс (%d),Forêt (%d),Bosque (%d)
+BTN_EQUIP,Equip,Обрати,Équiper,Equipar
+LBL_EQUIPPED,Equipped,Обрано,Équipé,Equipado
+MSG_DAILY_REWARD,Daily Reward: +%d Coins!,Щоденна нагорода: +%d монет!,Récompense quotidienne: +%d pièces!,Recompensa diaria: +%d monedas!
+BTN_PRIVACY,Privacy Policy,Політика конфіденційності,Politique de confidentialité,Política de privacidad
+MSG_TUTORIAL,Drag food to the animal!,Перетягни їжу до тварини!,Glisse la nourriture vers l'animal!,¡Arrastra la comida al animal!
+BTN_COLLECTION,Collection,Колекція,Collection,Colección
+BTN_NURSERY,Nursery,Розплідник,Pépinière,Guardería
+TITLE_COLLECTION,Sticker Book,Книга наліпок,Album d'autocollants,Álbum de pegatinas
+MSG_NEW_STICKER,New Sticker!,Нова наліпка!,Nouvel autocollant!,¡Nueva pegatina!
+MSG_FEVER,FEVER! x%d,ЛИХОМАНКА! x%d,FIÈVRE! x%d,¡FIEBRE! x%d
+MSG_ACHIEVEMENT,Achievement: 100 Fed! +500,Досягнення: 100 нагодовано! +500,Succès: 100 nourris! +500,¡Logro: 100 alimentados! +500
+MSG_RATE_APP,Enjoying the game? Rate us!,Подобається гра? Оцініть нас!,Vous aimez le jeu? Évaluez-nous!,¿Te gusta el juego? ¡Califícanos!
+BTN_RATE,Rate,Оцінити,Évaluer,Calificar
+BTN_LATER,Later,Пізніше,Plus tard,Más tarde
+MSG_QUEST_COMPLETE,Daily Quest Done! +300 Coins!,Щоденний квест виконано! +300 монет!,Quête quotidienne terminée! +300 pièces!,¡Misión diaria completada! +300 monedas!
+LBL_HINT,Hint (%d),Підказка (%d),Indice (%d),Pista (%d)
+LBL_HINTS_SHOP,3x Hints (%d) [%d],3x Підказки (%d) [%d],3x Indices (%d) [%d],3x Pistas (%d) [%d]
+MSG_COPIED,Copied!,Скопійовано!,Copié!,¡Copiado!
+MSG_CLIPBOARD_EMPTY,Clipboard empty!,Буфер порожній!,Presse-papiers vide!,¡Portapapeles vacío!
+MSG_INVALID_DATA,Invalid data!,Невірні дані!,Données invalides!,¡Datos inválidos!
+MSG_INVALID_SAVE,Invalid save data!,Невірні дані збереження!,Données de sauvegarde invalides!,¡Datos de guardado inválidos!
+MSG_IDLE_EARNINGS,Your animals missed you! +%d coins,Твої тварини сумували! +%d монет,Tes animaux se sont ennuyés! +%d pièces,¡Tus animales te extrañaron! +%d monedas
+BTN_GACHA,Gacha Box (%d),Гача-бокс (%d),Boîte Gacha (%d),Caja Gacha (%d)
+MSG_ALL_UNLOCKED,All animals unlocked!,Усі тварини розблоковані!,Tous les animaux débloqués!,¡Todos los animales desbloqueados!
+MSG_UNLOCKED,You unlocked %s!,Ти розблокував %s!,Tu as débloqué %s!,¡Desbloqueaste a %s!
+BTN_CONTINUE,Continue,Далі,Continuer,Continuar
+BTN_VIBRATION,Vibration,Вібрація,Vibration,Vibración
+BTN_REDUCED_MOTION,Reduced Motion,Менше анімацій,Mouvement réduit,Movimiento reducido
+LBL_PROGRESS,%d / %d Unlocked,%d / %d Відкрито,%d / %d Débloqué,%d / %d Desbloqueado
+TITLE_QUESTS,Daily Quests,Щоденні квести,Quêtes quotidiennes,Misiones diarias
+BTN_QUESTS,Quests,Квести,Quêtes,Misiones
+QUEST_PLAY_MATCHES,Complete %d rounds,Завершити %d раундів,Terminer %d manches,Completar %d rondas
+QUEST_USE_HINTS,Use %d hints,Використати %d підказок,Utiliser %d indices,Usar %d pistas
+QUEST_EARN_COINS,Earn %d coins,Заробити %d монет,Gagner %d pièces,Ganar %d monedas
+BTN_CLAIM,Claim,Забрати,Réclamer,Reclamar
+LBL_CLAIMED,Claimed,Забрано,Réclamé,Reclamado
+NUM_ZERO,Zero,Нуль,Zéro,Cero
+NUM_ONE,One,Один,Un,Uno
+NUM_TWO,Two,Два,Deux,Dos
+NUM_THREE,Three,Три,Trois,Tres
+NUM_FOUR,Four,Чотири,Quatre,Cuatro
+NUM_FIVE,Five,П'ять,Cinq,Cinco
+NUM_SIX,Six,Шість,Six,Seis
+NUM_SEVEN,Seven,Сім,Sept,Siete
+NUM_EIGHT,Eight,Вісім,Huit,Ocho
+NUM_NINE,Nine,Дев'ять,Neuf,Nueve
+GATE_INSTRUCTION,Enter the numbers shown as words,Введіть числа показані словами,Entrez les nombres en mots,Ingrese los números en palabras
+GATE_TAP_PROMPT,Tap: %s,Натисни: %s,Appuyez: %s,Toca: %s
+LBL_PARENT_ZONE,Parent Zone,Батьківська зона,Zone parentale,Zona de padres
+LBL_STATS_HEADER,Child's Progress,Прогрес дитини,Progrès de l'enfant,Progreso del niño
+LBL_GAMES_PLAYED,Games played: %d,Ігор зіграно: %d,Parties jouées: %d,Juegos jugados: %d
+LBL_ANIMALS_FED,Animals fed: %d,Тварин нагодовано: %d,Animaux nourris: %d,Animales alimentados: %d
+LBL_ANIMALS_UNLOCKED,Unlocked: %d / %d,Відкрито: %d / %d,Débloqué: %d / %d,Desbloqueado: %d / %d
+LBL_BEST_TIME,Best time: %d:%02d,Найкращий час: %d:%02d,Meilleur temps: %d:%02d,Mejor tiempo: %d:%02d
+BTN_EXPORT,Export Save,Експорт збереження,Exporter la sauvegarde,Exportar guardado
+BTN_IMPORT,Import Save,Імпорт збереження,Importer la sauvegarde,Importar guardado
+SPLASH_SUBTITLE,Play & Learn Adventures,Грай і вчись — Пригоди,Joue et apprends — Aventures,Juega y aprende — Aventuras
+SPLASH_LETS_GO,LET'S GO!,ПОЇХАЛИ!,C'EST PARTI !,¡VAMOS!
+TITLE_GAME_HUB,Games,Ігри,Jeux,Juegos
+TITLE_LEVEL_COMPLETE,Level Complete!,Рівень пройдено!,Niveau terminé!,¡Nivel completado!
+GAME_HUNGRY_PETS,Hungry Pets,Голодні улюбленці,Animaux affamés,Mascotas hambrientas
+GAME_SHADOW_MATCH,Shadow Match,Збіг тіней,Ombres,Sombras
+GAME_MEMORY,Memory,Пам'ять,Mémoire,Memoria
+GAME_COLOR_POP,Color Pop,Лопай кольори,Éclate-couleurs,Estalla colores
+GAME_SHAPE_SORTER,Shape Sorter,Форми,Formes,Formas
+GAME_COUNTING,Counting,Лічба,Compter,Contar
+GAME_PUZZLE,Puzzle,Пазл,Puzzle,Puzle
+GAME_ODD_ONE_OUT,Odd One Out,Знайди зайве,L'intrus,El intruso
+GAME_TRACING,Tracing,Обводимо,Tracé,Trazado
+GAME_MUSIC,Music,Музика,Musique,Música
+BADGE_PLAY,PLAY!,ГРАТИ!,JOUER!,¡JUGAR!
+BADGE_PLAYED,Played ★,Зіграно ★,Joué ★,Jugado ★
+BADGE_COMING_SOON,Coming Soon,Скоро,Bientôt,Próximamente
+SHADOW_TUTORIAL,Find the shadow!,Знайди тінь!,Trouve l'ombre!,¡Encuentra la sombra!
+SHADOW_TUTORIAL_TODDLER,Where is the shadow?,Де тінь?,Où est l'ombre ?,¿Dónde está la sombra?
+MEMORY_TUTORIAL,Find two matching cards!,Знайди дві однакові картки!,Trouve les cartes identiques!,¡Encuentra las cartas iguales!
+MEMORY_TUTORIAL_TODDLER,Find pairs!,Знайди пари!,Trouve les paires!,¡Encuentra los pares!
+MEMORY_TUTORIAL_PRESCHOOL,Find and remember!,Знайди та запам'ятай!,Trouve et mémorise!,¡Encuentra y recuerda!
+AGE_TITLE,How old are you?,Скільки тобі років?,Quel âge as-tu?,¿Cuántos años tienes?
+AGE_TODDLER,2-4 Years,2-4 Роки,2-4 Ans,2-4 Años
+AGE_TODDLER_DESC,Play and explore!,Граємо та вивчаємо світ!,Jouer et explorer!,¡Jugar y explorar!
+AGE_PRESCHOOL,3-7 Years,3-7 Років,3-7 Ans,3-7 Años
+AGE_PRESCHOOL_DESC,Think and solve!,Думаємо та вирішуємо!,Penser et résoudre!,¡Pensar y resolver!
+AGE_START,Let's Go!,Поїхали!,C'est parti!,¡Vamos!
+BTN_CHANGE_AGE,Change Age,Змінити вік,Changer l'âge,Cambiar edad
+LBL_CURRENT_AGE,Age group: %s,Вікова група: %s,Groupe d'âge: %s,Grupo de edad: %s
+COLOR_POP_TUTORIAL_TODDLER,Pop the bubbles!,Лопай бульбашки!,Éclate les bulles!,¡Revienta las burbujas!
+COLOR_POP_TUTORIAL_PRESCHOOL,Pop only RED ones!,Лопай тільки ЧЕРВОНІ!,Éclate seulement les ROUGES!,¡Revienta solo los ROJOS!
+COLOR_POP_TARGET,Pop: %s,Лопай: %s,Éclate: %s,Revienta: %s
+COLOR_RED,Red,Червоний,Rouge,Rojo
+COLOR_BLUE,Blue,Синій,Bleu,Azul
+COLOR_GREEN,Green,Зелений,Vert,Verde
+COLOR_YELLOW,Yellow,Жовтий,Jaune,Amarillo
+COLOR_PURPLE,Purple,Фіолетовий,Violet,Morado
+COLOR_ORANGE,Orange,Помаранчевий,Orange,Naranja
+COLOR_PINK,Pink,Рожевий,Rose,Rosa
+MUSIC_TUTORIAL_TODDLER,Tap the animals to play music!,Тикай на тварин щоб грати музику!,Appuie sur les animaux pour jouer!,¡Toca los animales para tocar música!
+MUSIC_TUTORIAL_PRESCHOOL,Watch and repeat the melody!,Дивись і повтори мелодію!,Regarde et répète la mélodie!,¡Mira y repite la melodía!
+MUSIC_WATCH,Watch...,Дивись...,Regarde...,Mira...
+MUSIC_YOUR_TURN,Your turn!,Твоя черга!,À toi!,¡Tu turno!
+MUSIC_GREAT,Great melody!,Чудова мелодія!,Belle mélodie!,¡Gran melodía!
+SHAPES_TUTORIAL_TODDLER,Put shapes in holes!,Встав фігурки!,Place les formes!,¡Pon las formas!
+SHAPES_TUTORIAL_PRESCHOOL,Build the rocket!,Збери ракету!,Construis la fusée!,¡Construye el cohete!
+SHAPES_COMPLETE,All shapes matched!,Усі фігури на місці!,Toutes les formes placées!,¡Todas las formas colocadas!
+ODD_TUTORIAL_TODDLER,Find the different one!,Знайди не таку!,Trouve le différent!,¡Encuentra el diferente!
+ODD_TUTORIAL_PRESCHOOL,Which one doesn't belong?,Що тут зайве?,Lequel n'appartient pas?,¿Cuál no pertenece?
+COUNTING_TUTORIAL_TODDLER,Give Tofie the fruits!,Дай Тофі фрукти!,Donne les fruits à Tofie !,¡Dale las frutas a Tofie!
+COUNTING_TUTORIAL_PRESCHOOL,Solve the equation!,Розв'яжи рівняння!,Résous l'équation !,¡Resuelve la ecuación!
+COUNTING_GIVE_TOFIE,Give Tofie %d %s!,Дай Тофі %d %s!,Donne %d %s à Tofie !,¡Dale %d %s a Tofie!
+COUNTING_COUNTER,%d / %d,%d / %d,%d / %d,%d / %d
+COUNTING_ROUND,Round %d / %d,Раунд %d / %d,Manche %d / %d,Ronda %d / %d
+FRUIT_APPLE,Apple,Яблуко,Pomme,Manzana
+FRUIT_BANANA,Banana,Банан,Banane,Plátano
+FRUIT_ORANGE,Orange,Апельсин,Orange,Naranja
+FRUIT_GRAPE,Grape,Виноград,Raisin,Uva
+FRUIT_WATERMELON,Watermelon,Кавун,Pastèque,Sandía
+SHOP_NOT_ENOUGH,Not enough stars!,Замало зірок!,Pas assez d'étoiles !,¡No hay suficientes estrellas!
+GAME_PATTERN,Patterns,Візерунки,Motifs,Patrones
+PATTERN_TUTORIAL_TODDLER,What comes next?,Що далі?,Qu'est-ce qui suit ?,¿Qué sigue?
+PATTERN_TUTORIAL_PRESCHOOL,Complete the pattern!,Доповни візерунок!,Complète le motif !,¡Completa el patrón!
+GAME_COMPARE,Compare,Порівняння,Comparer,Comparar
+COMPARE_TUTORIAL_TODDLER,Which group has more?,Де більше?,Quel groupe a plus ?,¿Qué grupo tiene más?
+COMPARE_TUTORIAL_PRESCHOOL,Compare the groups!,Порівняй групи!,Compare les groupes !,¡Compara los grupos!
+COMPARE_WHICH_MORE,Which has MORE?,Де БІЛЬШЕ?,Lequel a PLUS ?,¿Cuál tiene MÁS?
+COMPARE_WHICH_FEWER,Which has FEWER?,Де МЕНШЕ?,Lequel a MOINS ?,¿Cuál tiene MENOS?
+COMPARE_VS,VS,VS,VS,VS
+MEMORY_PAIRS_FOUND,%d / %d,%d / %d,%d / %d,%d / %d
+GAME_SORTING,Sorting,Сортування,Tri,Clasificación
+SORTING_TUTORIAL_TODDLER,Sort the animals!,Сортуй тваринок!,Trie les animaux !,¡Clasifica los animales!
+SORTING_TUTORIAL_PRESCHOOL,Sort by habitat!,Сортуй за середовищем!,Trie par habitat !,¡Clasifica por hábitat!
+SORTING_CAT_FOREST,Forest,Ліс,Forêt,Bosque
+SORTING_CAT_FARM,Farm,Ферма,Ferme,Granja
+SORTING_CAT_JUNGLE,Jungle,Джунглі,Jungle,Jungla
+GAME_SIZE_SORT,Size Sorting,Сортуй за розміром,Tri par taille,Clasifica por tamaño
+SIZE_SORT_TUTORIAL_TODDLER,Match by size!,Знайди за розміром!,Trouve par taille !,¡Encuentra por tamaño!
+SIZE_SORT_TUTORIAL_PRESCHOOL,Sort big medium and small!,Сортуй великий середній і малий!,Trie grand moyen et petit !,¡Ordena grande mediano y pequeño!
+SIZE_BIG,Big,Великий,Grand,Grande
+SIZE_MEDIUM,Medium,Середній,Moyen,Mediano
+SIZE_SMALL,Small,Малий,Petit,Pequeño
+GAME_COLOR_CONVEYOR,Color Conveyor,Кольоровий конвеєр,Convoyeur de couleurs,Cinta de colores
+CONVEYOR_TUTORIAL_TODDLER,Sort by color!,Сортуй за кольором!,Trie par couleur !,¡Clasifica por color!
+CONVEYOR_TUTORIAL_PRESCHOOL,Catch and sort the toys!,Лови та сортуй іграшки!,Attrape et trie les jouets !,¡Atrapa y clasifica los juguetes!
+PUZZLE_TUTORIAL_TODDLER,Match the halves!,З'єднай половинки!,Assemble les moitiés !,¡Une las mitades!
+PUZZLE_TUTORIAL_PRESCHOOL,Complete the puzzle!,Склади пазл!,Complète le puzzle !,¡Completa el rompecabezas!
+COLORING_TUTORIAL_TODDLER,Color the animal!,Розфарбуй тваринку!,Colorie l'animal !,¡Colorea al animal!
+COLORING_TUTORIAL_PRESCHOOL,Paint with all colors!,Малюй усіма кольорами!,Peins avec toutes les couleurs !,¡Pinta con todos los colores!
+GAME_HYGIENE,Hygiene,Гігієна,Hygiène,Higiene
+HYGIENE_TUTORIAL_TODDLER,Wipe the animal clean!,Витри тваринку!,Nettoie l'animal !,¡Limpia al animal!
+HYGIENE_TUTORIAL_PRESCHOOL,Clean all the dirt spots!,Витри всі плями бруду!,Nettoie toutes les taches !,¡Limpia todas las manchas!
+GAME_WEATHER_DRESS,Weather Dress,Одяг за погодою,Habille selon la météo,Viste según el clima
+DRESS_TUTORIAL_TODDLER,Dress for the weather!,Одягни за погодою!,Habille selon la météo !,¡Viste según el clima!
+DRESS_TUTORIAL_PRESCHOOL,Pick the right clothes!,Обери правильний одяг!,Choisis les bons vêtements !,¡Elige la ropa correcta!
+WEATHER_SUNNY,Sunny,Сонячно,Ensoleillé,Soleado
+WEATHER_RAINY,Rainy,Дощ,Pluvieux,Lluvioso
+WEATHER_SNOWY,Snowy,Сніг,Neigeux,Nevado
+WEATHER_WINDY,Windy,Вітряно,Venteux,Ventoso
+GAME_SAFE_MAZE,Maze,Лабіринт,Labyrinthe,Laberinto
+MAZE_TUTORIAL_TODDLER,Guide the animal!,Проведи тваринку!,Guide l'animal !,¡Guía al animal!
+MAZE_TUTORIAL_PRESCHOOL,Follow the path carefully!,Слідуй стежкою обережно!,Suis le chemin prudemment !,¡Sigue el camino con cuidado!
+GAME_SENSORY_SANDBOX,Neon Draw,Неонове малювання,Dessin néon,Dibujo neón
+SANDBOX_TUTORIAL_TODDLER,Draw with your finger!,Малюй пальчиком!,Dessine avec ton doigt !,¡Dibuja con tu dedo!
+SANDBOX_TUTORIAL_PRESCHOOL,Create neon art!,Створи неонову картину!,Crée de l'art néon !,¡Crea arte neón!
+GAME_ALGO_ROBOT,Robot,Робот,Robot,Robot
+ALGO_TUTORIAL_TODDLER,Guide the robot to the star!,Проведи робота до зірки!,Guide le robot vers l'étoile !,¡Guía al robot hasta la estrella!
+ALGO_TUTORIAL_PRESCHOOL,Program the robot's path!,Запрограмуй шлях робота!,Programme le chemin du robot !,¡Programa el camino del robot!
+GAME_MATH_SCALES,Math Scales,Математичні ваги,Balance mathématique,Balanza matemática
+SCALES_TUTORIAL,Balance the scales!,Зрівноваж терези!,Équilibre la balance !,¡Equilibra la balanza!
+GAME_CASH_REGISTER,Cash Register,Каса,Caisse,Caja registradora
+REGISTER_TUTORIAL,Pay the exact price!,Заплати точну ціну!,Paie le prix exact !,¡Paga el precio exacto!
+GAME_ECO_CONVEYOR,Eco Sort,Еко-сортування,Tri écologique,Clasificación ecológica
+ECO_TUTORIAL,Sort the trash!,Сортуй сміття!,Trie les déchets !,¡Clasifica la basura!
+GAME_LOOP_ROBOT,Loop Robot,Робот з циклами,Robot à boucles,Robot con bucles
+LOOP_TUTORIAL,Program with repeats!,Програмуй з повторами!,Programme avec des répétitions !,¡Programa con repeticiones!
+GAME_KNIGHT_PATH,Knight's Path,Шлях коня,Chemin du cavalier,Camino del caballo
+KNIGHT_TUTORIAL,Move the knight to the star!,Доведи коня до зірки!,Amène le cavalier à l'étoile !,¡Lleva el caballo a la estrella!
+KNIGHT_TODDLER_TUTORIAL,Tap green cells to collect stars!,Натискай зелені клітинки та збирай зірки!,Appuie sur les cases vertes pour collecter les étoiles !,¡Toca las casillas verdes para recoger estrellas!
+KNIGHT_TREASURE_HUNT,The knight hunts for treasure!,Лицар шукає скарби!,Le chevalier chasse le trésor !,¡El caballero busca tesoros!
+KNIGHT_MOVES,Moves: %d / Min: %d,Ходи: %d / Мін: %d,Coups : %d / Min : %d,Movimientos: %d / Mín: %d
+GAME_COLOR_LAB,Color Lab,Лабораторія кольорів,Laboratoire de couleurs,Laboratorio de colores
+COLOR_LAB_TUTORIAL,Mix the colors!,Змішай кольори!,Mélange les couleurs !,¡Mezcla los colores!
+GAME_MATH_BINGO,Math Bingo,Математичне бінго,Bingo mathématique,Bingo matemático
+BINGO_TUTORIAL,Solve and mark!,Розв'яжи та позначай!,Résous et marque !,¡Resuelve y marca!
+BINGO_PARTY,Bingo party with animals!,Бінго-вечірка у тварин!,Fête bingo avec les animaux !,¡Fiesta bingo con animales!
+BINGO_CELEBRATION,BINGO!,БІНГО!,BINGO !,¡BINGO!
+GAME_SPELLING,Spelling,Літери,Orthographe,Ortografía
+SPELLING_TUTORIAL,Spell the word!,Склади слово!,Épelle le mot !,¡Deletrea la palabra!
+GAME_GRAVITY_ORBITS,Orbits,Орбіти,Orbites,Órbitas
+ORBITS_TUTORIAL,Keep the satellite in orbit!,Утримуй супутник на орбіті!,Maintiens le satellite en orbite !,¡Mantén el satélite en órbita!
+GRAVITY_TIME,%.1f s,%.1f с,%.1f s,%.1f s
+GAME_ANALOG_CLOCK,Clock,Годинник,Horloge,Reloj
+LOOP_ROBOT_TUTORIAL,Program the robot with loops!,Програмуй робота з повторами!,Programme le robot avec des boucles !,¡Programa el robot con bucles!
+CLOCK_TUTORIAL,Set the clock!,Встанови час!,Règle l'horloge !,¡Pon la hora!
+CLOCK_PLUS_HOUR,+1h,+1г,+1h,+1h
+CLOCK_MINUS_HOUR,-1h,-1г,-1h,-1h
+CLOCK_PLUS_MIN,+5m,+5хв,+5m,+5m
+CLOCK_MINUS_MIN,-5m,-5хв,-5m,-5m
+EXIT_TITLE,Exit Game,Вихід з гри,Quitter le jeu,Salir del juego
+EXIT_CONFIRM,Do you want to quit?,Бажаєш вийти з гри?,Veux-tu quitter le jeu ?,¿Quieres salir del juego?
+EXIT_YES,Yes,Так,Oui,Sí
+EXIT_NO,No,Ні,Non,No
+SPLASH_TAP,Tap to play!,Натисни щоб грати!,Appuie pour jouer !,¡Toca para jugar!
+BTN_BACK,Back,Назад,Retour,Atrás
+ECO_PAPER,Paper,Папір,Papier,Papel
+ECO_PLASTIC,Plastic,Пластик,Plastique,Plástico
+ECO_GLASS,Glass,Скло,Verre,Vidrio
+ECO_ORGANIC,Organic,Органіка,Organique,Orgánico
+SPELL_CAT,CAT,КІТ,CHAT,GATO
+SPELL_DOG,DOG,ПЕС,CHIEN,PERRO
+SPELL_COW,COW,КОРОВА,VACHE,VACA
+SPELL_HEN,HEN,КУРКА,POULE,GALLINA
+SPELL_BEAR,BEAR,ВЕДМІДЬ,OURS,OSO
+SPELL_FROG,FROG,ЖАБА,GRENOUILLE,RANA
+SPELL_DEER,DEER,ОЛЕНЬ,CERF,CIERVO
+SPELL_GOAT,GOAT,КОЗА,CHÈVRE,CABRA
+SPELL_LION,LION,ЛЕВ,LION,LEÓN
+SPELL_PANDA,PANDA,ПАНДА,PANDA,PANDA
+SPELL_HORSE,HORSE,КІНЬ,CHEVAL,CABALLO
+SPELL_MOUSE,MOUSE,МИША,SOURIS,RATÓN
+SPELLING_ALPHABET,ABCDEFGHIJKLMNOPQRSTUVWXYZ,АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ,ABCDEFGHIJKLMNOPQRSTUVWXYZ,ABCDEFGHIJKLMNOPQRSTUVWXYZ
+BTN_COLOR_BLIND,Color-Blind Mode,Режим дальтонізму,Mode daltonien,Modo daltónico
+LBL_SFX_VOLUME,Sound Effects,Звукові ефекти,Effets sonores,Efectos de sonido
+LBL_BGM_VOLUME,Music Volume,Гучність музики,Volume musique,Volumen música
+LBL_SESSION_LIMIT,Session Timer: %d min,Таймер сесії: %d хв,Minuterie: %d min,Temporizador: %d min
+LBL_SESSION_OFF,Session Timer: Off,Таймер сесії: Вимк,Minuterie: Désactivé,Temporizador: Apagado
+TAB_ANIMALS,Animals,Тварини,Animaux,Animales
+TAB_BACKGROUNDS,Backgrounds,Фони,Arrière-plans,Fondos
+BTN_BUY_BG,Buy (%d),Купити (%d),Acheter (%d),Comprar (%d)
+LBL_EQUIP,Equip,Обрати,Équiper,Equipar
+BG_SKY,Sky,Небо,Ciel,Cielo
+BG_MEADOW,Meadow,Луки,Prairie,Pradera
+BG_FOREST,Forest,Ліс,Forêt,Bosque
+BG_OCEAN,Ocean,Океан,Océan,Océano
+BG_BEACH,Beach,Пляж,Plage,Playa
+BG_CITY,City,Місто,Ville,Ciudad
+BG_PUZZLE,Puzzle,Пазл,Puzzle,Puzle
+BG_GARDEN,Garden,Сад,Jardin,Jardín
+BG_FOREST_NIGHT,Dark Forest,Нічний ліс,Forêt sombre,Bosque oscuro
+BG_SCIENCE,Science Lab,Лабораторія,Labo science,Laboratorio
+BG_CANDY,Candy Land,Цукерковий світ,Pays des bonbons,Tierra de dulces
+BG_ARCTIC,Arctic,Арктика,Arctique,Ártico
+BG_SUNSET,Sunset Forest,Ліс на заході,Forêt au coucher,Bosque al atardecer
+BG_SPACE,Space,Космос,Espace,Espacio
+BG_ARCTIC_NIGHT,Arctic Night,Арктична ніч,Nuit arctique,Noche ártica
+BG_ARCTIC_VILLAGE,Arctic Village,Арктичне село,Village arctique,Aldea ártica
+BG_UNDERWATER,Underwater,Підводний світ,Sous-marin,Submarino
+BG_CASTLE,Castle,Замок,Château,Castillo
+CLOCK_TODDLER_INSTRUCTION,What time is it?,Котра година?,Quelle heure est-il ?,¿Qué hora es?
+CLOCK_ACTIVITY_MORNING,Morning! 7 o'clock!,Ранок! Сьома година!,Le matin ! 7 heures !,¡Mañana! ¡Las 7!
+CLOCK_ACTIVITY_BREAKFAST,Breakfast! 8 o'clock!,Сніданок! Восьма година!,Petit-déjeuner ! 8 heures !,¡Desayuno! ¡Las 8!
+CLOCK_ACTIVITY_LUNCH,Lunch! 12 o'clock!,Обід! Дванадцята година!,Déjeuner ! 12 heures !,¡Almuerzo! ¡Las 12!
+CLOCK_ACTIVITY_PLAY,Playtime! 3 o'clock!,Час гратися! Третя година!,C'est l'heure de jouer ! 15 heures !,¡A jugar! ¡Las 3!
+CLOCK_ACTIVITY_DINNER,Dinner! 6 o'clock!,Вечеря! Шоста година!,Dîner ! 18 heures !,¡Cena! ¡Las 6!
+CLOCK_ACTIVITY_BATH,Bath time! 8 o'clock!,Час купатися! Восьма вечора!,L'heure du bain ! 20 heures !,¡Hora del baño! ¡Las 8!
+CLOCK_ACTIVITY_SLEEP,Bedtime! 9 o'clock!,Час спатоньки! Дев'ята вечора!,Au lit ! 21 heures !,¡A dormir! ¡Las 9!
+BINGO_TUTORIAL_TODDLER,Find the right number!,Знайди потрібне число!,Trouve le bon nombre !,¡Encuentra el número correcto!
+SPELLING_TUTORIAL_TODDLER,Who is this? Tap the right card!,Хто це? Натисни правильну картку!,Qui est-ce ? Appuie sur la bonne carte !,¿Quién es? ¡Toca la tarjeta correcta!
+REGISTER_TUTORIAL_TODDLER,Put coins in the register!,Поклади монетки в касу!,Mets les pièces dans la caisse !,¡Pon las monedas en la caja!
+COMPARE_EQUAL_OR_NOT,Are they equal?,Чи вони рівні?,Sont-ils égaux ?,¿Son iguales?
+ROBOT_LOST_HELP,The robot is lost! Help it find the way!,Робот загубився! Допоможи йому знайти шлях!,Le robot est perdu ! Aide-le à trouver le chemin !,¡El robot está perdido! ¡Ayúdalo a encontrar el camino!
+WHO_IS_HIDING,Who is hiding here?,Хто тут заховався?,Qui se cache ici ?,¿Quién se esconde aquí?
+WHO_ATE_MORE,Who ate more?,Хто з'їв більше?,Qui a mangé plus ?,¿Quién comió más?
+TRAIN_SEATS,Put the animals on the train!,Посади тварин у паровозик!,Mets les animaux dans le train !,¡Pon los animales en el tren!
+TRAIN_TOOT,TOOT!,ТУ-ТУУ!,TOOT !,¡TUUU!
+GOING_HOME,Help the animals find home!,Допоможи тваринам знайти дім!,Aide les animaux à trouver leur maison !,¡Ayuda a los animales a encontrar su hogar!
+SAVE_PLANET,Save the planet!,Врятуй планету!,Sauve la planète !,¡Salva el planeta!
+PAINTER_NEEDS,The painter is making art!,Художник малює картину!,Le peintre fait de l'art !,¡El pintor está creando arte!
+PAINTER_MASTERPIECE,Masterpiece!,Шедевр!,Chef-d'œuvre !,¡Obra maestra!
+TOFIE_SCHEDULE,Tofie's Schedule,Розклад Тофі,L'emploi du temps de Tofie,El horario de Tofie
+WIZARD_PATTERNS,The wizard creates patterns!,Чарівник створює візерунки!,Le magicien crée des motifs !,¡El mago crea patrones!
+SCALES_SHARE_TUTORIAL,Share equally!,Поділи порівну!,Partage également !,¡Comparte por igual!
+ORBITS_TODDLER_TUTORIAL,Catch the stars!,Лови зірочки!,Attrape les étoiles !,¡Atrapa las estrellas!
+WEATHER_CLOUDY,Cloudy,Хмарно,Nuageux,Nublado
+WEATHER_STORMY,Stormy,Грозово,Orageux,Tormentoso
+WEATHER_HOT,Hot,Спека,Chaud,Caluroso
+WEATHER_FOGGY,Foggy,Туманно,Brumeux,Neblinoso
+COLOR_CREAM,Cream,Кремовий,Crème,Crema
+COLOR_LIGHT_BLUE,Light Blue,Блакитний,Bleu clair,Azul claro
+COLOR_BROWN,Brown,Коричневий,Marron,Marrón
+COLOR_OLIVE,Olive,Оливковий,Olive,Oliva
+COLOR_DARK_BROWN,Dark Brown,Темно-коричневий,Brun foncé,Marrón oscuro
+INFO_WHAT_TO_DO,What to do:,Що робити:,Que faire :,Qué hacer:
+INFO_DEVELOPS,Develops:,Розвиває:,Développe :,Desarrolla:
+DESC_HUNGRY_PETS,Help the animals find food! Drag the right food to the hungry animal.,Допоможи тваринам знайти їжу! Перетягни правильну їжу до голодної тварини.,Aide les animaux à trouver de la nourriture ! Glisse la bonne nourriture vers l'animal affamé.,Ayuda a los animales a encontrar comida. Arrastra la comida correcta al animal hambriento.
+SKILL_HUNGRY_PETS,Associative thinking,Асоціативне мислення,Pensée associative,Pensamiento asociativo
+DESC_SHADOW_MATCH,Find the animal's shadow! Drag the colorful animal onto the correct silhouette.,Знайди тінь тварини! Перетягни кольорову тварину на правильний силует.,Trouve l'ombre de l'animal ! Glisse l'animal coloré sur la bonne silhouette.,Encuentra la sombra del animal. Arrastra el animal de color a la silueta correcta.
+SKILL_SHADOW_MATCH,Shape recognition,Розпізнавання форм,Reconnaissance des formes,Reconocimiento de formas
+DESC_MEMORY,Find the pairs! Remember where each card is and find matching ones.,Знайди пари! Запам'ятай де яка картка і знайди однакові.,Trouve les paires ! Mémorise l'emplacement des cartes et trouve les identiques.,Encuentra los pares. Recuerda dónde está cada carta y encuentra las iguales.
+SKILL_MEMORY,Short-term memory,Короткочасна пам'ять,Mémoire à court terme,Memoria a corto plazo
+DESC_COLOR_POP,Pop the bubbles! Toddlers: all of them. Preschoolers: only the right color.,Лопай бульбашки! Малюки: усі. Дошкільнята: тільки потрібного кольору.,Éclate les bulles ! Tout-petits : toutes. Préscolaires : seulement la bonne couleur.,Revienta las burbujas. Pequeños: todas. Preescolares: solo del color correcto.
+SKILL_COLOR_POP,Color recognition,Розпізнавання кольорів,Reconnaissance des couleurs,Reconocimiento de colores
+DESC_SHAPE_SORTER,Sort the shapes! Toddlers: shapes into holes. Preschoolers: build a rocket.,Склади фігури! Малюки: фігури в отвори. Дошкільнята: збери ракету.,Trie les formes ! Tout-petits : formes dans les trous. Préscolaires : construis une fusée.,Clasifica las formas. Pequeños: formas en agujeros. Preescolares: construye un cohete.
+SKILL_SHAPE_SORTER,Spatial thinking,Просторове мислення,Pensée spatiale,Pensamiento espacial
+DESC_COUNTING,Count and give! Put as many fruits as needed.,Порахуй і дай! Поклади стільки фруктів скільки потрібно.,Compte et donne ! Mets autant de fruits que demandé.,Cuenta y da. Pon tantas frutas como se necesiten.
+SKILL_COUNTING,Counting and arithmetic,Рахування та арифметика,Comptage et arithmétique,Conteo y aritmética
+DESC_MUSIC,Play music! Toddlers: tap the animals. Preschoolers: repeat the melody.,Грай музику! Малюки: натискай тварин. Дошкільнята: повтори мелодію.,Joue de la musique ! Tout-petits : appuie sur les animaux. Préscolaires : répète la mélodie.,Toca música. Pequeños: toca los animales. Preescolares: repite la melodía.
+SKILL_MUSIC,Musical memory,Музична пам'ять,Mémoire musicale,Memoria musical
+DESC_SAFE_MAZE,Guide the animal! Trace the path with your finger to the star.,Проведи тварину! Веди пальцем по шляху до зірки.,Guide l'animal ! Trace le chemin avec ton doigt jusqu'à l'étoile.,Guía al animal. Traza el camino con tu dedo hasta la estrella.
+SKILL_SAFE_MAZE,Hand-eye coordination,Координація рука-око,Coordination œil-main,Coordinación mano-ojo
+DESC_SMART_COLORING,Color the animal! Paint with the brush and the animal comes alive.,Розфарбуй тварину! Малюй пензлем і тварина оживе.,Colorie l'animal ! Peins avec le pinceau et l'animal prend vie.,Colorea al animal. Pinta con el pincel y el animal cobrará vida.
+SKILL_SMART_COLORING,Fine motor skills + creativity,Дрібна моторика + творчість,Motricité fine + créativité,Motricidad fina + creatividad
+DESC_SENSORY_SANDBOX,Draw with neon! Free drawing on a dark background.,Малюй неоном! Вільне малювання на темному фоні.,Dessine en néon ! Dessin libre sur fond sombre.,Dibuja con neón. Dibujo libre sobre fondo oscuro.
+SKILL_SENSORY_SANDBOX,Sensory exploration,Сенсорне дослідження,Exploration sensorielle,Exploración sensorial
+DESC_MAGNETIC_HALVES,Join the halves! Find the other half of the animal.,З'єднай половинки! Знайди другу частину тварини.,Assemble les moitiés ! Trouve l'autre moitié de l'animal.,Une las mitades. Encuentra la otra mitad del animal.
+SKILL_MAGNETIC_HALVES,Visual assembly,Візуальне складання,Assemblage visuel,Ensamblaje visual
+DESC_COLOR_LAB,Mix the colors! Drag two paints into the bowl and create a new color.,Змішай кольори! Перетягни дві фарби в миску і створи новий колір.,Mélange les couleurs ! Glisse deux peintures dans le bol et crée une nouvelle couleur.,Mezcla los colores. Arrastra dos pinturas al cuenco y crea un nuevo color.
+SKILL_COLOR_LAB,Understanding colors,Розуміння кольорів,Compréhension des couleurs,Comprensión de los colores
+DESC_WEATHER_DRESS,Dress for the weather! Choose the right clothes for sun rain or snow.,Одягни за погодою! Обери правильний одяг для сонця дощу чи снігу.,Habille selon la météo ! Choisis les bons vêtements pour le soleil la pluie ou la neige.,Viste según el clima. Elige la ropa correcta para el sol la lluvia o la nieve.
+SKILL_WEATHER_DRESS,Cause and effect,Причинно-наслідкові зв'язки,Cause et effet,Causa y efecto
+DESC_COMPARE,Which is more? Compare two groups and tap the bigger one.,Де більше? Порівняй дві купки і натисни більшу.,Lequel a plus ? Compare deux groupes et appuie sur le plus grand.,Dónde hay más? Compara dos grupos y toca el más grande.
+SKILL_COMPARE,Quantity comparison,Кількісне порівняння,Comparaison de quantités,Comparación de cantidades
+DESC_SIZE_SORT,Load the train! Arrange the animals by size.,Посади в паровозик! Розмісти тварин за розміром.,Charge le train ! Place les animaux par taille.,Sube al tren. Ordena los animales por tamaño.
+SKILL_SIZE_SORT,Seriation (size),Серіація (розмір),Sériation (taille),Seriación (tamaño)
+DESC_ODD_ONE_OUT,Who is hiding? Find the one that is different from the others.,Хто заховався? Знайди того хто відрізняється від інших.,Qui se cache ? Trouve celui qui est différent des autres.,Quién se esconde? Encuentra al que es diferente de los demás.
+SKILL_ODD_ONE_OUT,Classification,Класифікація,Classification,Clasificación
+DESC_SORTING,Help the animals get home! Drag each one to the right house.,Допоможи тваринам додому! Перетягни кожну в правильний будинок.,Aide les animaux à rentrer ! Glisse chacun dans la bonne maison.,Ayuda a los animales a llegar a casa. Arrastra cada uno a la casa correcta.
+SKILL_SORTING,Categorization,Категоризація,Catégorisation,Categorización
+DESC_HYGIENE,Wash the animal! Wipe away the dirt until the animal is clean.,Помий тварину! Протри бруд щоб тварина стала чистою.,Lave l'animal ! Essuie la saleté jusqu'à ce que l'animal soit propre.,Lava al animal. Limpia la suciedad hasta que el animal esté limpio.
+SKILL_HYGIENE,Fine motor skills + hygiene,Дрібна моторика + гігієна,Motricité fine + hygiène,Motricidad fina + higiene
+DESC_CASH_REGISTER,Pay with coins! Put together the right amount of coins.,Заплати монетами! Склади правильну суму з монет.,Paie avec des pièces ! Rassemble le bon montant de pièces.,Paga con monedas. Junta la cantidad correcta de monedas.
+SKILL_CASH_REGISTER,Understanding money + addition,Розуміння грошей + додавання,Compréhension de l'argent + addition,Comprensión del dinero + suma
+DESC_ECO_CONVEYOR,Save the planet! Sort the trash into the right containers.,Врятуй планету! Сортуй сміття в правильні контейнери.,Sauve la planète ! Trie les déchets dans les bons conteneurs.,Salva el planeta. Clasifica la basura en los contenedores correctos.
+SKILL_ECO_CONVEYOR,Ecological awareness,Екологічна свідомість,Conscience écologique,Conciencia ecológica
+DESC_COLOR_CONVEYOR,Help the artist! Sort items by color.,Допоможи художнику! Сортуй предмети за кольором.,Aide l'artiste ! Trie les objets par couleur.,Ayuda al artista. Clasifica los objetos por color.
+SKILL_COLOR_CONVEYOR,Color recognition,Розпізнавання кольорів,Reconnaissance des couleurs,Reconocimiento de colores
+DESC_MATH_SCALES,Share equally! Divide the apples between the animals.,Поділи порівну! Розділи яблука між тваринами.,Partage également ! Divise les pommes entre les animaux.,Reparte por igual. Divide las manzanas entre los animales.
+SKILL_MATH_SCALES,Equality + division,Рівність + ділення,Égalité + division,Igualdad + división
+DESC_MATH_BINGO,Bingo party! Solve the problem and find the answer on the board.,Бінго-вечірка! Розв'яжи приклад і знайди відповідь на полі.,Fête bingo ! Résous le problème et trouve la réponse sur le plateau.,Fiesta de bingo. Resuelve el problema y encuentra la respuesta en el tablero.
+SKILL_MATH_BINGO,Arithmetic,Арифметика,Arithmétique,Aritmética
+DESC_SPELLING_BLOCKS,Build a word! Drag the letters to spell the animal's name.,Склади слово! Перетягни букви щоб написати назву тварини.,Construis un mot ! Glisse les lettres pour épeler le nom de l'animal.,Forma una palabra. Arrastra las letras para deletrear el nombre del animal.
+SKILL_SPELLING_BLOCKS,Literacy + spelling,Грамотність + спеллінг,Littératie + orthographe,Alfabetización + ortografía
+DESC_ANALOG_CLOCK,What time is it? Set the clock hands to the right time.,Який час? Встанови стрілки годинника на потрібний час.,Quelle heure est-il ? Règle les aiguilles de l'horloge à la bonne heure.,Qué hora es? Pon las manecillas del reloj a la hora correcta.
+SKILL_ANALOG_CLOCK,Understanding time,Розуміння часу,Compréhension du temps,Comprensión del tiempo
+DESC_KNIGHT_PATH,Knight's adventures! Guide the knight to the treasures.,Пригоди лицаря! Проведи коника до скарбів.,Aventures du cavalier ! Guide le cavalier vers les trésors.,Aventuras del caballero. Guía al caballero hasta los tesoros.
+SKILL_KNIGHT_PATH,Spatial logic,Просторова логіка,Logique spatiale,Lógica espacial
+DESC_ALGO_ROBOT,Robot adventures! Show the robot the path to the battery.,Робот-пригоди! Покажи роботу шлях до батарейки.,Aventures du robot ! Montre au robot le chemin vers la batterie.,Aventuras del robot. Muestra al robot el camino a la batería.
+SKILL_ALGO_ROBOT,Algorithmic thinking,Алгоритмічне мислення,Pensée algorithmique,Pensamiento algorítmico
+DESC_PATTERN,Patterns! Find which element comes next.,Візерунки! Знайди який елемент буде наступним.,Motifs ! Trouve quel élément vient ensuite.,Patrones. Encuentra qué elemento viene a continuación.
+SKILL_PATTERN,Logical thinking,Логічне мислення,Pensée logique,Pensamiento lógico
+DESC_GRAVITY_ORBITS,Hungry planet! Catch stars and feed the planet.,Голодна планета! Злови зірки і нагодуй планету.,Planète affamée ! Attrape les étoiles et nourris la planète.,Planeta hambriento. Atrapa estrellas y alimenta al planeta.
+SKILL_GRAVITY_ORBITS,Counting + self-control,Рахування + самоконтроль,Comptage + autocontrôle,Conteo + autocontrol

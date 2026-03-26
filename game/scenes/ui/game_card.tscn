@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://csgame_card"]
+
+[ext_resource type="Script" path="res://scripts/minigames/game_card.gd" id="1_script"]
+
+[node name="GameCard" type="Control"]
+layout_mode = 2
+size_flags_horizontal = 3
+custom_minimum_size = Vector2(0, 140)
+script = ExtResource("1_script")

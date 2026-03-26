@@ -1,0 +1,143 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/parental_gate.gd" id="1_script"]
+
+[node name="ParentalGate" type="CanvasLayer"]
+process_mode = 3
+visible = false
+script = ExtResource("1_script")
+
+[node name="Overlay" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+color = Color(0, 0, 0, 0.6)
+
+[node name="PanelContainer" type="PanelContainer" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -220.0
+offset_right = 280.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Overlay/PanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="InstructionLabel" type="Label" parent="Overlay/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Enter the numbers shown as words"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="PromptLabel" type="Label" parent="Overlay/PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Tap: Two, Eight, Four"
+horizontal_alignment = 1
+
+[node name="DigitsHBox" type="HBoxContainer" parent="Overlay/PanelContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="DigitsLabel" type="Label" parent="Overlay/PanelContainer/VBoxContainer/DigitsHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "_  _  _"
+horizontal_alignment = 1
+
+[node name="KeypadGrid" type="GridContainer" parent="Overlay/PanelContainer/VBoxContainer"]
+layout_mode = 2
+columns = 5
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+
+[node name="Btn1" type="Button" parent="Overlay/PanelContainer/VBoxContainer/KeypadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 80)
+theme_type_variation = &"CircleButton"
+text = "1"
+
+[node name="Btn2" type="Button" parent="Overlay/PanelContainer/VBoxContainer/KeypadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 80)
+theme_type_variation = &"CircleButton"
+text = "2"
+
+[node name="Btn3" type="Button" parent="Overlay/PanelContainer/VBoxContainer/KeypadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 80)
+theme_type_variation = &"CircleButton"
+text = "3"
+
+[node name="Btn4" type="Button" parent="Overlay/PanelContainer/VBoxContainer/KeypadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 80)
+theme_type_variation = &"CircleButton"
+text = "4"
+
+[node name="Btn5" type="Button" parent="Overlay/PanelContainer/VBoxContainer/KeypadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 80)
+theme_type_variation = &"CircleButton"
+text = "5"
+
+[node name="Btn6" type="Button" parent="Overlay/PanelContainer/VBoxContainer/KeypadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 80)
+theme_type_variation = &"CircleButton"
+text = "6"
+
+[node name="Btn7" type="Button" parent="Overlay/PanelContainer/VBoxContainer/KeypadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 80)
+theme_type_variation = &"CircleButton"
+text = "7"
+
+[node name="Btn8" type="Button" parent="Overlay/PanelContainer/VBoxContainer/KeypadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 80)
+theme_type_variation = &"CircleButton"
+text = "8"
+
+[node name="Btn9" type="Button" parent="Overlay/PanelContainer/VBoxContainer/KeypadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 80)
+theme_type_variation = &"CircleButton"
+text = "9"
+
+[node name="Btn0" type="Button" parent="Overlay/PanelContainer/VBoxContainer/KeypadGrid"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 80)
+theme_type_variation = &"CircleButton"
+text = "0"
+
+[node name="CancelButton" type="Button" parent="Overlay/PanelContainer/VBoxContainer"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+theme_type_variation = &"SecondaryButton"
+theme_override_font_sizes/font_size = 20
+text = "Cancel"
+
+[connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/KeypadGrid/Btn1" to="." method="_on_keypad_pressed" binds= [1]]
+[connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/KeypadGrid/Btn2" to="." method="_on_keypad_pressed" binds= [2]]
+[connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/KeypadGrid/Btn3" to="." method="_on_keypad_pressed" binds= [3]]
+[connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/KeypadGrid/Btn4" to="." method="_on_keypad_pressed" binds= [4]]
+[connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/KeypadGrid/Btn5" to="." method="_on_keypad_pressed" binds= [5]]
+[connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/KeypadGrid/Btn6" to="." method="_on_keypad_pressed" binds= [6]]
+[connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/KeypadGrid/Btn7" to="." method="_on_keypad_pressed" binds= [7]]
+[connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/KeypadGrid/Btn8" to="." method="_on_keypad_pressed" binds= [8]]
+[connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/KeypadGrid/Btn9" to="." method="_on_keypad_pressed" binds= [9]]
+[connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/KeypadGrid/Btn0" to="." method="_on_keypad_pressed" binds= [0]]
+[connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/CancelButton" to="." method="_on_cancel_pressed"]

@@ -1,0 +1,168 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/splash_screen.gd" id="1_splash"]
+[ext_resource type="Script" path="res://scripts/components/splash_track.gd" id="2_track"]
+[ext_resource type="Script" path="res://scripts/components/splash_deco.gd" id="3_deco"]
+[ext_resource type="FontFile" path="res://assets/fonts/Nunito-Regular.ttf" id="4_font_regular"]
+[ext_resource type="FontFile" path="res://assets/fonts/Nunito-ExtraBold.ttf" id="5_font_extrabold"]
+
+[node name="SplashScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_splash")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="DecoTL" type="Control" parent="."]
+layout_mode = 1
+anchor_left = 0.1
+anchor_top = 0.15
+anchor_right = 0.1
+anchor_bottom = 0.15
+offset_right = 70.0
+offset_bottom = 50.0
+modulate = Color(1, 1, 1, 0.7)
+script = ExtResource("3_deco")
+shape_type = 0
+
+[node name="DecoTR" type="Control" parent="."]
+layout_mode = 1
+anchor_left = 0.85
+anchor_top = 0.2
+anchor_right = 0.85
+anchor_bottom = 0.2
+offset_left = -80.0
+offset_bottom = 80.0
+modulate = Color(1, 1, 1, 0.7)
+script = ExtResource("3_deco")
+shape_type = 1
+
+[node name="DecoBL" type="Control" parent="."]
+layout_mode = 1
+anchor_left = 0.15
+anchor_top = 0.8
+anchor_right = 0.15
+anchor_bottom = 0.8
+offset_top = -60.0
+offset_right = 60.0
+modulate = Color(1, 1, 1, 0.7)
+script = ExtResource("3_deco")
+shape_type = 2
+
+[node name="DecoBR" type="Control" parent="."]
+layout_mode = 1
+anchor_left = 0.9
+anchor_top = 0.85
+anchor_right = 0.9
+anchor_bottom = 0.85
+offset_left = -60.0
+offset_top = -60.0
+modulate = Color(1, 1, 1, 0.7)
+script = ExtResource("3_deco")
+shape_type = 3
+
+[node name="TitleLabel" type="Label" parent="."]
+layout_mode = 1
+theme_type_variation = &"TitleLabel"
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 80.0
+offset_right = 300.0
+offset_bottom = 170.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.62, 0.11, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.12)
+theme_override_constants/outline_size = 4
+theme_override_constants/shadow_offset_x = 4
+theme_override_constants/shadow_offset_y = 4
+theme_override_font_sizes/font_size = 72
+text = "Tofie"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 175.0
+offset_right = 300.0
+offset_bottom = 215.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.51, 0.22, 0.93, 1)
+theme_override_font_sizes/font_size = 24
+text = "Play & Learn Adventures"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SplashTrack" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -340.0
+offset_top = -20.0
+offset_right = 340.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_track")
+
+[node name="StudioFromLabel" type="Label" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -72.0
+offset_right = 200.0
+offset_bottom = -52.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.51, 0.22, 0.93, 0.5)
+theme_override_fonts/font = ExtResource("4_font_regular")
+theme_override_font_sizes/font_size = 14
+text = "from"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StudioNameLabel" type="Label" parent="."]
+layout_mode = 1
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -52.0
+offset_right = 200.0
+offset_bottom = -20.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.51, 0.22, 0.93, 1)
+theme_override_colors/font_outline_color = Color(1, 1, 1, 0.35)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.08)
+theme_override_constants/outline_size = 3
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_fonts/font = ExtResource("5_font_extrabold")
+theme_override_font_sizes/font_size = 24
+text = "K-TRIAD"
+horizontal_alignment = 1
+vertical_alignment = 1

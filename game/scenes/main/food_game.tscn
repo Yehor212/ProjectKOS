@@ -1,0 +1,59 @@
+[gd_scene format=3 uid="uid://bicrmujc4xnb5"]
+
+[ext_resource type="Script" uid="uid://byooybsg7gwyd" path="res://scripts/food_game.gd" id="1_ilrle"]
+[ext_resource type="Script" uid="uid://bjiaypodih1i" path="res://scripts/tutorial_overlay.gd" id="9_tut"]
+[ext_resource type="AudioStream" uid="uid://dejnjbxidx0ua" path="res://assets/audio/bgm/bgm_loop.wav" id="10_bgm"]
+
+[node name="FoodGame" type="Node2D" unique_id=1524076757]
+script = ExtResource("1_ilrle")
+
+[node name="Background" type="TextureRect" parent="." unique_id=1258995470]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="DragTrail" type="CPUParticles2D" parent="." unique_id=1315307917]
+emitting = false
+amount = 12
+lifetime = 0.3
+direction = Vector2(0, 1)
+spread = 30.0
+gravity = Vector2(0, 200)
+initial_velocity_min = 20.0
+initial_velocity_max = 50.0
+scale_amount_min = 2.0
+scale_amount_max = 4.0
+color = Color(1, 0.95, 0.6, 0.8)
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=329899511]
+anchor_mode = 0
+
+[node name="TutorialOverlay" type="Node2D" parent="." unique_id=619670949]
+visible = false
+script = ExtResource("9_tut")
+
+[node name="HandLabel" type="Label" parent="TutorialOverlay" unique_id=1160195795]
+theme_override_font_sizes/font_size = 48
+text = ""
+
+[node name="HintLabel" type="Label" parent="TutorialOverlay" unique_id=776062670]
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+
+[node name="BGMusic" type="AudioStreamPlayer" parent="." unique_id=131226678]
+stream = ExtResource("10_bgm")
+autoplay = true
+bus = &"SFX"
+
+[node name="HintButton" type="Button" parent="." unique_id=715335409]
+offset_left = 16.0
+offset_top = 660.0
+offset_right = 170.0
+offset_bottom = 704.0
+theme_type_variation = &"PillButton"
+theme_override_font_sizes/font_size = 16
+text = "Hint (3)"

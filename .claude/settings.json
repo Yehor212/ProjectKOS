@@ -1,0 +1,33 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/commit-gate.cjs",
+            "timeout": 120000
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/fullcycle-flag.cjs",
+            "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/preflight-inject.cjs",
+            "timeout": 5000,
+            "statusMessage": "Pre-flight protocol injection..."
+          }
+        ]
+      }
+    ]
+  }
+}

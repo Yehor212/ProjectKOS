@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://b1doicicqrlij"]
+
+[ext_resource type="Texture2D" uid="uid://wtj4750660uu" path="res://assets/sprites/animals/Cow.png" id="1_reef3"]
+
+[node name="Cow" type="Sprite2D"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("1_reef3")

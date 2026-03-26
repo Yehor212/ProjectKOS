@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://cpqq0v35mftin"]
+
+[ext_resource type="Texture2D" uid="uid://dikg20i015uft" path="res://assets/sprites/animals/Crocodile.png" id="1_vmktj"]
+
+[node name="Crocodile" type="Sprite2D"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("1_vmktj")

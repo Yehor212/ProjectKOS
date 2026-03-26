@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8h3jfto7qh7v"]
+
+[ext_resource type="Texture2D" uid="uid://cyvhmq5x4yd06" path="res://assets/sprites/animals/Mouse.png" id="1_ttf2w"]
+
+[node name="Mouse" type="Sprite2D"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("1_ttf2w")

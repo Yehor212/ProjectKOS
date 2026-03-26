@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://dxu38l04ib1vm"]
+
+[ext_resource type="Texture2D" uid="uid://nan0hxaj736t" path="res://assets/sprites/animals/Squirrel.png" id="1_h3wux"]
+
+[node name="Squirrel" type="Sprite2D"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("1_h3wux")

@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://ds0af72v8e8ch"]
+
+[ext_resource type="Texture2D" uid="uid://b4jbjx53x0pyy" path="res://assets/sprites/food/Bone.png" id="1_13gv3"]
+
+[node name="Bone" type="Sprite2D"]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("1_13gv3")

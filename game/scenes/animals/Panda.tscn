@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://b4d7v0k57mtbg"]
+
+[ext_resource type="Texture2D" uid="uid://mekj6lg18d5f" path="res://assets/sprites/animals/Panda.png" id="1_cqxk2"]
+
+[node name="Panda" type="Sprite2D"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("1_cqxk2")

@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://gq631nqoi3ya"]
+
+[ext_resource type="Texture2D" uid="uid://y3w3lwblwllc" path="res://assets/sprites/food/Cabbage.png" id="1_hya51"]
+
+[node name="Cabbage" type="Sprite2D"]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("1_hya51")

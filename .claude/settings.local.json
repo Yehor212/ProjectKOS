@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:garden.bradwoods.io)",
+      "WebFetch(domain:kevurugames.com)",
+      "WebFetch(domain:www.turbodocx.com)",
+      "WebFetch(domain:totter87.medium.com)",
+      "WebFetch(domain:link.springer.com)",
+      "WebFetch(domain:abagames.github.io)",
+      "WebFetch(domain:yukaichou.com)",
+      "WebFetch(domain:www.gamerefinery.com)",
+      "WebFetch(domain:docs.godotengine.org)",
+      "WebFetch(domain:gameaccessibilityguidelines.com)",
+      "WebFetch(domain:www.syntaxcache.com)",
+      "WebFetch(domain:godotshaders.com)",
+      "WebFetch(domain:www.gameanim.com)",
+      "WebFetch(domain:pixune.com)",
+      "WebFetch(domain:www.gotut.net)",
+      "WebFetch(domain:ilogos.biz)",
+      "WebFetch(domain:www.ixiegaming.com)",
+      "WebFetch(domain:rocketbrush.com)",
+      "WebFetch(domain:magicmedia.studio)",
+      "WebFetch(domain:freesound.org)",
+      "WebFetch(domain:opengameart.org)",
+      "Bash(npx:*)",
+      "mcp__mcp-image__*",
+      "mcp__svg-maker__*",
+      "mcp__filesystem__*",
+      "mcp__context7__*",
+      "WebFetch(domain:www.gamedeveloper.com)",
+      "Bash(/c/Godot/Godot_v4.6.1-stable_win64_console.exe --headless --path game/ -s tests/run_all_tests.gd --quit-after 60 2>&1)",
+      "mcp__Snyk__snyk_code_scan",
+      "mcp__Snyk__snyk_auth"
+    ]
+  }
+}

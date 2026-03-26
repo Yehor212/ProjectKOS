@@ -1,0 +1,37 @@
+{
+  "test_runner": "game/tests/run_all_tests.gd",
+  "command": "godot --headless --path game/ -s tests/run_all_tests.gd",
+  "suites": [
+    {
+      "name": "GameData Tests",
+      "file": "game/tests/test_game_data.gd",
+      "tests": [
+        "find_correct_food_name returns correct food for known animals",
+        "find_correct_food_name returns empty for unknown animals",
+        "all animal-food pairs have valid data (19 pairs)",
+        "no duplicate animal names",
+        "MAX_ROUNDS in valid range",
+        "V20.0 biological pairings correct"
+      ]
+    },
+    {
+      "name": "RoundManager Tests",
+      "file": "game/tests/test_round_manager.gd",
+      "tests": [
+        "start_new_round creates correct number of animals and food",
+        "all food items have valid food_type metadata",
+        "dynamic difficulty scales 3→4→5 based on rounds_played",
+        "correct match returns true and emits signal",
+        "incorrect match returns false and preserves state",
+        "errors_made increments on failed matches",
+        "on-screen count maintained after match",
+        "return_food_to_origin restores position",
+        "reposition_all produces consistent positions",
+        "earned_coins present in stats",
+        "derangement working"
+      ]
+    }
+  ],
+  "total_tests": 17,
+  "last_run": null
+}

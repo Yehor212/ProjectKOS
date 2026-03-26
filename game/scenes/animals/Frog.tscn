@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://uv6ht1mvqjcm"]
+
+[ext_resource type="Texture2D" uid="uid://88ov1bvlpnvy" path="res://assets/sprites/animals/Frog.png" id="1_i3uh0"]
+
+[node name="Frog" type="Sprite2D"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("1_i3uh0")

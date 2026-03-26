@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://jfsbfggp2aw6"]
+
+[ext_resource type="Texture2D" uid="uid://bak7253fadkji" path="res://assets/sprites/food/Mosquito.png" id="1_vn7he"]
+
+[node name="Mosquito" type="Sprite2D"]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("1_vn7he")

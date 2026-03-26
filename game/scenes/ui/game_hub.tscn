@@ -1,0 +1,123 @@
+[gd_scene load_steps=3 format=3 uid="uid://csgame_hub"]
+
+[ext_resource type="Script" path="res://scripts/minigames/game_hub.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/backgrounds/elements/clouds_wide_1.png" id="4_clouds"]
+
+[node name="GameHub" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="SkyBackground" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.216, 0.714, 0.965, 1)
+
+[node name="CloudLayer" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 200.0
+grow_horizontal = 2
+modulate = Color(0.85, 0.92, 1.0, 0.25)
+texture = ExtResource("4_clouds")
+stretch_mode = 1
+
+[node name="ContentTint" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = 74.0
+offset_right = -8.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.99, 0.98, 0.97, 0.20)
+
+[node name="HeaderBar" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 8.0
+offset_right = -16.0
+offset_bottom = 72.0
+grow_horizontal = 2
+theme_override_constants/separation = 12
+
+[node name="BackButton" type="Button" parent="HeaderBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(80, 64)
+theme_type_variation = &"AccentButton"
+text = ""
+
+[node name="ArrowIcon" type="Control" parent="HeaderBar/BackButton"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TitleLabel" type="Label" parent="HeaderBar"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
+theme_override_font_sizes/font_size = 36
+text = "Games"
+
+[node name="Spacer" type="Control" parent="HeaderBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StarBar" type="HBoxContainer" parent="HeaderBar"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="StarIcon" type="Control" parent="HeaderBar/StarBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(28, 28)
+
+[node name="StarLabel" type="Label" parent="HeaderBar/StarBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "0"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 80.0
+offset_right = -16.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+scroll_deadzone = 12
+
+[node name="GridContainer" type="GridContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 14
+columns = 2
+
+[connection signal="pressed" from="HeaderBar/BackButton" to="." method="_on_back_pressed"]

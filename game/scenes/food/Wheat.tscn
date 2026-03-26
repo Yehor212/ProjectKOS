@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://bf8xke65i0teh"]
+
+[ext_resource type="Texture2D" uid="uid://b8pt17ae2u5o4" path="res://assets/sprites/food/Wheat.png" id="1_eay4q"]
+
+[node name="Wheat" type="Sprite2D"]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("1_eay4q")

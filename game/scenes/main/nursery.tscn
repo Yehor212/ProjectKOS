@@ -1,0 +1,27 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/nursery.gd" id="1_script"]
+
+[node name="Nursery" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Background" type="TextureRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+
+[node name="BackButton" type="Button" parent="."]
+offset_left = 32.0
+offset_top = 32.0
+offset_right = 212.0
+offset_bottom = 112.0
+custom_minimum_size = Vector2(0, 80)
+theme_type_variation = &"SecondaryButton"
+theme_override_font_sizes/font_size = 22
+text = "Main Menu"
+
+[connection signal="pressed" from="BackButton" to="." method="_on_back_pressed"]

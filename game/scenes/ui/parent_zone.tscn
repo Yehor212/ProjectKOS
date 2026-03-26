@@ -1,0 +1,263 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/parent_zone.gd" id="1_script"]
+[ext_resource type="Script" path="res://scripts/components/ui_popper.gd" id="3_popper"]
+
+[node name="ParentZone" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 6
+modulate = Color(0.75, 0.75, 0.85, 1)
+
+[node name="BackButton" type="Button" parent="."]
+layout_mode = 1
+offset_left = 32.0
+offset_top = 32.0
+offset_right = 96.0
+offset_bottom = 96.0
+custom_minimum_size = Vector2(64, 64)
+theme_type_variation = &"CircleButton"
+text = ""
+
+[node name="ContentTint" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.0, 0.0, 0.0, 0.35)
+
+[node name="ScrollContainer" type="ScrollContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 32.0
+offset_top = 128.0
+offset_right = -32.0
+offset_bottom = -32.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 20
+
+[node name="UIPopper" type="Node" parent="ScrollContainer/VBox"]
+script = ExtResource("3_popper")
+
+[node name="TitleLabel" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 32
+text = "Parent Zone"
+horizontal_alignment = 1
+
+[node name="StatsHeader" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
+theme_override_font_sizes/font_size = 22
+text = "Child's Progress"
+horizontal_alignment = 1
+
+[node name="GamesLabel" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.85)
+theme_override_font_sizes/font_size = 18
+text = "Games played: 0"
+horizontal_alignment = 1
+
+[node name="FedLabel" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.85)
+theme_override_font_sizes/font_size = 18
+text = "Animals fed: 0"
+horizontal_alignment = 1
+
+[node name="UnlockedLabel" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.85)
+theme_override_font_sizes/font_size = 18
+text = "Unlocked: 0 / 19"
+horizontal_alignment = 1
+
+[node name="BestTimeLabel" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.85)
+theme_override_font_sizes/font_size = 18
+text = "Best time: --:--"
+horizontal_alignment = 1
+
+[node name="StarsLabel" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
+theme_override_font_sizes/font_size = 22
+text = " 0"
+horizontal_alignment = 1
+
+[node name="Sep1" type="HSeparator" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="SettingsHeader" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.4, 1)
+theme_override_font_sizes/font_size = 22
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="VolumeLabel" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.85)
+theme_override_font_sizes/font_size = 18
+text = "Volume"
+horizontal_alignment = 1
+
+[node name="VolumeSlider" type="HSlider" parent="ScrollContainer/VBox"]
+layout_mode = 2
+min_value = 0.0
+max_value = 1.0
+step = 0.1
+value = 1.0
+
+[node name="BgmLabel" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.85)
+theme_override_font_sizes/font_size = 18
+text = "Music Volume"
+horizontal_alignment = 1
+
+[node name="BgmSlider" type="HSlider" parent="ScrollContainer/VBox"]
+layout_mode = 2
+min_value = 0.0
+max_value = 1.0
+step = 0.1
+value = 0.7
+
+[node name="LanguageOption" type="OptionButton" parent="ScrollContainer/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+theme_override_font_sizes/font_size = 20
+
+[node name="VibrationCheck" type="CheckButton" parent="ScrollContainer/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Vibration"
+button_pressed = true
+
+[node name="ReducedMotionCheck" type="CheckButton" parent="ScrollContainer/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Reduced Motion"
+
+[node name="ColorBlindCheck" type="CheckButton" parent="ScrollContainer/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "Color-Blind Mode"
+
+[node name="SessionLabel" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.85)
+theme_override_font_sizes/font_size = 18
+text = "Session Timer: 20 min"
+horizontal_alignment = 1
+
+[node name="SessionSlider" type="HSlider" parent="ScrollContainer/VBox"]
+layout_mode = 2
+min_value = 0.0
+max_value = 60.0
+step = 5.0
+value = 20.0
+
+[node name="AgeLabel" type="Label" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.85)
+theme_override_font_sizes/font_size = 18
+text = "Age group: --"
+horizontal_alignment = 1
+
+[node name="ChangeAgeButton" type="Button" parent="ScrollContainer/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+theme_type_variation = &"SecondaryButton"
+theme_override_font_sizes/font_size = 20
+text = "Change Age"
+
+[node name="Sep2" type="HSeparator" parent="ScrollContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ExportButton" type="Button" parent="ScrollContainer/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+theme_type_variation = &"SecondaryButton"
+theme_override_font_sizes/font_size = 20
+text = "Export Save"
+
+[node name="ImportButton" type="Button" parent="ScrollContainer/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+theme_type_variation = &"SecondaryButton"
+theme_override_font_sizes/font_size = 20
+text = "Import Save"
+
+[node name="RateAppButton" type="Button" parent="ScrollContainer/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+theme_type_variation = &"SecondaryButton"
+theme_override_font_sizes/font_size = 20
+text = "Rate App"
+
+[node name="PrivacyButton" type="Button" parent="ScrollContainer/VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 80)
+theme_type_variation = &"SecondaryButton"
+theme_override_font_sizes/font_size = 20
+text = "Privacy Policy"
+
+[node name="StatusLabel" type="Label" parent="ScrollContainer/VBox"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.02, 0.84, 0.63, 1)
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+
+[connection signal="pressed" from="BackButton" to="." method="_on_back_pressed"]
+[connection signal="value_changed" from="ScrollContainer/VBox/VolumeSlider" to="." method="_on_volume_slider_value_changed"]
+[connection signal="item_selected" from="ScrollContainer/VBox/LanguageOption" to="." method="_on_language_option_item_selected"]
+[connection signal="toggled" from="ScrollContainer/VBox/VibrationCheck" to="." method="_on_vibration_toggled"]
+[connection signal="toggled" from="ScrollContainer/VBox/ReducedMotionCheck" to="." method="_on_reduced_motion_toggled"]
+[connection signal="pressed" from="ScrollContainer/VBox/ExportButton" to="." method="_on_export_pressed"]
+[connection signal="pressed" from="ScrollContainer/VBox/ImportButton" to="." method="_on_import_pressed"]
+[connection signal="pressed" from="ScrollContainer/VBox/RateAppButton" to="." method="_on_rate_app_pressed"]
+[connection signal="pressed" from="ScrollContainer/VBox/ChangeAgeButton" to="." method="_on_change_age_pressed"]
+[connection signal="value_changed" from="ScrollContainer/VBox/BgmSlider" to="." method="_on_bgm_slider_value_changed"]
+[connection signal="toggled" from="ScrollContainer/VBox/ColorBlindCheck" to="." method="_on_color_blind_toggled"]
+[connection signal="value_changed" from="ScrollContainer/VBox/SessionSlider" to="." method="_on_session_slider_value_changed"]
+[connection signal="pressed" from="ScrollContainer/VBox/PrivacyButton" to="." method="_on_privacy_pressed"]

@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://yigni6k4mgq4"]
+
+[ext_resource type="Texture2D" uid="uid://b2cd8u2w3egk2" path="res://assets/sprites/animals/Horse.png" id="1_hr53a"]
+
+[node name="Horse" type="Sprite2D"]
+scale = Vector2(0.35, 0.35)
+texture = ExtResource("1_hr53a")

@@ -1,0 +1,57 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
+[application]
+
+config/name="Tofie Play & Learn Adventures"
+run/main_scene="res://scenes/ui/splash_screen.tscn"
+config/features=PackedStringArray("4.6")
+boot_splash/bg_color=Color(0.88, 0.95, 0.98, 1)
+boot_splash/image="res://assets/branding/tofie_logo.png"
+config/icon="res://assets/icons/icon_1024.png"
+
+[autoload]
+
+ThemeManager="*res://scripts/autoloads/theme_manager.gd"
+SceneManager="*res://scripts/autoloads/scene_manager.gd"
+ProgressManager="*res://scripts/autoloads/progress_manager.gd"
+RewardManager="*res://scripts/autoloads/reward_manager.gd"
+SettingsManager="*res://scripts/autoloads/settings_manager.gd"
+AnalyticsManager="*res://scripts/autoloads/analytics_manager.gd"
+AudioManager="*res://scripts/autoloads/audio_manager.gd"
+HapticsManager="*res://scripts/autoloads/haptics_manager.gd"
+VFXManager="*res://scenes/autoloads/vfx_manager.tscn"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/initial_position_type=0
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation="landscape"
+
+[gui]
+
+theme/default_font="res://assets/fonts/Nunito-ExtraBold.ttf"
+theme/default_font_size=24
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
