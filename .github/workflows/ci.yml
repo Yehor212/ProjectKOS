@@ -91,7 +91,7 @@ jobs:
           godot --headless --path game/ --export-release "Android" build/game.aab
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-aab-${{ github.ref_name }}
           path: build/game.aab
