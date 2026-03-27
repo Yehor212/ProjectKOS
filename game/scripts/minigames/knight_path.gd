@@ -1,7 +1,10 @@
 extends BaseMiniGame
 
-## PRE-30 Шлях коня — пересувай коня шаховою дошкою до зірки!
+## PRE-30 Квест рыцаря / Knight's Quest — пригодницька карта з лісом та замком!
 ## Preschool: 4 раунди, 5x5 сітка. Хід конем: Г-подібний (2+1).
+##   Зірки = скарби, дружні дракони на порожніх клітинках.
+##   Збір обладунків: щит → шолом → меч → плащ. Після 4-го — лицар дружить з драконом.
+##   L-move preview при наведенні на валідну клітинку.
 ## Toddler: "Пригоди коника" — 5 раундів, 3x3 сітка, збирай зірки.
 ## Показуємо можливі ходи підсвіченими клітинками.
 ## Лічильник ходів — зірки за ефективність (тільки Preschool).
@@ -10,19 +13,28 @@ const TOTAL_ROUNDS: int = 4
 const GRID_SIZE: int = 5
 const CELL_SIZE: float = 84.0
 const IDLE_HINT_DELAY: float = 6.0
-const CELL_COLOR_LIGHT: Color = Color(0.96, 0.92, 1.0, 0.98)
-const CELL_COLOR_DARK: Color = Color(0.52, 0.42, 0.78, 0.98)
-const HIGHLIGHT_COLOR: Color = Color("a78bfa", 0.92)
+const CELL_COLOR_LIGHT: Color = Color(0.78, 0.90, 0.72, 0.98)  ## Лісова полянка
+const CELL_COLOR_DARK: Color = Color(0.38, 0.56, 0.32, 0.98)   ## Густий ліс
+const HIGHLIGHT_COLOR: Color = Color("fbbf24", 0.92)            ## Золоте підсвічування (скарби)
 const KNIGHT_COLOR: Color = Color("4f46e5")
 const GOAL_COLOR: Color = Color("fbbf24")
 const SAFETY_TIMEOUT_SEC: float = 120.0
+## Палітра пригодницької карти
+const TRAIL_PREVIEW_COLOR: Color = Color("fbbf24", 0.6)  ## Пунктирний L-шлях (preview)
+const TRAIL_DONE_COLOR: Color = Color("22c55e", 0.7)     ## L-шлях після ходу
+const DRAGON_COLOR: Color = Color("f97316")               ## Дружній дракон (оранжевий)
+const TREE_COLOR: Color = Color("22c55e")                 ## Дерева на порожніх клітинках
+const ARMOR_NAMES: Array[String] = ["shield", "helmet", "sword", "cape"]
+const ARMOR_COLORS: Array[Color] = [
+	Color("6366f1"), Color("a78bfa"), Color("38bdf8"), Color("ef476f"),
+]
 
 ## Toddler-режим: "Пригоди коника" — збирай зірки на маленькій сітці
 const TODDLER_GRID_SIZE: int = 3
 const TODDLER_CELL_SIZE: float = 130.0
 const TODDLER_TOTAL_ROUNDS: int = 5
 const TODDLER_STAR_COLOR: Color = Color("fbbf24")
-const TODDLER_HIGHLIGHT_COLOR: Color = Color("4ade80", 0.92)
+const TODDLER_HIGHLIGHT_COLOR: Color = Color("fbbf24", 0.88)  ## Золоте підсвічування — скарб
 ## Кількість зірок на раунд: R1=1, R2=1, R3=2, R4=2, R5=3
 const TODDLER_STARS_PER_ROUND: Array[int] = [1, 1, 2, 2, 3]
 
@@ -65,6 +77,16 @@ var _toddler_stars_collected: int = 0
 var _toddler_star_nodes: Array[Node2D] = []
 var _toddler_grid_origin: Vector2 = Vector2.ZERO
 
+## Пригодницька карта: L-move preview, декоративні дракони, дерева
+var _preview_line: Line2D = null
+var _decor_nodes: Array[Node2D] = []  ## Дерева + дракони (чистяться в _clear_round)
+
+## Обладунки лицаря: збираються по 1 за раунд (Preschool)
+## 0=shield, 1=helmet, 2=sword, 3=cape
+var _armor_collected: int = 0
+var _armor_hud_icons: Array[Panel] = []
+var _armor_hud: HBoxContainer = null
+
 
 func _ready() -> void:
 	game_id = "knight_path"
@@ -74,6 +96,8 @@ func _ready() -> void:
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
 	_build_hud()
+	if not _is_toddler:
+		_build_armor_hud()
 	_start_round()
 	_start_safety_timeout(SAFETY_TIMEOUT_SEC)
 
@@ -81,7 +105,7 @@ func _ready() -> void:
 func get_tutorial_instruction() -> String:
 	if _is_toddler:
 		return tr("KNIGHT_TREASURE_HUNT")
-	return tr("KNIGHT_TUTORIAL")
+	return tr("KNIGHT_QUEST_TUTORIAL")
 
 
 func get_tutorial_demo() -> Dictionary:
@@ -120,7 +144,7 @@ func _start_round() -> void:
 	_update_moves_label()
 	_show_valid_moves()
 	var d: float = 0.15 if SettingsManager.reduced_motion else 0.3
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(d)
 	tw.tween_callback(func() -> void:
 		_input_locked = false
@@ -190,7 +214,7 @@ func _spawn_grid() -> void:
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var total: float = float(GRID_SIZE) * CELL_SIZE
 	_grid_origin = Vector2((vp.x - total) * 0.5, 100.0)
-	## Текстурна дошка під сіткою
+	## Текстурна дошка під сіткою — лісова текстура
 	var board_pad: float = 12.0
 	var board: TextureRect = TextureRect.new()
 	board.size = Vector2(total + board_pad * 2.0, total + board_pad * 2.0)
@@ -200,7 +224,7 @@ func _spawn_grid() -> void:
 	var board_tex_path: String = "res://assets/textures/backtiles/backtile_08.png"
 	if ResourceLoader.exists(board_tex_path):
 		board.texture = load(board_tex_path)
-	board.modulate = Color(1, 1, 1, 0.2)
+	board.modulate = Color(0.85, 0.95, 0.80, 0.25)  ## Зеленуватий відтінок — ліс
 	board.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(board)
 	_all_round_nodes.append(board)
@@ -216,9 +240,9 @@ func _spawn_grid() -> void:
 			var style: StyleBoxFlat = GameData.candy_cell(
 				CELL_COLOR_LIGHT if is_light else CELL_COLOR_DARK, 10)
 			cell.add_theme_stylebox_override("panel", style)
-			## Tile текстура на клітинках (LAW 28)
-			var tile_color: String = "blue" if is_light else "green"
-			var tile_path: String = "res://assets/textures/tiles/%s/tile_%02d.png" % [tile_color, (idx % 5) + 1]
+			## Tile текстура на клітинках — зелені/оранжеві для лісу (LAW 28)
+			var tile_color: String = "green" if is_light else "orange"
+			var tile_path: String = "res://assets/textures/tiles/%s/tile_%02d.png" % [tile_color, (idx % 10) + 1]
 			cell.material = GameData.create_premium_material(
 				0.03, 2.0, 0.03, 0.06, 0.04, 0.03, 0.05, tile_path, 0.2, 0.08, 0.20, 0.18)
 			cell.pivot_offset = cell.size / 2.0
@@ -228,6 +252,8 @@ func _spawn_grid() -> void:
 			grid_cells.append(cell)
 			idx += 1
 	_staggered_spawn(grid_cells, 0.04)
+	## Декорації лісової карти: дерева + дракони на порожніх клітинках
+	_spawn_map_decorations()
 
 
 func _cell_center(grid_pos: Vector2i) -> Vector2:
@@ -237,9 +263,10 @@ func _cell_center(grid_pos: Vector2i) -> Vector2:
 
 
 func _spawn_knight_and_goal() -> void:
-	## Ціль — зірка
+	## Ціль — скарб (зірка/діамант)
 	_goal_node = Node2D.new()
 	_goal_node.position = _cell_center(_goal_pos)
+	_goal_node.z_index = 2
 	add_child(_goal_node)
 	var goal_panel: Panel = Panel.new()
 	var gsz: float = CELL_SIZE * 0.7
@@ -250,7 +277,7 @@ func _spawn_knight_and_goal() -> void:
 	goal_panel.material = GameData.create_premium_material(
 		0.05, 2.0, 0.04, 0.08, 0.04, 0.03, 0.05, "", 0.0, 0.12, 0.30, 0.25) ## Premium overlay (LAW 28)
 	_goal_node.add_child(goal_panel)
-	## HQ текстура зірки замість code-drawn
+	## HQ текстура зірки (скарб) замість code-drawn
 	var star_tex_path: String = "res://assets/textures/game_icons/icon_star.png"
 	if ResourceLoader.exists(star_tex_path):
 		var star_tex: Texture2D = load(star_tex_path)
@@ -264,7 +291,7 @@ func _spawn_knight_and_goal() -> void:
 		)
 		_goal_node.add_child(star_ctrl)
 	else:
-		var goal_icon: Control = IconDraw.star_5pt(gsz * 0.7, GOAL_COLOR)
+		var goal_icon: Control = IconDraw.diamond(gsz * 0.7, GOAL_COLOR)
 		goal_icon.position = Vector2(-gsz * 0.5, -gsz * 0.5)
 		goal_icon.size = Vector2(gsz, gsz)
 		_goal_node.add_child(goal_icon)
@@ -309,7 +336,7 @@ func _pulse_goal() -> void:
 		return
 	if SettingsManager.reduced_motion:
 		return
-	var tw: Tween = create_tween().set_loops()
+	var tw: Tween = _create_game_tween().set_loops()
 	tw.tween_property(_goal_node, "scale", Vector2(1.08, 1.08), 1.0)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_property(_goal_node, "scale", Vector2.ONE, 1.0)\
@@ -324,6 +351,7 @@ func _update_moves_label() -> void:
 
 func _show_valid_moves() -> void:
 	_clear_highlights()
+	_clear_preview_line()
 	for offset: Vector2i in KNIGHT_OFFSETS:
 		var target: Vector2i = _knight_pos + offset
 		if target.x < 0 or target.x >= GRID_SIZE or \
@@ -336,21 +364,25 @@ func _show_valid_moves() -> void:
 			float(target.x) * CELL_SIZE + 3.0,
 			float(target.y) * CELL_SIZE + 3.0)
 		var style: StyleBoxFlat = GameData.candy_cell(HIGHLIGHT_COLOR, 10, true)
-		style.border_color = Color("a78bfa", 0.9)
+		style.border_color = Color("fbbf24", 0.9)
 		style.set_border_width_all(2)
-		style.shadow_color = Color("a78bfa", 0.3)
+		style.shadow_color = Color("fbbf24", 0.3)
 		style.shadow_size = 8
 		cell.add_theme_stylebox_override("panel", style)
 		cell.material = GameData.create_premium_material(
 			0.03, 2.0, 0.03, 0.06, 0.04, 0.03, 0.05, "", 0.0, 0.08, 0.20, 0.18) ## Premium overlay (LAW 28)
 		cell.mouse_filter = Control.MOUSE_FILTER_STOP
 		cell.gui_input.connect(_on_highlight_input.bind(target))
+		## L-шлях preview при наведенні (Preschool)
+		cell.mouse_entered.connect(_show_l_preview.bind(target))
+		cell.mouse_exited.connect(_clear_preview_line)
 		add_child(cell)
 		_highlight_cells.append(cell)
 		_all_round_nodes.append(cell)
 
 
 func _clear_highlights() -> void:
+	_clear_preview_line()
 	for cell: Panel in _highlight_cells:
 		if is_instance_valid(cell):
 			cell.queue_free()
@@ -376,6 +408,7 @@ func _move_knight_to(target_pos: Vector2i) -> void:
 	_knight_pos = target_pos
 	_moves += 1
 	_update_moves_label()
+	AudioManager.play_sfx("whoosh")  ## Свист при кожному ході лицаря
 	var new_dist: int = _bfs_distance(_knight_pos, _goal_pos)
 	## Субоптимальний хід: не наблизився до цілі → A7 + A11 scaffolding
 	if new_dist > 0 and new_dist >= old_dist:
@@ -400,7 +433,7 @@ func _move_knight_to(target_pos: Vector2i) -> void:
 			_input_locked = false
 			_reset_idle_timer()
 		return
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	## Стиснення перед стрибком
 	tw.tween_property(_knight_node, "scale", Vector2(1.2, 0.8), 0.08)
 	## Стрибок з розтягуванням
@@ -424,6 +457,7 @@ func _on_puzzle_solved() -> void:
 	_register_correct(_knight_node)
 	_total_moves += _moves
 	_total_min_moves += _min_moves
+	AudioManager.play_sfx("coin")  ## Скарб знайдено!
 	## VFX: використовуємо позицію коня як fallback (toddler не має _goal_node)
 	var vfx_pos: Vector2
 	if is_instance_valid(_goal_node):
@@ -436,9 +470,12 @@ func _on_puzzle_solved() -> void:
 	VFXManager.spawn_premium_celebration(vfx_pos)
 	## Переможний танець коня: bounce + rotate
 	_animate_knight_victory_dance()
+	## Обладунок за раунд (Preschool): щит → шолом → меч → плащ
+	if not _is_toddler and _armor_collected < ARMOR_NAMES.size():
+		_award_armor_piece()
 	var total: int = TODDLER_TOTAL_ROUNDS if _is_toddler else TOTAL_ROUNDS
 	var d2: float = 0.15 if SettingsManager.reduced_motion else 0.8
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(d2)
 	tw.tween_callback(func() -> void:
 		_clear_round()
@@ -453,10 +490,16 @@ func _on_puzzle_solved() -> void:
 
 func _clear_round() -> void:
 	_clear_highlights()
+	_clear_preview_line()
 	## Очистити trail, якщо є
 	if is_instance_valid(_trail_line):
 		_trail_line.queue_free()
 	_trail_line = null
+	## Очистити декоративні елементи (дерева, дракони)
+	for decor: Node2D in _decor_nodes:
+		if is_instance_valid(decor):
+			decor.queue_free()
+	_decor_nodes.clear()
 	for node: Node in _all_round_nodes:
 		if is_instance_valid(node):
 			node.queue_free()
@@ -472,12 +515,16 @@ func _clear_round() -> void:
 func _finish() -> void:
 	_game_over = true
 	_input_locked = true
+	## Preschool: фінальна сцена — лицар у повному обладунку дружить з драконом
+	if not _is_toddler and _armor_collected >= ARMOR_NAMES.size():
+		_animate_dragon_friend_finale()
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
 	var total: int = TODDLER_TOTAL_ROUNDS if _is_toddler else TOTAL_ROUNDS
 	## Toddler завжди отримує 5 зірок (A6 — помилки не рахуються)
 	var earned: int = 5 if _is_toddler else _calculate_stars(_total_moves - _total_min_moves)
 	finish_game(earned, {"time_sec": elapsed, "errors": _errors,
-		"rounds_played": total, "earned_stars": earned})
+		"rounds_played": total, "earned_stars": earned,
+		"armor_collected": _armor_collected})
 
 
 ## ---- Toddler mode: "Пригоди коника" ----
@@ -498,7 +545,7 @@ func _start_round_toddler() -> void:
 	_spawn_toddler_stars()
 	_show_toddler_valid_moves()
 	var d: float = 0.15 if SettingsManager.reduced_motion else 0.3
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(d)
 	tw.tween_callback(func() -> void:
 		_input_locked = false
@@ -559,7 +606,7 @@ func _spawn_toddler_grid() -> void:
 	var board_tex_path: String = "res://assets/textures/backtiles/backtile_08.png"
 	if ResourceLoader.exists(board_tex_path):
 		board.texture = load(board_tex_path)
-	board.modulate = Color(1, 1, 1, 0.25)
+	board.modulate = Color(0.85, 0.95, 0.80, 0.3)  ## Зеленуватий відтінок — ліс
 	board.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(board)
 	_all_round_nodes.append(board)
@@ -575,9 +622,9 @@ func _spawn_toddler_grid() -> void:
 			var style: StyleBoxFlat = GameData.candy_cell(
 				CELL_COLOR_LIGHT if is_light else CELL_COLOR_DARK, 14)
 			cell.add_theme_stylebox_override("panel", style)
-			## Tile текстура на клітинках (LAW 28)
-			var tile_color: String = "blue" if is_light else "green"
-			var tile_path: String = "res://assets/textures/tiles/%s/tile_%02d.png" % [tile_color, (idx % 5) + 1]
+			## Tile текстура на клітинках — зелені/оранжеві для лісу (LAW 28)
+			var tile_color: String = "green" if is_light else "orange"
+			var tile_path: String = "res://assets/textures/tiles/%s/tile_%02d.png" % [tile_color, (idx % 10) + 1]
 			cell.material = GameData.create_premium_material(
 				0.03, 2.0, 0.03, 0.06, 0.04, 0.03, 0.05, tile_path, 0.2, 0.08, 0.20, 0.18)
 			cell.pivot_offset = cell.size / 2.0
@@ -674,7 +721,7 @@ func _pulse_toddler_star(star_node: Node2D) -> void:
 		return
 	if SettingsManager.reduced_motion:
 		return
-	var tw: Tween = create_tween().set_loops()
+	var tw: Tween = _create_game_tween().set_loops()
 	tw.tween_property(star_node, "scale", Vector2(1.1, 1.1), 0.8)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_property(star_node, "scale", Vector2.ONE, 0.8)\
@@ -694,11 +741,11 @@ func _show_toddler_valid_moves() -> void:
 		cell.position = _toddler_grid_origin + Vector2(
 			float(target.x) * TODDLER_CELL_SIZE + 3.0,
 			float(target.y) * TODDLER_CELL_SIZE + 3.0)
-		## Яскраво-зелена підсвітка для Toddler — зрозуміліша
+		## Золота підсвітка для Toddler — скарб (LAW 25: + контрастна обводка)
 		var style: StyleBoxFlat = GameData.candy_cell(TODDLER_HIGHLIGHT_COLOR, 14, true)
-		style.border_color = Color("4ade80", 0.9)
+		style.border_color = Color("f59e0b", 0.9)
 		style.set_border_width_all(3)
-		style.shadow_color = Color("4ade80", 0.35)
+		style.shadow_color = Color("f59e0b", 0.35)
 		style.shadow_size = 10
 		cell.add_theme_stylebox_override("panel", style)
 		cell.material = GameData.create_premium_material(
@@ -724,16 +771,18 @@ func _move_toddler_knight(target_pos: Vector2i) -> void:
 	_input_locked = true
 	_knight_pos = target_pos
 	_moves += 1
+	AudioManager.play_sfx("whoosh")  ## Свист при кожному ході
 	## Toddler: будь-який валідний хід = "правильний" (A6)
 	_register_correct(_knight_node)
 	VFXManager.spawn_correct_sparkle(_toddler_cell_center(target_pos))
 	_clear_highlights()
-	## Перевірка: чи є зірка на цій клітинці
+	## Перевірка: чи є скарб на цій клітинці
 	var collected_star: bool = false
 	for i: int in _toddler_stars.size():
 		if _toddler_stars[i] == target_pos:
 			collected_star = true
 			_toddler_stars_collected += 1
+			AudioManager.play_sfx("coin")  ## Скарб зібрано!
 			## Анімація "скриня відкривається" (scale pop) + видалити зірку
 			if i < _toddler_star_nodes.size() and is_instance_valid(_toddler_star_nodes[i]):
 				VFXManager.spawn_correct_sparkle(_toddler_cell_center(target_pos))
@@ -749,7 +798,7 @@ func _move_toddler_knight(target_pos: Vector2i) -> void:
 		_knight_node.scale = Vector2.ONE
 		_after_toddler_move(collected_star)
 		return
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	## Стиснення перед стрибком
 	tw.tween_property(_knight_node, "scale", Vector2(1.0, 0.8), 0.08)
 	## Стрибок із EASE_OUT_BACK для juice
@@ -787,7 +836,7 @@ func _animate_treasure_collect(star_node: Node2D) -> void:
 	if SettingsManager.reduced_motion:
 		star_node.queue_free()
 		return
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_property(star_node, "scale", Vector2(1.5, 1.5), 0.15)\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(star_node, "modulate:a", 0.0, 0.2)
@@ -805,7 +854,7 @@ func _animate_knight_trophy() -> void:
 		return
 	if SettingsManager.reduced_motion:
 		return
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	## Rotation wobble
 	tw.tween_property(_knight_node, "rotation_degrees", 12.0, 0.1)
 	tw.tween_property(_knight_node, "rotation_degrees", -12.0, 0.15)
@@ -831,7 +880,7 @@ func _spawn_l_move_trail(from_pos: Vector2i, to_pos: Vector2i) -> void:
 		_trail_line = null
 	_trail_line = Line2D.new()
 	_trail_line.width = 4.0
-	_trail_line.default_color = Color("a78bfa", 0.8)
+	_trail_line.default_color = TRAIL_DONE_COLOR
 	_trail_line.add_point(p0)
 	_trail_line.add_point(p1)
 	_trail_line.add_point(p2)
@@ -839,7 +888,7 @@ func _spawn_l_move_trail(from_pos: Vector2i, to_pos: Vector2i) -> void:
 	add_child(_trail_line)
 	_all_round_nodes.append(_trail_line)
 	## Згасання trail через 0.5с
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(0.15)
 	tw.tween_property(_trail_line, "modulate:a", 0.0, 0.5)
 	tw.tween_callback(func() -> void:
@@ -857,7 +906,7 @@ func _animate_knight_victory_dance() -> void:
 		return
 	if SettingsManager.reduced_motion:
 		return
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	## Bounce вгору
 	var base_y: float = _knight_node.position.y
 	tw.tween_property(_knight_node, "position:y", base_y - 20.0, 0.15)\
@@ -895,7 +944,260 @@ func _show_idle_hint() -> void:
 	if not SettingsManager.reduced_motion:
 		for cell: Panel in _highlight_cells:
 			if is_instance_valid(cell):
-				var tw: Tween = create_tween()
+				var tw: Tween = _create_game_tween()
 				tw.tween_property(cell, "modulate", Color(1.4, 1.4, 1.4, 1.0), 0.2)
 				tw.tween_property(cell, "modulate", Color.WHITE, 0.2)
 	_reset_idle_timer()
+
+
+## ---- L-move preview при наведенні (Preschool) ----
+
+func _show_l_preview(target_pos: Vector2i) -> void:
+	## Пунктирний L-шлях від коня до цільової клітинки при hover
+	_clear_preview_line()
+	if _input_locked or _game_over:
+		return
+	## Обчислити проміжну точку L-ходу (горизонтально → вертикально)
+	var intermediate: Vector2i = Vector2i(target_pos.x, _knight_pos.y)
+	var p0: Vector2 = _cell_center(_knight_pos)
+	var p1: Vector2 = _cell_center(intermediate)
+	var p2: Vector2 = _cell_center(target_pos)
+	_preview_line = Line2D.new()
+	_preview_line.width = 3.0
+	_preview_line.default_color = TRAIL_PREVIEW_COLOR
+	_preview_line.add_point(p0)
+	_preview_line.add_point(p1)
+	_preview_line.add_point(p2)
+	_preview_line.z_index = 3
+	## Пунктирна текстура — чергуємо opacity вздовж лінії
+	var faded: Color = Color(TRAIL_PREVIEW_COLOR.r, TRAIL_PREVIEW_COLOR.g,
+		TRAIL_PREVIEW_COLOR.b, 0.1)
+	var dash_gradient: Gradient = Gradient.new()
+	dash_gradient.set_color(0, TRAIL_PREVIEW_COLOR)
+	dash_gradient.add_point(0.45, TRAIL_PREVIEW_COLOR)
+	dash_gradient.add_point(0.55, faded)
+	dash_gradient.set_color(1, faded)
+	_preview_line.gradient = dash_gradient
+	add_child(_preview_line)
+
+
+func _clear_preview_line() -> void:
+	if is_instance_valid(_preview_line):
+		_preview_line.queue_free()
+	_preview_line = null
+
+
+## ---- Декорації лісової карти (дерева + дракони) ----
+
+func _spawn_map_decorations() -> void:
+	## Розмістити дерева та дракона на вільних клітинках (не knight, не goal, не valid moves)
+	var occupied: Dictionary = {}
+	occupied[_knight_pos] = true
+	occupied[_goal_pos] = true
+	## Знайти валідні ходи — теж не декоруємо
+	for offset: Vector2i in KNIGHT_OFFSETS:
+		var mv: Vector2i = _knight_pos + offset
+		if mv.x >= 0 and mv.x < GRID_SIZE and mv.y >= 0 and mv.y < GRID_SIZE:
+			occupied[mv] = true
+	var free_cells: Array[Vector2i] = []
+	for row: int in GRID_SIZE:
+		for col: int in GRID_SIZE:
+			var pos: Vector2i = Vector2i(col, row)
+			if not occupied.has(pos):
+				free_cells.append(pos)
+	free_cells.shuffle()
+	## Дерева: 2-4 на вільних клітинках
+	var tree_count: int = mini(free_cells.size(), _scale_by_round_i(2, 4, _round, TOTAL_ROUNDS))
+	for i: int in tree_count:
+		if i >= free_cells.size():
+			break
+		_spawn_tree_decor(free_cells[i])
+	## Дракон (Preschool): 1 дружній дракон на вільній клітинці, починаючи з раунду 1
+	if not _is_toddler and _round >= 1:
+		var dragon_idx: int = tree_count
+		if dragon_idx < free_cells.size():
+			_spawn_dragon_decor(free_cells[dragon_idx])
+
+
+func _spawn_tree_decor(grid_pos: Vector2i) -> void:
+	## Декоративне дерево на клітинці — code-drawn (IconDraw.pine_tree)
+	var tree_node: Node2D = Node2D.new()
+	var center: Vector2 = _cell_center(grid_pos)
+	tree_node.position = center
+	tree_node.z_index = 1
+	add_child(tree_node)
+	var tsz: float = CELL_SIZE * 0.5
+	var tree_icon: Control = IconDraw.pine_tree(tsz, TREE_COLOR)
+	tree_icon.position = Vector2(-tsz * 0.5, -tsz * 0.5)
+	tree_icon.size = Vector2(tsz, tsz)
+	tree_icon.modulate = Color(1.0, 1.0, 1.0, 0.6)  ## Напівпрозорий — не відволікає
+	tree_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tree_node.add_child(tree_icon)
+	_decor_nodes.append(tree_node)
+	_all_round_nodes.append(tree_node)
+
+
+func _spawn_dragon_decor(grid_pos: Vector2i) -> void:
+	## Дружній дракон — декоративний елемент (оранжевий, не блокує рух)
+	var dragon_node: Node2D = Node2D.new()
+	var center: Vector2 = _cell_center(grid_pos)
+	dragon_node.position = center
+	dragon_node.z_index = 1
+	add_child(dragon_node)
+	var dsz: float = CELL_SIZE * 0.55
+	## Використовуємо circle bg + ghost як "дракон" + тематичний колір
+	var dragon_panel: Panel = Panel.new()
+	dragon_panel.size = Vector2(dsz, dsz)
+	dragon_panel.position = Vector2(-dsz * 0.5, -dsz * 0.5)
+	var ds: StyleBoxFlat = GameData.candy_circle(DRAGON_COLOR, dsz * 0.5, true)
+	dragon_panel.add_theme_stylebox_override("panel", ds)
+	dragon_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dragon_node.add_child(dragon_panel)
+	## Іконка "дракон" — ghost як стилізований дракон (дружній)
+	var dragon_icon: Control = IconDraw.ghost(dsz * 0.7, DRAGON_COLOR)
+	dragon_icon.position = Vector2(-dsz * 0.5, -dsz * 0.5)
+	dragon_icon.size = Vector2(dsz, dsz)
+	dragon_icon.modulate = Color(1.0, 1.0, 1.0, 0.85)
+	dragon_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dragon_node.add_child(dragon_icon)
+	_decor_nodes.append(dragon_node)
+	_all_round_nodes.append(dragon_node)
+	## Легка пульсація дракона — "дихає"
+	if not SettingsManager.reduced_motion:
+		var tw: Tween = _create_game_tween().set_loops()
+		tw.tween_property(dragon_node, "scale", Vector2(1.06, 1.06), 1.2)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_property(dragon_node, "scale", Vector2.ONE, 1.2)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+## ---- Armor HUD (Preschool) ----
+
+func _build_armor_hud() -> void:
+	## Панель обладунків під instruction pill — 4 слоти: shield, helmet, sword, cape
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	_armor_hud = HBoxContainer.new()
+	_armor_hud.set("theme_override_constants/separation", 8)
+	_armor_hud.alignment = BoxContainer.ALIGNMENT_CENTER
+	_armor_hud.position = Vector2(vp.x * 0.5 - 100.0, _sa_top + 56)
+	_armor_hud.size = Vector2(200.0, 36.0)
+	add_child(_armor_hud)
+	_armor_hud_icons.clear()
+	for i: int in ARMOR_NAMES.size():
+		var slot: Panel = Panel.new()
+		slot.custom_minimum_size = Vector2(32, 32)
+		var slot_style: StyleBoxFlat = GameData.candy_circle(
+			Color(0.3, 0.3, 0.3, 0.3), 16.0, false)
+		slot.add_theme_stylebox_override("panel", slot_style)
+		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_armor_hud.add_child(slot)
+		## Іконка обладунку (ще не зібраний — сірий)
+		var icon: Control = _create_armor_icon(i, 22.0, Color(0.5, 0.5, 0.5, 0.4))
+		icon.position = Vector2(5, 5)
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		slot.add_child(icon)
+		_armor_hud_icons.append(slot)
+
+
+func _create_armor_icon(index: int, sz: float, color: Color) -> Control:
+	## Іконки обладунків: shield=diamond, helmet=star, sword=arrow, cape=flag
+	match index:
+		0:  ## Shield — діамант
+			return IconDraw.diamond(sz, color)
+		1:  ## Helmet — зірка
+			return IconDraw.star_5pt(sz, color)
+		2:  ## Sword — стрілка вгору
+			return IconDraw.arrow_up(sz, color)
+		3:  ## Cape — прапор
+			return IconDraw.flag(sz, color)
+		_:
+			push_warning("knight_path: unknown armor index %d" % index)
+			return IconDraw.star_5pt(sz, color)
+
+
+func _award_armor_piece() -> void:
+	## Нагородити лицаря обладунком за поточний раунд
+	if _armor_collected >= ARMOR_NAMES.size():
+		push_warning("knight_path: all armor already collected")
+		return
+	var piece_idx: int = _armor_collected
+	_armor_collected += 1
+	AudioManager.play_sfx("reward")  ## Звук нагороди за обладунок
+	## Оновити HUD: зробити іконку яскравою
+	if piece_idx < _armor_hud_icons.size():
+		var slot: Panel = _armor_hud_icons[piece_idx]
+		if is_instance_valid(slot):
+			## Видалити стару сіру іконку, додати яскраву
+			for child: Node in slot.get_children():
+				child.queue_free()
+			var bright_style: StyleBoxFlat = GameData.candy_circle(
+				ARMOR_COLORS[piece_idx], 16.0, true)
+			slot.add_theme_stylebox_override("panel", bright_style)
+			var icon: Control = _create_armor_icon(
+				piece_idx, 22.0, ARMOR_COLORS[piece_idx])
+			icon.position = Vector2(5, 5)
+			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			slot.add_child(icon)
+			## Анімація: scale pop при отриманні
+			if not SettingsManager.reduced_motion:
+				slot.pivot_offset = slot.size / 2.0
+				var tw: Tween = _create_game_tween()
+				tw.tween_property(slot, "scale", Vector2(1.5, 1.5), 0.12)\
+					.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+				tw.tween_property(slot, "scale", Vector2.ONE, 0.2)\
+					.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+				## VFX sparkle на слоті
+				VFXManager.spawn_correct_sparkle(
+					slot.global_position + slot.size * 0.5)
+
+
+## ---- Dragon-friend фінальна сцена (Preschool, усі 4 обладунки зібрано) ----
+
+func _animate_dragon_friend_finale() -> void:
+	## Лицар у повних обладунках "перемагає" дракона → дракон стає другом
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var center: Vector2 = vp * 0.5
+	## Дракон з'являється з правого боку
+	var dragon_finale: Node2D = Node2D.new()
+	dragon_finale.position = Vector2(center.x + 80.0, center.y)
+	dragon_finale.z_index = 10
+	dragon_finale.modulate = Color(1.0, 1.0, 1.0, 0.0)  ## Починає невидимим
+	add_child(dragon_finale)
+	var dsz: float = 64.0
+	var dragon_bg: Panel = Panel.new()
+	dragon_bg.size = Vector2(dsz, dsz)
+	dragon_bg.position = Vector2(-dsz * 0.5, -dsz * 0.5)
+	var ds: StyleBoxFlat = GameData.candy_circle(DRAGON_COLOR, dsz * 0.5, true)
+	dragon_bg.add_theme_stylebox_override("panel", ds)
+	dragon_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dragon_finale.add_child(dragon_bg)
+	var dragon_icon: Control = IconDraw.ghost(dsz * 0.7, DRAGON_COLOR)
+	dragon_icon.position = Vector2(-dsz * 0.5, -dsz * 0.5)
+	dragon_icon.size = Vector2(dsz, dsz)
+	dragon_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dragon_finale.add_child(dragon_icon)
+	if not SettingsManager.reduced_motion:
+		var tw: Tween = _create_game_tween()
+		## Дракон з'являється
+		tw.tween_property(dragon_finale, "modulate:a", 1.0, 0.3)
+		## Дракон підстрибує від радості (став другом!)
+		var base_y: float = dragon_finale.position.y
+		tw.tween_property(dragon_finale, "position:y", base_y - 15.0, 0.15)\
+			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(dragon_finale, "position:y", base_y, 0.2)\
+			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		## Святкування — конфеті
+		tw.tween_callback(func() -> void:
+			VFXManager.spawn_premium_celebration(center))
+		## Згасання
+		tw.tween_interval(1.0)
+		tw.tween_property(dragon_finale, "modulate:a", 0.0, 0.4)
+		tw.tween_callback(func() -> void:
+			if is_instance_valid(dragon_finale):
+				dragon_finale.queue_free())
+	else:
+		dragon_finale.modulate = Color(1.0, 1.0, 1.0, 1.0)
+		VFXManager.spawn_premium_celebration(center)
+		get_tree().create_timer(1.5).timeout.connect(func() -> void:
+			if is_instance_valid(dragon_finale):
+				dragon_finale.queue_free())

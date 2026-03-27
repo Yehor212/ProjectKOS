@@ -31,6 +31,37 @@ const PREVIEW_LINE_COLOR: Color = Color("ffd166", 0.4)
 const PREVIEW_LINE_WIDTH: float = 3.0
 const DEMO_MOVE_DURATION: float = 0.55  ## Повільніший рух під час демо
 
+## ── Robot personality constants ──
+const EYE_RADIUS: float = 5.0
+const PUPIL_RADIUS: float = 2.5
+const EYE_OFFSET: Vector2 = Vector2(8.0, -6.0)  ## Від центру робота
+const EYE_TRACK_RANGE: float = 3.0  ## Макс зміщення зіниці за курсором
+const MOUTH_WIDTH: float = 12.0
+const MOUTH_Y_OFFSET: float = 6.0  ## Нижче центру робота
+
+## Robot emotion enum (mouth shape)
+enum RobotMood { NEUTRAL, HAPPY, CONFUSED, BONK }
+
+## ── Grid theme constants (DECORATIVE — не змінюють pathfinding!) ──
+const THEME_NONE: int = 0
+const THEME_LAVA: int = 1
+const THEME_WATER: int = 2
+const LAVA_TINT: Color = Color("ef476f", 0.25)  ## Червоний декоративний оверлей
+const WATER_TINT: Color = Color("06d6a0", 0.2)  ## Блакитно-зелений оверлей
+const LAVA_ICON_COLOR: Color = Color("ef476f")
+const WATER_ICON_COLOR: Color = Color("118ab2")
+## Кількість тематичних клітинок за раундом (прогресивно)
+const THEMED_CELLS_MIN: int = 1
+const THEMED_CELLS_MAX: int = 3
+
+## ── Personality animation constants ──
+const WOBBLE_ANGLE: float = 0.15  ## Радіани повороту при зміні напрямку
+const STRETCH_SCALE: Vector2 = Vector2(0.85, 1.15)  ## Витягування при русі вперед
+const BONK_OFFSET: float = 8.0  ## Пікселі відскоку при ударі в стіну
+const BACKFLIP_DURATION: float = 0.6
+const SLIDE_PITCH_BASE: float = 0.9  ## Базовий pitch для slide SFX (зростає за кроком)
+const SLIDE_PITCH_STEP: float = 0.05  ## Приріст pitch за кожен крок
+
 const DIRECTIONS: Dictionary = {
 	"up": Vector2i(0, -1), "down": Vector2i(0, 1),
 	"left": Vector2i(-1, 0), "right": Vector2i(1, 0),
@@ -73,6 +104,25 @@ var _demo_path: Array[String] = []  ## Очікувана послідовніс
 var _toddler_replay_idx: int = 0  ## Поточний крок replay у toddler
 var _demo_trail: Line2D = null  ## Trail що показується під час демо
 
+## ── Robot face nodes ──
+var _left_eye: Control = null
+var _right_eye: Control = null
+var _left_pupil: Control = null
+var _right_pupil: Control = null
+var _mouth_ctrl: Control = null
+var _robot_mood: int = RobotMood.NEUTRAL
+var _cursor_pos: Vector2 = Vector2.ZERO  ## Кешована позиція курсора для очей
+
+## ── Grid theme state ──
+var _current_theme: int = THEME_NONE
+var _themed_cells: Dictionary = {}  ## Vector2i -> theme_id (декоративні оверлеї)
+var _theme_overlays: Array[Node] = []  ## Ноди оверлеїв тем для cleanup
+
+## ── Personality state ──
+var _last_move_dir: String = ""  ## Попередній напрямок для wobble detection
+var _execution_step: int = 0  ## Поточний крок виконання (для pitch escalation)
+var _optimal_length: int = 0  ## BFS optimal path length для bonus detection
+
 
 func _ready() -> void:
 	game_id = "algo_robot"
@@ -86,6 +136,30 @@ func _ready() -> void:
 	_build_hud()
 	_start_round()
 	_start_safety_timeout(SAFETY_TIMEOUT_SEC)
+
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		_cursor_pos = (event as InputEventMouseMotion).position
+	elif event is InputEventScreenTouch:
+		_cursor_pos = (event as InputEventScreenTouch).position
+
+
+func _process(_delta: float) -> void:
+	_update_eye_tracking()
+
+
+## ── Оновлення зіниць — слідкують за курсором/пальцем ──
+func _update_eye_tracking() -> void:
+	if not is_instance_valid(_robot_node):
+		return
+	if not is_instance_valid(_left_pupil) or not is_instance_valid(_right_pupil):
+		return
+	var robot_global: Vector2 = _robot_node.global_position
+	var dir_to_cursor: Vector2 = (_cursor_pos - robot_global).normalized()
+	var offset: Vector2 = dir_to_cursor * EYE_TRACK_RANGE
+	_left_pupil.position = Vector2(-PUPIL_RADIUS, -PUPIL_RADIUS) + offset
+	_right_pupil.position = Vector2(-PUPIL_RADIUS, -PUPIL_RADIUS) + offset
 
 
 func get_tutorial_instruction() -> String:
@@ -132,16 +206,21 @@ func _start_round() -> void:
 	_toddler_replay_idx = 0
 	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
+	_select_grid_theme()
 	_generate_puzzle()
+	## Обчислити optimal path для bonus detection
+	_optimal_length = _compute_solution_path(_robot_pos, _goal_pos).size()
 	_spawn_grid()
+	_spawn_themed_overlays()
 	_spawn_robot_and_goal()
+	_spawn_robot_face()
 	_spawn_command_buttons()
 	_spawn_action_buttons()
 	## Preschool: створити preview line (порожню)
 	if not _is_toddler:
 		_spawn_preview_line()
 	var d: float = 0.15 if SettingsManager.reduced_motion else 0.3
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(d)
 	tw.tween_callback(func() -> void:
 		if _is_toddler:
@@ -175,6 +254,88 @@ func _generate_puzzle() -> void:
 	## Toddler: обчислити демо-шлях (BFS найкоротший)
 	if _is_toddler:
 		_demo_path = _compute_solution_path(_robot_pos, _goal_pos)
+
+
+## ── Вибір декоративної теми сітки (прогресивно за раундами, LAW 6) ──
+func _select_grid_theme() -> void:
+	_themed_cells.clear()
+	## Toddler: без тем (чиста сітка). Preschool раунд 0: теж чиста.
+	if _is_toddler or _round == 0:
+		_current_theme = THEME_NONE
+		return
+	## Прогресивно: раунд 1 = lava, раунд 2+ = water або змішано
+	if _round == 1:
+		_current_theme = THEME_LAVA
+	else:
+		_current_theme = [THEME_LAVA, THEME_WATER][randi() % 2]
+	## Кількість декоративних клітинок зростає з раундом
+	var count: int = _scale_by_round_i(THEMED_CELLS_MIN, THEMED_CELLS_MAX, _round, _total_rounds)
+	var candidates: Array[Vector2i] = []
+	for row: int in _grid_size:
+		for col: int in _grid_size:
+			var pos: Vector2i = Vector2i(col, row)
+			## Не ставимо тему на старт і ціль
+			if pos != Vector2i.ZERO and pos != _goal_pos:
+				candidates.append(pos)
+	candidates.shuffle()
+	var placed: int = 0
+	for pos: Vector2i in candidates:
+		if placed >= count:
+			break
+		_themed_cells[pos] = _current_theme
+		placed += 1
+
+
+## ── Спавн декоративних оверлеїв на тематичні клітинки ──
+## DECORATIVE ONLY — не змінюють pathfinding (LAW 25: іконка + колір)
+func _spawn_themed_overlays() -> void:
+	for cell_pos: Vector2i in _themed_cells:
+		var theme_id: int = _themed_cells.get(cell_pos, THEME_NONE)
+		if theme_id == THEME_NONE:
+			continue
+		var center: Vector2 = _cell_center(cell_pos)
+		## Кольоровий оверлей
+		var overlay: Panel = Panel.new()
+		var sz: float = CELL_SIZE - 6.0
+		overlay.size = Vector2(sz, sz)
+		overlay.position = Vector2(center.x - sz * 0.5, center.y - sz * 0.5)
+		var tint: Color = LAVA_TINT if theme_id == THEME_LAVA else WATER_TINT
+		var style: StyleBoxFlat = StyleBoxFlat.new()
+		style.bg_color = tint
+		style.corner_radius_top_left = 8
+		style.corner_radius_top_right = 8
+		style.corner_radius_bottom_left = 8
+		style.corner_radius_bottom_right = 8
+		overlay.add_theme_stylebox_override("panel", style)
+		overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(overlay)
+		_all_round_nodes.append(overlay)
+		_theme_overlays.append(overlay)
+		## Іконка теми (LAW 25: не тільки колір — додаємо форму)
+		var icon_ctrl: Control = Control.new()
+		var icon_sz: float = 18.0
+		icon_ctrl.size = Vector2(icon_sz, icon_sz)
+		icon_ctrl.position = Vector2(center.x - icon_sz * 0.5, center.y - icon_sz * 0.5)
+		icon_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if theme_id == THEME_LAVA:
+			## Трикутник вогню (LAW 25: форма + колір)
+			icon_ctrl.draw.connect(func() -> void:
+				var pts: PackedVector2Array = PackedVector2Array([
+					Vector2(icon_sz * 0.5, 0.0),
+					Vector2(icon_sz, icon_sz),
+					Vector2(0.0, icon_sz)])
+				icon_ctrl.draw_colored_polygon(pts, LAVA_ICON_COLOR))
+		else:
+			## Хвилі води (LAW 25: форма + колір)
+			icon_ctrl.draw.connect(func() -> void:
+				for wave_i: int in 3:
+					var y: float = float(wave_i) * 6.0 + 3.0
+					icon_ctrl.draw_line(
+						Vector2(0.0, y), Vector2(icon_sz, y),
+						WATER_ICON_COLOR, 2.0))
+		add_child(icon_ctrl)
+		_all_round_nodes.append(icon_ctrl)
+		_theme_overlays.append(icon_ctrl)
 
 
 ## BFS найкоротший шлях між двома позиціями на сітці.
@@ -308,6 +469,94 @@ func _spawn_robot_and_goal() -> void:
 		robot_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_robot_node.add_child(robot_icon)
 	_all_round_nodes.append(_robot_node)
+
+
+## ── Спавн обличчя робота (очі + рот) як дочірніх вузлів _robot_node ──
+func _spawn_robot_face() -> void:
+	if not is_instance_valid(_robot_node):
+		push_warning("AlgoRobot: _spawn_robot_face — robot_node invalid")
+		return
+	## Ліве око (біле коло + зіниця)
+	_left_eye = Control.new()
+	_left_eye.size = Vector2(EYE_RADIUS * 2.0, EYE_RADIUS * 2.0)
+	_left_eye.position = Vector2(-EYE_OFFSET.x - EYE_RADIUS, EYE_OFFSET.y - EYE_RADIUS)
+	_left_eye.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_left_eye.z_index = 3
+	_left_eye.draw.connect(func() -> void:
+		_left_eye.draw_circle(Vector2(EYE_RADIUS, EYE_RADIUS), EYE_RADIUS, Color.WHITE)
+		_left_eye.draw_arc(Vector2(EYE_RADIUS, EYE_RADIUS), EYE_RADIUS, 0.0, TAU, 24, Color(0.3, 0.3, 0.4), 1.0))
+	_robot_node.add_child(_left_eye)
+	## Ліва зіниця
+	_left_pupil = Control.new()
+	_left_pupil.size = Vector2(PUPIL_RADIUS * 2.0, PUPIL_RADIUS * 2.0)
+	_left_pupil.position = Vector2(-PUPIL_RADIUS, -PUPIL_RADIUS)
+	_left_pupil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_left_pupil.z_index = 4
+	_left_pupil.draw.connect(func() -> void:
+		_left_pupil.draw_circle(Vector2(PUPIL_RADIUS, PUPIL_RADIUS), PUPIL_RADIUS, Color(0.15, 0.15, 0.2)))
+	_left_eye.add_child(_left_pupil)
+	## Праве око
+	_right_eye = Control.new()
+	_right_eye.size = Vector2(EYE_RADIUS * 2.0, EYE_RADIUS * 2.0)
+	_right_eye.position = Vector2(EYE_OFFSET.x - EYE_RADIUS, EYE_OFFSET.y - EYE_RADIUS)
+	_right_eye.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_right_eye.z_index = 3
+	_right_eye.draw.connect(func() -> void:
+		_right_eye.draw_circle(Vector2(EYE_RADIUS, EYE_RADIUS), EYE_RADIUS, Color.WHITE)
+		_right_eye.draw_arc(Vector2(EYE_RADIUS, EYE_RADIUS), EYE_RADIUS, 0.0, TAU, 24, Color(0.3, 0.3, 0.4), 1.0))
+	_robot_node.add_child(_right_eye)
+	## Права зіниця
+	_right_pupil = Control.new()
+	_right_pupil.size = Vector2(PUPIL_RADIUS * 2.0, PUPIL_RADIUS * 2.0)
+	_right_pupil.position = Vector2(-PUPIL_RADIUS, -PUPIL_RADIUS)
+	_right_pupil.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_right_pupil.z_index = 4
+	_right_pupil.draw.connect(func() -> void:
+		_right_pupil.draw_circle(Vector2(PUPIL_RADIUS, PUPIL_RADIUS), PUPIL_RADIUS, Color(0.15, 0.15, 0.2)))
+	_right_eye.add_child(_right_pupil)
+	## Рот — керується через _robot_mood
+	_mouth_ctrl = Control.new()
+	_mouth_ctrl.size = Vector2(MOUTH_WIDTH, 8.0)
+	_mouth_ctrl.position = Vector2(-MOUTH_WIDTH * 0.5, MOUTH_Y_OFFSET)
+	_mouth_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_mouth_ctrl.z_index = 3
+	_mouth_ctrl.draw.connect(_draw_robot_mouth)
+	_robot_node.add_child(_mouth_ctrl)
+	_set_robot_mood(RobotMood.NEUTRAL)
+
+
+## Малюємо рот залежно від настрою
+func _draw_robot_mouth() -> void:
+	if not is_instance_valid(_mouth_ctrl):
+		return
+	var w: float = MOUTH_WIDTH
+	var h: float = 8.0
+	match _robot_mood:
+		RobotMood.HAPPY:
+			## Усмішка — дуга вниз
+			_mouth_ctrl.draw_arc(Vector2(w * 0.5, 0.0), w * 0.4, 0.2, PI - 0.2, 16, Color(0.2, 0.2, 0.3), 2.0)
+		RobotMood.CONFUSED:
+			## Здивований О
+			_mouth_ctrl.draw_arc(Vector2(w * 0.5, h * 0.5), 3.5, 0.0, TAU, 12, Color(0.2, 0.2, 0.3), 2.0)
+		RobotMood.BONK:
+			## Хвиляста лінія (біль)
+			var pts: PackedVector2Array = PackedVector2Array()
+			for xi: int in 6:
+				var xf: float = float(xi) * w / 5.0
+				var yf: float = h * 0.5 + sin(float(xi) * 2.5) * 3.0
+				pts.append(Vector2(xf, yf))
+			if pts.size() >= 2:
+				_mouth_ctrl.draw_polyline(pts, Color(0.2, 0.2, 0.3), 2.0)
+		_:
+			## Neutral — пряма лінія
+			_mouth_ctrl.draw_line(Vector2(w * 0.2, h * 0.5), Vector2(w * 0.8, h * 0.5), Color(0.3, 0.3, 0.4), 2.0)
+
+
+## Зміна настрою робота з перемальовкою рота
+func _set_robot_mood(mood: int) -> void:
+	_robot_mood = mood
+	if is_instance_valid(_mouth_ctrl):
+		_mouth_ctrl.queue_redraw()
 
 
 func _spawn_command_buttons() -> void:
@@ -504,7 +753,7 @@ func _execute_demo_step(idx: int) -> void:
 			_demo_trail.add_point(target)
 		_execute_demo_step(idx + 1)
 		return
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_property(_robot_node, "position", target, DEMO_MOVE_DURATION)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_callback(func() -> void:
@@ -519,7 +768,7 @@ func _execute_demo_step(idx: int) -> void:
 ## Демо завершено — повернути робота, показати інструкцію, розблокувати.
 func _on_demo_complete() -> void:
 	## Невелика пауза щоб дитина побачила фінальну позицію
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(0.5)
 	tw.tween_callback(func() -> void:
 		## Повернути робота на старт
@@ -528,7 +777,7 @@ func _on_demo_complete() -> void:
 			if SettingsManager.reduced_motion:
 				_robot_node.position = _cell_center(Vector2i.ZERO)
 			else:
-				var back_tw: Tween = create_tween()
+				var back_tw: Tween = _create_game_tween()
 				back_tw.tween_property(_robot_node, "position",
 					_cell_center(Vector2i.ZERO), 0.3)\
 					.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -592,7 +841,7 @@ func _handle_toddler_replay(dir: String) -> void:
 			_toddler_replay_idx += 1
 			_check_toddler_replay_complete()
 			return
-		var tw: Tween = create_tween()
+		var tw: Tween = _create_game_tween()
 		tw.tween_property(_robot_node, "position", target, MOVE_DURATION)\
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tw.tween_callback(func() -> void:
@@ -616,7 +865,7 @@ func _handle_toddler_replay(dir: String) -> void:
 			_input_locked = false
 			_reset_idle_timer()
 			return
-		var tw: Tween = create_tween()
+		var tw: Tween = _create_game_tween()
 		tw.tween_property(_robot_node, "position",
 			_cell_center(Vector2i.ZERO), 0.3)\
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -677,6 +926,9 @@ func _on_play_pressed() -> void:
 		return
 	_executing = true
 	_input_locked = true
+	_execution_step = 0
+	_last_move_dir = ""
+	_set_robot_mood(RobotMood.NEUTRAL)
 	## Preschool: прибрати preview line при запуску
 	_clear_preview_line()
 	_execute_commands(0)
@@ -695,30 +947,113 @@ func _execute_commands(idx: int) -> void:
 	var new_pos: Vector2i = _robot_pos + delta_pos
 	if new_pos.x < 0 or new_pos.x >= _grid_size or \
 		new_pos.y < 0 or new_pos.y >= _grid_size:
-		## Вдарився в стіну
-		_on_puzzle_failed()
+		## Вдарився в стіну — bonk animation
+		_play_wall_bonk(dir)
 		return
 	_robot_pos = new_pos
 	var target: Vector2 = _cell_center(new_pos)
+	_execution_step += 1
+	## Audio: slide SFX з зростаючим pitch за кроком
+	var pitch: float = SLIDE_PITCH_BASE + float(_execution_step) * SLIDE_PITCH_STEP
+	AudioManager.play_sfx("slide", clampf(pitch, 0.8, 1.5))
 	HapticsManager.vibrate_light()
+	## Personality: wobble при зміні напрямку, stretch при русі вперед
+	var direction_changed: bool = _last_move_dir != "" and _last_move_dir != dir
+	_last_move_dir = dir
+	## Перевірка декоративної клітинки — щасливий на воді, нейтральний на лаві
+	if _themed_cells.has(new_pos):
+		var cell_theme: int = _themed_cells.get(new_pos, THEME_NONE)
+		if cell_theme == THEME_LAVA:
+			_set_robot_mood(RobotMood.CONFUSED)
+		elif cell_theme == THEME_WATER:
+			_set_robot_mood(RobotMood.HAPPY)
+	else:
+		_set_robot_mood(RobotMood.NEUTRAL)
 	if SettingsManager.reduced_motion:
-		_robot_node.position = target
+		if is_instance_valid(_robot_node):
+			_robot_node.position = target
 		_execute_commands(idx + 1)
 		return
-	_move_tween = create_tween()
+	_move_tween = _create_game_tween()
+	## Personality animation: wobble при повороті
+	if direction_changed and is_instance_valid(_robot_node):
+		var wobble_dir: float = 1.0 if dir in ["right", "down"] else -1.0
+		_move_tween.tween_property(_robot_node, "rotation",
+			WOBBLE_ANGLE * wobble_dir, 0.08)\
+			.set_trans(Tween.TRANS_SINE)
+		_move_tween.tween_property(_robot_node, "rotation", 0.0, 0.08)\
+			.set_trans(Tween.TRANS_SINE)
+	## Personality animation: stretch при русі вперед
+	if is_instance_valid(_robot_node):
+		_move_tween.tween_property(_robot_node, "scale",
+			STRETCH_SCALE, MOVE_DURATION * 0.3)\
+			.set_trans(Tween.TRANS_SINE)
 	_move_tween.tween_property(_robot_node, "position", target, MOVE_DURATION)\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	_move_tween.tween_callback(func() -> void: _execute_commands(idx + 1))
+	## Повернути масштаб до нормального
+	if is_instance_valid(_robot_node):
+		_move_tween.tween_property(_robot_node, "scale",
+			Vector2.ONE, MOVE_DURATION * 0.3)\
+			.set_trans(Tween.TRANS_SINE)
+	_move_tween.tween_callback(func() -> void:
+		if not is_instance_valid(_robot_node):
+			push_warning("AlgoRobot: robot freed during execution")
+			return
+		_execute_commands(idx + 1))
+
+
+## ── Wall bonk animation — робот вдаряється в стіну та відскакує ──
+func _play_wall_bonk(dir: String) -> void:
+	_set_robot_mood(RobotMood.BONK)
+	AudioManager.play_sfx("error")
+	HapticsManager.vibrate_error()
+	if not is_instance_valid(_robot_node):
+		push_warning("AlgoRobot: _play_wall_bonk — robot freed")
+		_on_puzzle_failed()
+		return
+	if SettingsManager.reduced_motion:
+		_on_puzzle_failed()
+		return
+	## Bonk: рух до стіни на BONK_OFFSET пікселів, потім назад
+	var bonk_delta: Vector2 = Vector2(
+		DIRECTIONS.get(dir, Vector2i.ZERO).x,
+		DIRECTIONS.get(dir, Vector2i.ZERO).y).normalized() * BONK_OFFSET
+	var original_pos: Vector2 = _robot_node.position
+	var bonk_tw: Tween = _create_game_tween()
+	bonk_tw.tween_property(_robot_node, "position",
+		original_pos + bonk_delta, 0.08)\
+		.set_trans(Tween.TRANS_SINE)
+	## Shake rotation
+	bonk_tw.tween_property(_robot_node, "rotation", 0.12, 0.05)
+	bonk_tw.tween_property(_robot_node, "rotation", -0.12, 0.05)
+	bonk_tw.tween_property(_robot_node, "rotation", 0.0, 0.05)
+	## Повернутися назад
+	bonk_tw.tween_property(_robot_node, "position",
+		original_pos, 0.15)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	bonk_tw.tween_callback(func() -> void:
+		if not is_instance_valid(_robot_node):
+			push_warning("AlgoRobot: robot freed during bonk")
+			return
+		_on_puzzle_failed())
 
 
 func _on_puzzle_solved() -> void:
+	_set_robot_mood(RobotMood.HAPPY)
 	_register_correct(_robot_node)
+	## VFX: success ripple на позиції цілі
 	if is_instance_valid(_goal_node):
+		VFXManager.spawn_success_ripple(_goal_node.global_position, GOAL_COLOR)
 		VFXManager.spawn_premium_celebration(_goal_node.global_position)
-	## Robot dance: spin + scale bounce (замість просто celebration)
-	_play_robot_dance()
-	var d: float = 0.15 if SettingsManager.reduced_motion else 1.0
-	var tw: Tween = create_tween()
+	AudioManager.play_sfx("success")
+	## Optimal path bonus: backflip якщо розв'язав за мінімум кроків
+	var is_optimal: bool = _optimal_length > 0 and _commands.size() == _optimal_length
+	if is_optimal:
+		_play_robot_backflip()
+	else:
+		_play_robot_dance()
+	var d: float = 0.15 if SettingsManager.reduced_motion else 1.2
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(d)
 	tw.tween_callback(func() -> void:
 		_clear_round()
@@ -729,21 +1064,34 @@ func _on_puzzle_solved() -> void:
 			_start_round())
 
 
-## Robot dance: spin 360° + scale bounce 1.0→1.3→1.0 при success.
+## Robot dance: themed victory per grid theme.
+## THEME_NONE: spin + scale bounce. LAVA: fiery shake. WATER: wave wiggle.
 func _play_robot_dance() -> void:
 	if not is_instance_valid(_robot_node):
 		push_warning("AlgoRobot: _play_robot_dance — robot freed")
 		return
 	if SettingsManager.reduced_motion:
 		return
-	var dance_tw: Tween = create_tween().set_parallel(true)
-	## Spin: rotation 0 → 2*PI за 0.5с
+	match _current_theme:
+		THEME_LAVA:
+			_play_lava_victory()
+		THEME_WATER:
+			_play_water_victory()
+		_:
+			_play_default_victory()
+
+
+## Default victory: spin 360 + scale bounce
+func _play_default_victory() -> void:
+	if not is_instance_valid(_robot_node):
+		push_warning("AlgoRobot: _play_default_victory — robot freed")
+		return
+	var dance_tw: Tween = _create_game_tween().set_parallel(true)
 	dance_tw.tween_property(_robot_node, "rotation",
 		TAU, 0.5)\
 		.from(0.0)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	## Scale bounce: 1.0 → 1.3 → 1.0
-	var scale_tw: Tween = create_tween()
+	var scale_tw: Tween = _create_game_tween()
 	scale_tw.tween_property(_robot_node, "scale",
 		Vector2(1.3, 1.3), 0.25)\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -752,7 +1100,87 @@ func _play_robot_dance() -> void:
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 
 
+## Lava victory: швидкі tremor-shake + яскравий scale pop
+func _play_lava_victory() -> void:
+	if not is_instance_valid(_robot_node):
+		push_warning("AlgoRobot: _play_lava_victory — robot freed")
+		return
+	var tw: Tween = _create_game_tween()
+	## Tremor shake — 3 швидких нахили
+	for shake_i: int in 3:
+		var angle: float = 0.18 * (1.0 if shake_i % 2 == 0 else -1.0)
+		tw.tween_property(_robot_node, "rotation", angle, 0.06)
+	tw.tween_property(_robot_node, "rotation", 0.0, 0.06)
+	## Scale pop: 1.0 -> 1.4 -> 1.0 (fiery burst)
+	tw.tween_property(_robot_node, "scale",
+		Vector2(1.4, 1.4), 0.15)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_robot_node, "scale",
+		Vector2.ONE, 0.2)\
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+## Water victory: плавні хвилі — коливання вліво-вправо + м'який bounce
+func _play_water_victory() -> void:
+	if not is_instance_valid(_robot_node):
+		push_warning("AlgoRobot: _play_water_victory — robot freed")
+		return
+	var original_x: float = _robot_node.position.x
+	var tw: Tween = _create_game_tween()
+	## Wave wiggle — 2 повні хвилі
+	for wave_i: int in 4:
+		var offset_x: float = 6.0 * (1.0 if wave_i % 2 == 0 else -1.0)
+		tw.tween_property(_robot_node, "position:x",
+			original_x + offset_x, 0.1)\
+			.set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_robot_node, "position:x", original_x, 0.1)\
+		.set_trans(Tween.TRANS_SINE)
+	## Soft scale bounce
+	tw.tween_property(_robot_node, "scale",
+		Vector2(1.15, 1.25), 0.15)\
+		.set_trans(Tween.TRANS_SINE)
+	tw.tween_property(_robot_node, "scale",
+		Vector2.ONE, 0.2)\
+		.set_trans(Tween.TRANS_SINE)
+
+
+## ── Backflip за optimal path: подвійний spin + вертикальний стрибок ──
+func _play_robot_backflip() -> void:
+	if not is_instance_valid(_robot_node):
+		push_warning("AlgoRobot: _play_robot_backflip — robot freed")
+		return
+	if SettingsManager.reduced_motion:
+		return
+	AudioManager.play_sfx("reward")
+	var original_y: float = _robot_node.position.y
+	var flip_tw: Tween = _create_game_tween().set_parallel(true)
+	## Подвійний spin (2 * TAU)
+	flip_tw.tween_property(_robot_node, "rotation",
+		TAU * 2.0, BACKFLIP_DURATION)\
+		.from(0.0)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	## Вертикальний стрибок: вгору на 30px, потім назад
+	var jump_tw: Tween = _create_game_tween()
+	jump_tw.tween_property(_robot_node, "position:y",
+		original_y - 30.0, BACKFLIP_DURATION * 0.5)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	jump_tw.tween_property(_robot_node, "position:y",
+		original_y, BACKFLIP_DURATION * 0.5)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	## Scale: squash-stretch під час стрибка
+	var squash_tw: Tween = _create_game_tween()
+	squash_tw.tween_property(_robot_node, "scale",
+		Vector2(0.8, 1.3), BACKFLIP_DURATION * 0.25)
+	squash_tw.tween_property(_robot_node, "scale",
+		Vector2(1.2, 0.85), BACKFLIP_DURATION * 0.25)
+	squash_tw.tween_property(_robot_node, "scale",
+		Vector2(0.9, 1.15), BACKFLIP_DURATION * 0.25)
+	squash_tw.tween_property(_robot_node, "scale",
+		Vector2.ONE, BACKFLIP_DURATION * 0.25)
+
+
 func _on_puzzle_failed() -> void:
+	_set_robot_mood(RobotMood.CONFUSED)
 	if _is_toddler:
 		_register_error(_robot_node)  ## A11: scaffolding для тоддлера
 	else:
@@ -769,15 +1197,20 @@ func _on_puzzle_failed() -> void:
 		_update_cmd_display()
 		_executing = false
 		_input_locked = false
+		_set_robot_mood(RobotMood.NEUTRAL)
 		_reset_idle_timer()
 		return
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_property(_robot_node, "position", _cell_center(Vector2i.ZERO), 0.3)
 	tw.tween_callback(func() -> void:
+		if not is_instance_valid(_robot_node):
+			push_warning("AlgoRobot: robot freed during fail reset")
+			return
 		_commands.clear()
 		_update_cmd_display()
 		_executing = false
 		_input_locked = false
+		_set_robot_mood(RobotMood.NEUTRAL)
 		_reset_idle_timer())
 
 
@@ -801,6 +1234,9 @@ func _on_exit_pause() -> void:
 	_update_cmd_display()
 	_clear_preview_line()
 	_toddler_replay_idx = 0
+	_set_robot_mood(RobotMood.NEUTRAL)
+	_last_move_dir = ""
+	_execution_step = 0
 
 
 ## ---- Round management ----
@@ -822,6 +1258,18 @@ func _clear_round() -> void:
 	_repeat_btn = null
 	_preview_line = null
 	_demo_trail = null
+	## Cleanup personality state (A9: round hygiene)
+	_left_eye = null
+	_right_eye = null
+	_left_pupil = null
+	_right_pupil = null
+	_mouth_ctrl = null
+	_robot_mood = RobotMood.NEUTRAL
+	_themed_cells.clear()
+	_theme_overlays.clear()
+	_last_move_dir = ""
+	_execution_step = 0
+	_optimal_length = 0
 
 
 func _finish() -> void:
