@@ -1,41 +1,51 @@
 extends BaseMiniGame
 
-## PRE-35 Буквені блоки — перетягни літери щоб скласти слово!
-## 5 раундів. Показуємо зображення тварини + порожні слоти.
-## Правильна літера в правильному слоті → зелений. Неправильна → snap back.
-## Використовує UniversalDrag для перетягування літер.
+## Табір Тофі / Camp Name Tags
+## Тварини приїхали в табір, але загубили бірки з іменами.
+## Preschool: перетягни літери в слоти, щоб скласти ім'я на бірці.
+## Toddler: "Хто це?" — тап на правильну картку.
+## R1-R2: 3-буквенні слова + 1 дистрактор.
+## R3-R4: 4-буквенні + 2 дистрактори.
+## R5: 5-буквенні + 3 дистрактори.
+## Аудіо: pitched click на кожну літеру при drag, "success" при complete.
 
 const TOTAL_ROUNDS: int = 5
-const SLOT_SIZE: float = 52.0
-const SLOT_GAP: float = 8.0
-const LETTER_SIZE: float = 56.0
+const SLOT_SIZE: float = 56.0
+const SLOT_GAP: float = 10.0
+const LETTER_SIZE: float = 60.0
 const LETTER_GAP: float = 12.0
-const EXTRA_WRONG_LETTERS: int = 3
 const IDLE_HINT_DELAY: float = 5.0
 const SAFETY_TIMEOUT_SEC: float = 120.0
 
-## Ключі перекладу — tr() поверне слово потрібною мовою (uk: "КІТ", en: "CAT")
+## Дистрактори по раундах (LAW 6 / A4 прогресивна складність)
+const DISTRACTORS_BY_ROUND: Array[int] = [1, 1, 2, 2, 3]
+## Бажана довжина слова по раундах
+const WORD_LEN_BY_ROUND: Array[int] = [3, 3, 4, 4, 5]
+
+## Усі тварини з наявними спрайтами + перекладами
 const WORD_KEYS: Array[String] = [
 	"SPELL_CAT", "SPELL_DOG", "SPELL_COW", "SPELL_HEN",
 	"SPELL_BEAR", "SPELL_FROG", "SPELL_DEER", "SPELL_GOAT",
 	"SPELL_LION", "SPELL_PANDA", "SPELL_HORSE", "SPELL_MOUSE",
-	"SPELL_CHICKEN", "SPELL_PENGUIN", "SPELL_ELEPHANT",
-	"SPELL_SQUIRREL", "SPELL_HEDGEHOG", "SPELL_CROCODILE",
+	"SPELL_BUNNY",
 ]
 const WORD_IMAGES: Dictionary = {
 	"SPELL_CAT": "Cat", "SPELL_DOG": "Dog", "SPELL_COW": "Cow",
 	"SPELL_HEN": "Chicken", "SPELL_BEAR": "Bear", "SPELL_FROG": "Frog",
 	"SPELL_DEER": "Deer", "SPELL_GOAT": "Goat", "SPELL_LION": "Lion",
 	"SPELL_PANDA": "Panda", "SPELL_HORSE": "Horse", "SPELL_MOUSE": "Mouse",
-	"SPELL_CHICKEN": "Chicken", "SPELL_PENGUIN": "Penguin",
-	"SPELL_ELEPHANT": "Elephant", "SPELL_SQUIRREL": "Squirrel",
-	"SPELL_HEDGEHOG": "Hedgehog", "SPELL_CROCODILE": "Crocodile",
+	"SPELL_BUNNY": "Bunny",
 }
+
+## Кольори
 const SLOT_EMPTY_COLOR: Color = Color(0.93, 0.88, 0.98, 0.6)
 const SLOT_CORRECT_COLOR: Color = Color("06d6a0", 0.7)
 const SLOT_BORDER_COLOR: Color = Color("a78bfa")
 const LETTER_BG_COLOR: Color = Color("6366f1")
+const TAG_BG_COLOR: Color = Color("fef3c7")
+const TAG_BORDER_COLOR: Color = Color("f59e0b")
 
+## Drag
 var _drag: UniversalDrag = null
 var _round: int = 0
 var _start_time: float = 0.0
@@ -43,24 +53,29 @@ var _current_word: String = ""
 var _current_word_key: String = ""
 var _current_slot_idx: int = 0
 
+## Ноди поточного раунду
 var _slots: Array[Panel] = []
 var _slot_nodes: Array[Node2D] = []
 var _letter_nodes: Array[Node2D] = []
 var _all_round_nodes: Array[Node] = []
 var _letter_char: Dictionary = {}
 var _letter_origins: Dictionary = {}
-var _used_words: Array[int] = []
+var _used_word_keys: Array[String] = []
 var _image_sprite: Sprite2D = null
 
+## Idle
 var _idle_timer: SceneTreeTimer = null
 
-## ---- Toddler mode: "Хто це?" ----
+## Toddler mode
 var _is_toddler: bool = false
 var _toddler_cards: Array[Node2D] = []
 var _toddler_correct_idx: int = -1
 const TODDLER_CARD_W: float = 160.0
 const TODDLER_CARD_H: float = 120.0
 const TODDLER_IMAGE_SIZE: float = 300.0
+
+## Довжина-бакети для вибору слів (генеруються в _ready)
+var _length_pools: Dictionary = {}
 
 
 func _ready() -> void:
@@ -70,6 +85,7 @@ func _ready() -> void:
 	_is_toddler = (SettingsManager.age_group == 1)
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
+	_build_length_pools()
 	_drag = UniversalDrag.new(self)
 	_drag.item_picked_up.connect(_on_picked)
 	_drag.item_dropped_on_target.connect(_on_dropped_target)
@@ -79,15 +95,38 @@ func _ready() -> void:
 	_start_safety_timeout(SAFETY_TIMEOUT_SEC)
 
 
+## Побудувати пули слів за довжиною перекладу (A8 / A12)
+func _build_length_pools() -> void:
+	_length_pools.clear()
+	for wk: String in WORD_KEYS:
+		var translated: String = tr(wk)
+		## A8: перевірити що переклад існує (не повернувся ключ)
+		if translated == wk or translated.is_empty():
+			push_warning("SpellingBlocks: переклад '%s' відсутній" % wk)
+			continue
+		## LAW 7: перевірити наявність спрайту
+		var animal_name: String = WORD_IMAGES.get(wk, "")
+		if animal_name.is_empty():
+			push_warning("SpellingBlocks: спрайт для '%s' не задано" % wk)
+			continue
+		var tex_path: String = "res://assets/sprites/animals/%s.png" % animal_name
+		if not ResourceLoader.exists(tex_path):
+			push_warning("SpellingBlocks: спрайт '%s' не знайдено" % tex_path)
+			continue
+		var word_len: int = translated.to_upper().length()
+		if not _length_pools.has(word_len):
+			_length_pools[word_len] = []
+		_length_pools[word_len].append(wk)
+
+
 func get_tutorial_instruction() -> String:
 	if _is_toddler:
-		return tr("SPELLING_TUTORIAL_TODDLER")
-	return tr("SPELLING_TUTORIAL")
+		return tr("SPELLING_CAMP_TODDLER")
+	return tr("SPELLING_CAMP_TUTORIAL")
 
 
 func get_tutorial_demo() -> Dictionary:
 	if _is_toddler:
-		## Підказка для тоддлера — тап на правильну картку
 		if _toddler_correct_idx >= 0 and _toddler_correct_idx < _toddler_cards.size():
 			var card: Node2D = _toddler_cards[_toddler_correct_idx]
 			if is_instance_valid(card):
@@ -100,8 +139,9 @@ func get_tutorial_demo() -> Dictionary:
 	var expected: String = _current_word[_current_slot_idx]
 	for node: Node2D in _letter_nodes:
 		if _letter_char.get(node, "") == expected:
-			var slot: Node2D = _slot_nodes[_current_slot_idx]
-			return {"type": "drag", "from": node.global_position, "to": slot.global_position}
+			if _current_slot_idx < _slot_nodes.size():
+				var slot: Node2D = _slot_nodes[_current_slot_idx]
+				return {"type": "drag", "from": node.global_position, "to": slot.global_position}
 	return {}
 
 
@@ -119,67 +159,119 @@ func _start_round() -> void:
 	if _is_toddler:
 		_start_round_toddler()
 		return
-	## Обрати слово
-	_current_word_key = _pick_word_key()
+	## Обрати слово потрібної довжини для цього раунду
+	_current_word_key = _pick_word_for_round(_round)
 	_current_word = tr(_current_word_key).to_upper()
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	_spawn_image(vp)
 	_spawn_slots(vp)
 	_spawn_letters(vp)
-	var unlock_d: float = 0.15 if SettingsManager.reduced_motion else 0.4
-	var tw: Tween = create_tween()
+	var unlock_d: float = ANIM_FAST if SettingsManager.reduced_motion else ANIM_NORMAL + 0.1
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(unlock_d)
 	tw.tween_callback(func() -> void:
+		if not is_instance_valid(self):
+			return
 		_input_locked = false
 		_drag.enabled = true
 		_reset_idle_timer())
 
 
-func _pick_word_key() -> String:
-	if _used_words.size() >= WORD_KEYS.size():
-		_used_words.clear()
-	var idx: int = randi() % WORD_KEYS.size()
-	while _used_words.has(idx):
-		idx = randi() % WORD_KEYS.size()
-	_used_words.append(idx)
-	return WORD_KEYS[idx]
+## Вибір слова з пулу потрібної довжини (LAW 6 / A4)
+func _pick_word_for_round(round_idx: int) -> String:
+	var desired_len: int = WORD_LEN_BY_ROUND[clampi(round_idx, 0, WORD_LEN_BY_ROUND.size() - 1)]
+	## Спробувати знайти слово потрібної довжини
+	var pool: Array = _length_pools.get(desired_len, []) as Array
+	## Відфільтрувати вже використані
+	var available: Array[String] = []
+	for wk: Variant in pool:
+		if not _used_word_keys.has(wk as String):
+			available.append(wk as String)
+	## Якщо порожній — шукати найближчу довжину (A8 fallback)
+	if available.is_empty():
+		available = _find_closest_pool(desired_len)
+	## Якщо все ще порожній — скинути used і спробувати знову
+	if available.is_empty():
+		_used_word_keys.clear()
+		for wk2: Variant in pool:
+			available.append(wk2 as String)
+	## Крайній fallback — будь-яке слово з будь-якого пулу
+	if available.is_empty():
+		for len_key: Variant in _length_pools.keys():
+			var lp: Array = _length_pools[len_key] as Array
+			for wk3: Variant in lp:
+				available.append(wk3 as String)
+		if available.is_empty():
+			push_warning("SpellingBlocks: жодного валідного слова не знайдено")
+			return "SPELL_CAT"
+	available.shuffle()
+	var chosen: String = available[0]
+	_used_word_keys.append(chosen)
+	return chosen
 
+
+## A8: Знайти найближчий пул якщо потрібна довжина порожня
+func _find_closest_pool(desired_len: int) -> Array[String]:
+	var best_delta: int = 999
+	var best_pool: Array = []
+	for len_key: Variant in _length_pools.keys():
+		var l: int = len_key as int
+		var delta: int = absi(l - desired_len)
+		if delta < best_delta:
+			var pool: Array = _length_pools[len_key] as Array
+			var avail: Array[String] = []
+			for wk: Variant in pool:
+				if not _used_word_keys.has(wk as String):
+					avail.append(wk as String)
+			if avail.size() > 0:
+				best_delta = delta
+				best_pool = avail
+	var result: Array[String] = []
+	for item: Variant in best_pool:
+		result.append(item as String)
+	return result
+
+
+## ---- Spawn image ----
 
 func _spawn_image(vp: Vector2) -> void:
 	var animal_name: String = WORD_IMAGES.get(_current_word_key, "Cat")
 	var tex_path: String = "res://assets/sprites/animals/%s.png" % animal_name
 	if not ResourceLoader.exists(tex_path):
-		push_warning("SpellingBlocks: teksturu '%s' ne znajdeno" % tex_path)
+		push_warning("SpellingBlocks: спрайт '%s' не знайдено" % tex_path)
 		return
 	var tex: Texture2D = load(tex_path)
 	_image_sprite = Sprite2D.new()
 	_image_sprite.texture = tex
 	_image_sprite.scale = Vector2(0.35, 0.35)
-	_image_sprite.position = Vector2(vp.x * 0.5, vp.y * 0.32)
+	_image_sprite.position = Vector2(vp.x * 0.5, vp.y * 0.28)
 	_image_sprite.material = GameData.create_premium_material(
 		0.04, 2.0, 0.03, 0.06, 0.05, 0.04, 0.08, "", 0.0, 0.10, 0.22, 0.18)
 	add_child(_image_sprite)
 	_all_round_nodes.append(_image_sprite)
-	## Анімація появи
 	if not SettingsManager.reduced_motion:
 		_image_sprite.modulate.a = 0.0
 		_image_sprite.scale = Vector2(0.2, 0.2)
-		var tw: Tween = create_tween().set_parallel(true)
-		tw.tween_property(_image_sprite, "modulate:a", 1.0, 0.3)
-		tw.tween_property(_image_sprite, "scale", Vector2(0.35, 0.35), 0.3)\
+		var tw: Tween = _create_game_tween().set_parallel(true)
+		tw.tween_property(_image_sprite, "modulate:a", 1.0, ANIM_NORMAL)
+		tw.tween_property(_image_sprite, "scale", Vector2(0.35, 0.35), ANIM_NORMAL)\
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
+
+## ---- Spawn slots ----
 
 func _spawn_slots(vp: Vector2) -> void:
 	_slots.clear()
 	_slot_nodes.clear()
 	var word_len: int = _current_word.length()
+	if word_len == 0:
+		push_warning("SpellingBlocks: слово порожнє, пропуск раунду")
+		return
 	var total_w: float = float(word_len) * (SLOT_SIZE + SLOT_GAP) - SLOT_GAP
 	var start_x: float = (vp.x - total_w) * 0.5
-	var slot_y: float = vp.y * 0.55
+	var slot_y: float = vp.y * 0.52
 	_drag.drop_targets.clear()
 	for i: int in word_len:
-		## Слот — Node2D обгортка для drop target
 		var slot_wrapper: Node2D = Node2D.new()
 		slot_wrapper.position = Vector2(
 			start_x + float(i) * (SLOT_SIZE + SLOT_GAP) + SLOT_SIZE * 0.5,
@@ -188,7 +280,6 @@ func _spawn_slots(vp: Vector2) -> void:
 		add_child(slot_wrapper)
 		_slot_nodes.append(slot_wrapper)
 		_all_round_nodes.append(slot_wrapper)
-		## Візуальна панель слоту
 		var panel: Panel = Panel.new()
 		panel.size = Vector2(SLOT_SIZE, SLOT_SIZE)
 		panel.position = Vector2(-SLOT_SIZE * 0.5, -SLOT_SIZE * 0.5)
@@ -196,7 +287,6 @@ func _spawn_slots(vp: Vector2) -> void:
 		style.border_color = SLOT_BORDER_COLOR
 		style.set_border_width_all(2)
 		panel.add_theme_stylebox_override("panel", style)
-		## Grain overlay (LAW 28)
 		panel.material = GameData.create_premium_material(
 			0.04, 2.0, 0.03, 0.0, 0.06, 0.05, 0.08, "", 0.0, 0.08, 0.18, 0.15)
 		GameData.add_gloss(panel, 10)
@@ -208,54 +298,67 @@ func _spawn_slots(vp: Vector2) -> void:
 	_staggered_spawn(_slot_nodes, 0.06)
 
 
+## ---- Spawn letters ----
+
 func _spawn_letters(vp: Vector2) -> void:
 	_letter_nodes.clear()
 	_letter_char.clear()
 	_letter_origins.clear()
 	_drag.draggable_items.clear()
-	## Зібрати літери: правильні + зайві
+	## Зібрати літери: правильні + зайві (LAW 6 прогресивна кількість дистракторів)
 	var correct_letters: Array[String] = []
 	for c: String in _current_word:
 		correct_letters.append(c)
-	var wrong_pool: Array[String] = []
-	## A8: збираємо алфавіт з УСІХ перекладених слів (працює для будь-якої мови)
-	var char_set: Dictionary = {}
+	## Визначити кількість дистракторів за раундом
+	var distractor_count: int = DISTRACTORS_BY_ROUND[clampi(_round, 0, DISTRACTORS_BY_ROUND.size() - 1)]
+	## Зібрати алфавіт дистракторів з усіх перекладених слів (A8 / A12 i18n-safe)
+	var wrong_set: Dictionary = {}
 	for wk: String in WORD_KEYS:
 		var translated: String = tr(wk).to_upper()
-		for ch2: String in translated:
-			if not correct_letters.has(ch2):
-				char_set[ch2] = true
-	## Fallback: якщо char_set порожній, використовуємо SPELLING_ALPHABET
-	if char_set.is_empty():
+		for ch: String in translated:
+			if not correct_letters.has(ch):
+				wrong_set[ch] = true
+	## Fallback: SPELLING_ALPHABET якщо wrong_set порожній
+	if wrong_set.is_empty():
 		var alphabet: String = tr("SPELLING_ALPHABET")
 		if alphabet == "SPELLING_ALPHABET" or alphabet.length() > 40:
 			alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		for ch3: String in alphabet:
-			if not correct_letters.has(ch3):
-				char_set[ch3] = true
-	for ch4: String in char_set.keys():
-		wrong_pool.append(ch4)
+		for ch2: String in alphabet:
+			if not correct_letters.has(ch2):
+				wrong_set[ch2] = true
+	var wrong_pool: Array[String] = []
+	for ch3: Variant in wrong_set.keys():
+		wrong_pool.append(ch3 as String)
 	wrong_pool.shuffle()
 	var extra: Array[String] = []
-	## Прогресивна складність: менше зайвих літер на початку
-	var extra_count: int = _scale_by_round_i(1, EXTRA_WRONG_LETTERS, _round, TOTAL_ROUNDS)
-	for i: int in mini(extra_count, wrong_pool.size()):
+	for i: int in mini(distractor_count, wrong_pool.size()):
 		extra.append(wrong_pool[i])
 	var all_letters: Array[String] = correct_letters.duplicate()
 	all_letters.append_array(extra)
 	## Перемішати
 	var shuffled: Array[String] = all_letters.duplicate()
 	shuffled.shuffle()
+	## LAW 2: гарантувати >= 3 елементи на екрані
+	if shuffled.size() < 3:
+		push_warning("SpellingBlocks: менше 3 літер, додаємо fallback дистрактори")
+		while shuffled.size() < 3 and wrong_pool.size() > 0:
+			var extra_ch: String = wrong_pool[shuffled.size() % wrong_pool.size()]
+			if not shuffled.has(extra_ch):
+				shuffled.append(extra_ch)
+			else:
+				break
 	## Розмістити внизу
 	var count: int = shuffled.size()
+	if count == 0:
+		push_warning("SpellingBlocks: жодної літери не створено")
+		return
 	var total_w: float = float(count) * (LETTER_SIZE + LETTER_GAP) - LETTER_GAP
 	var start_x: float = (vp.x - total_w) * 0.5
-	var letter_y: float = vp.y * 0.78
+	var letter_y: float = vp.y * 0.76
 	for i: int in count:
 		var ch: String = shuffled[i]
 		var node: Node2D = Node2D.new()
 		add_child(node)
-		## Фон літери
 		var bg: Panel = Panel.new()
 		bg.size = Vector2(LETTER_SIZE, LETTER_SIZE)
 		bg.position = Vector2(-LETTER_SIZE * 0.5, -LETTER_SIZE * 0.5)
@@ -263,15 +366,13 @@ func _spawn_letters(vp: Vector2) -> void:
 		style.border_color = Color(1, 1, 1, 0.4)
 		style.set_border_width_all(2)
 		bg.add_theme_stylebox_override("panel", style)
-		## Premium overlay (LAW 28)
 		bg.material = GameData.create_premium_material(
 			0.05, 2.0, 0.04, 0.06, 0.04, 0.03, 0.05, "", 0.0, 0.10, 0.25, 0.20)
 		GameData.add_gloss(bg, 10)
 		node.add_child(bg)
-		## Текст літери
 		var lbl: Label = Label.new()
 		lbl.text = ch
-		lbl.add_theme_font_size_override("font_size", 28)
+		lbl.add_theme_font_size_override("font_size", 30)
 		lbl.add_theme_color_override("font_color", Color.WHITE)
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -310,7 +411,9 @@ func _process(delta: float) -> void:
 
 
 func _on_picked(_item: Node2D) -> void:
-	AudioManager.play_sfx("click")
+	## Аудіо: pitched click при підборі літери (зростаючий pitch за позицією)
+	var letter_pitch: float = 0.8 + 0.1 * float(mini(_current_slot_idx, 6))
+	AudioManager.play_sfx("click", letter_pitch)
 	_reset_idle_timer()
 
 
@@ -318,6 +421,9 @@ func _on_dropped_target(item: Node2D, _target: Node2D) -> void:
 	if _game_over:
 		return
 	var ch: String = _letter_char.get(item, "")
+	if _current_slot_idx >= _current_word.length():
+		push_warning("SpellingBlocks: slot_idx виходить за межі слова")
+		return
 	var expected: String = _current_word[_current_slot_idx]
 	if ch == expected:
 		_handle_correct_letter(item)
@@ -330,35 +436,46 @@ func _on_dropped_empty(item: Node2D) -> void:
 	_drag.snap_back(item, origin)
 
 
-## ---- Feedback ----
+## ---- Correct / Wrong feedback ----
 
 func _handle_correct_letter(item: Node2D) -> void:
 	_register_correct(item)
 	_input_locked = true
 	_drag.enabled = false
+	## Літера + pitch-up аудіо (кожна наступна літера вище)
+	var pitch: float = 0.9 + 0.08 * float(mini(_current_slot_idx, 8))
+	AudioManager.play_sfx("pop", pitch)
 	## Літера летить в слот
+	if _current_slot_idx >= _slot_nodes.size():
+		push_warning("SpellingBlocks: slot_idx >= slot_nodes.size()")
+		return
 	var slot: Node2D = _slot_nodes[_current_slot_idx]
 	if SettingsManager.reduced_motion:
 		item.global_position = slot.global_position
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	if not SettingsManager.reduced_motion:
 		tw.tween_property(item, "global_position", slot.global_position, 0.2)\
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_callback(func() -> void:
+		if not is_instance_valid(self):
+			return
+		if not is_instance_valid(slot):
+			return
 		JuicyEffects.arrival_pulse(slot, self)
 		VFXManager.spawn_correct_sparkle(slot.global_position)
-		## Зробити слот зеленим + пульс-анімація
-		var cs: StyleBoxFlat = GameData.candy_panel(SLOT_CORRECT_COLOR, 14, false)
-		cs.border_color = Color("06d6a0")
-		cs.set_border_width_all(2)
-		var correct_panel: Panel = _slots[_current_slot_idx]
-		correct_panel.add_theme_stylebox_override("panel", cs)
-		if not SettingsManager.reduced_motion and is_instance_valid(correct_panel):
-			correct_panel.modulate = Color(1.6, 1.6, 1.6, 1.0)
-			var pulse_tw: Tween = create_tween()
-			pulse_tw.tween_property(correct_panel, "modulate", Color.WHITE, 0.3)\
-				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-		## Прибрати літеру з draggable
+		## Слот стає зеленим (LAW 25: + shape change для colorblind)
+		if _current_slot_idx < _slots.size():
+			var cs: StyleBoxFlat = GameData.candy_panel(SLOT_CORRECT_COLOR, 14, false)
+			cs.border_color = Color("06d6a0")
+			cs.set_border_width_all(3)
+			var correct_panel: Panel = _slots[_current_slot_idx]
+			correct_panel.add_theme_stylebox_override("panel", cs)
+			if not SettingsManager.reduced_motion and is_instance_valid(correct_panel):
+				correct_panel.modulate = Color(1.6, 1.6, 1.6, 1.0)
+				var pulse_tw: Tween = _create_game_tween()
+				pulse_tw.tween_property(correct_panel, "modulate", Color.WHITE, ANIM_NORMAL)\
+					.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		## Прибрати літеру з draggable (LAW 11 erase перед orphan)
 		_drag.draggable_items.erase(item)
 		_letter_char.erase(item)
 		_letter_origins.erase(item)
@@ -367,15 +484,17 @@ func _handle_correct_letter(item: Node2D) -> void:
 		if _current_slot_idx >= _current_word.length():
 			_on_word_complete()
 		else:
-			## Оновити drop target на наступний слот
-			_drag.drop_targets.clear()
-			_drag.drop_targets.append(_slot_nodes[_current_slot_idx])
+			if _current_slot_idx < _slot_nodes.size():
+				_drag.drop_targets.clear()
+				_drag.drop_targets.append(_slot_nodes[_current_slot_idx])
 			_input_locked = false
 			_drag.enabled = true
 			_reset_idle_timer())
 
 
 func _handle_wrong_letter(item: Node2D) -> void:
+	## A3/A6/A7: Toddler помилки не рахуються (тоддлер = карточний режим)
+	## Preschool: _errors += 1 + register_error (error sound + smoke + wobble)
 	_errors += 1
 	_register_error(item)
 	var origin: Vector2 = _letter_origins.get(item, item.position)
@@ -383,16 +502,22 @@ func _handle_wrong_letter(item: Node2D) -> void:
 	_reset_idle_timer()
 
 
+## ---- Word complete: бірка ----
+
 func _on_word_complete() -> void:
 	AudioManager.play_sfx("success")
 	HapticsManager.vibrate_success()
-	VFXManager.spawn_premium_celebration(get_viewport().get_visible_rect().size * 0.5)
-	## Звук нагороди за зібране слово (reward.wav)
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	VFXManager.spawn_premium_celebration(vp * 0.5)
+	## Бірка з іменем з'являється під твариною
+	_spawn_name_tag(vp)
 	AudioManager.play_sfx("reward")
-	var round_d: float = 0.15 if SettingsManager.reduced_motion else 0.8
-	var tw: Tween = create_tween()
+	var round_d: float = ANIM_FAST if SettingsManager.reduced_motion else CELEBRATION_DELAY
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(round_d)
 	tw.tween_callback(func() -> void:
+		if not is_instance_valid(self):
+			return
 		_clear_round()
 		_round += 1
 		if _round >= TOTAL_ROUNDS:
@@ -401,13 +526,56 @@ func _on_word_complete() -> void:
 			_start_round())
 
 
-## ---- Round management ----
+## Бірка: прямокутник з іменем тварини в стилі camp tag
+func _spawn_name_tag(vp: Vector2) -> void:
+	var tag: Node2D = Node2D.new()
+	var tag_w: float = maxf(float(_current_word.length()) * 24.0 + 40.0, 120.0)
+	var tag_h: float = 44.0
+	tag.position = Vector2(vp.x * 0.5, vp.y * 0.42)
+	tag.name = "NameTag"
+	add_child(tag)
+	_all_round_nodes.append(tag)
+	## Фон бірки
+	var panel: Panel = Panel.new()
+	panel.size = Vector2(tag_w, tag_h)
+	panel.position = Vector2(-tag_w * 0.5, -tag_h * 0.5)
+	var style: StyleBoxFlat = GameData.candy_panel(TAG_BG_COLOR, 12, false)
+	style.border_color = TAG_BORDER_COLOR
+	style.set_border_width_all(3)
+	panel.add_theme_stylebox_override("panel", style)
+	panel.material = GameData.create_premium_material(
+		0.04, 2.0, 0.03, 0.0, 0.06, 0.05, 0.08, "", 0.0, 0.10, 0.22, 0.18)
+	GameData.add_gloss(panel, 10)
+	tag.add_child(panel)
+	## Текст на бірці
+	var lbl: Label = Label.new()
+	lbl.text = _current_word
+	lbl.add_theme_font_size_override("font_size", 26)
+	lbl.add_theme_color_override("font_color", Color(0.25, 0.15, 0.05))
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.position = Vector2(-tag_w * 0.5, -tag_h * 0.5)
+	lbl.size = Vector2(tag_w, tag_h)
+	tag.add_child(lbl)
+	## Анімація: бірка з'являється знизу і підлітає вгору
+	if not SettingsManager.reduced_motion:
+		tag.modulate.a = 0.0
+		tag.position.y += 30.0
+		var target_y: float = tag.position.y - 30.0
+		var tw: Tween = _create_game_tween().set_parallel(true)
+		tw.tween_property(tag, "modulate:a", 1.0, ANIM_NORMAL)
+		tw.tween_property(tag, "position:y", target_y, ANIM_NORMAL)\
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## ---- Round management (A9 round hygiene) ----
 
 func _clear_round() -> void:
 	if not _is_toddler:
 		_drag.clear_drag()
 		_drag.draggable_items.clear()
 		_drag.drop_targets.clear()
+	## LAW 9/11: erase з dict перед queue_free
 	for node: Node in _all_round_nodes:
 		if is_instance_valid(node):
 			_letter_char.erase(node)
@@ -428,12 +596,12 @@ func _finish() -> void:
 	_game_over = true
 	_input_locked = true
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
-	var earned: int = 5 if _is_toddler else _calculate_stars(_errors)
+	var earned: int = _calculate_stars(_errors)
 	finish_game(earned, {"time_sec": elapsed, "errors": _errors,
 		"rounds_played": TOTAL_ROUNDS, "earned_stars": earned})
 
 
-## ---- Idle hint ----
+## ---- Idle hint (A10 idle escalation) ----
 
 func _reset_idle_timer() -> void:
 	if _game_over:
@@ -449,7 +617,6 @@ func _show_idle_hint() -> void:
 	if _input_locked or _game_over:
 		return
 	if _is_toddler:
-		## Підказка для тоддлера — пульсувати правильну картку
 		if _toddler_correct_idx >= 0 and _toddler_correct_idx < _toddler_cards.size():
 			var card: Node2D = _toddler_cards[_toddler_correct_idx]
 			if is_instance_valid(card):
@@ -463,93 +630,87 @@ func _show_idle_hint() -> void:
 		_reset_idle_timer()
 		return
 	## Підказка — правильна літера пульсує
-	var expected: String = _current_word[_current_slot_idx] if _current_slot_idx < _current_word.length() else ""
-	for node: Node2D in _letter_nodes:
-		if is_instance_valid(node) and _letter_char.get(node, "") == expected:
-			_pulse_node(node, 1.2)
-			break
+	if _current_slot_idx < _current_word.length():
+		var expected: String = _current_word[_current_slot_idx]
+		for node: Node2D in _letter_nodes:
+			if is_instance_valid(node) and _letter_char.get(node, "") == expected:
+				_pulse_node(node, 1.2)
+				break
 	_reset_idle_timer()
 
 
-## ---- Toddler mode: "Хто це?" ----
+## ---- Toddler mode: "Хто це?" (A3 age fork) ----
 
-
-## Почати раунд для тоддлера — показати зображення тварини + картки вибору
 func _start_round_toddler() -> void:
-	_current_word_key = _pick_word_key()
+	_current_word_key = _pick_word_for_round(_round)
 	var animal_name: String = WORD_IMAGES.get(_current_word_key, "Cat")
 	var vp: Vector2 = get_viewport().get_visible_rect().size
-	## R0-1 = 2 картки, R2-4 = 3 картки
+	## Прогресивна складність: R0-1 = 2 картки (LAW 2: мін 2 для тоддлера), R2-4 = 3
 	var option_count: int = 2 if _round < 2 else 3
-	## Зібрати дистрактори — інші тварини, відмінні від правильної
 	var distractors: Array[String] = _pick_distractors(_current_word_key, option_count - 1)
-	## Побудувати масив варіантів (правильна + дистрактори), перемішати
 	var options: Array[Dictionary] = []
 	options.append({"word_key": _current_word_key, "animal": animal_name, "correct": true})
 	for dk: String in distractors:
 		var d_animal: String = WORD_IMAGES.get(dk, "Cat")
 		options.append({"word_key": dk, "animal": d_animal, "correct": false})
 	options.shuffle()
-	## Запам'ятати індекс правильної картки
 	_toddler_correct_idx = -1
 	for i: int in options.size():
-		if options[i].correct:
+		if options[i].get("correct", false):
 			_toddler_correct_idx = i
 			break
-	## Показати зображення тварини зверху (якщо не аудіо-раунд R4)
+	## Показати зображення тварини зверху
 	if _round < 4:
 		_spawn_toddler_image(vp, animal_name)
-	## Розмістити картки знизу
+	_toddler_cards.clear()
 	var total_w: float = float(option_count) * (TODDLER_CARD_W + 16.0) - 16.0
 	var start_x: float = (vp.x - total_w) * 0.5 + TODDLER_CARD_W * 0.5
 	var card_y: float = vp.y * 0.75
-	_toddler_cards.clear()
 	for i: int in options.size():
 		var opt: Dictionary = options[i]
 		var pos: Vector2 = Vector2(start_x + float(i) * (TODDLER_CARD_W + 16.0), card_y)
 		var card: Node2D = _spawn_toddler_card(
-			pos, opt.word_key, opt.animal, opt.correct, i)
+			pos, opt.get("word_key", "") as String,
+			opt.get("animal", "Cat") as String,
+			opt.get("correct", false) as bool, i)
 		_toddler_cards.append(card)
 	_staggered_spawn(_toddler_cards, 0.08)
-	## Розблокувати ввід після анімації
-	var unlock_d: float = 0.15 if SettingsManager.reduced_motion else 0.4
-	var tw: Tween = create_tween()
+	var unlock_d: float = ANIM_FAST if SettingsManager.reduced_motion else ANIM_NORMAL + 0.1
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(unlock_d)
 	tw.tween_callback(func() -> void:
+		if not is_instance_valid(self):
+			return
 		_input_locked = false
 		_reset_idle_timer())
 
 
-## Показати велике зображення тварини зверху (тоддлер)
 func _spawn_toddler_image(vp: Vector2, animal_name: String) -> void:
 	var tex_path: String = "res://assets/sprites/animals/%s.png" % animal_name
 	if not ResourceLoader.exists(tex_path):
-		push_warning("SpellingBlocks toddler: teksturu '%s' ne znajdeno" % tex_path)
+		push_warning("SpellingBlocks: тоддлер спрайт '%s' не знайдено" % tex_path)
 		return
 	var tex: Texture2D = load(tex_path)
 	_image_sprite = Sprite2D.new()
 	_image_sprite.texture = tex
-	## Масштабувати до ~300dp
 	var tex_size: Vector2 = Vector2(tex.get_width(), tex.get_height())
-	var scale_f: float = TODDLER_IMAGE_SIZE / maxf(tex_size.x, tex_size.y)
+	var scale_f: float = TODDLER_IMAGE_SIZE / maxf(tex_size.x, maxf(tex_size.y, 1.0))
 	_image_sprite.scale = Vector2(scale_f, scale_f)
 	_image_sprite.position = Vector2(vp.x * 0.5, vp.y * 0.32)
 	_image_sprite.material = GameData.create_premium_material(
 		0.04, 2.0, 0.03, 0.06, 0.05, 0.04, 0.08, "", 0.0, 0.10, 0.22, 0.18)
 	add_child(_image_sprite)
 	_all_round_nodes.append(_image_sprite)
-	## Анімація появи
 	if not SettingsManager.reduced_motion:
 		_image_sprite.modulate.a = 0.0
 		var target_scale: Vector2 = _image_sprite.scale
 		_image_sprite.scale = target_scale * 0.6
-		var tw: Tween = create_tween().set_parallel(true)
-		tw.tween_property(_image_sprite, "modulate:a", 1.0, 0.3)
-		tw.tween_property(_image_sprite, "scale", target_scale, 0.3)\
+		var tw: Tween = _create_game_tween().set_parallel(true)
+		tw.tween_property(_image_sprite, "modulate:a", 1.0, ANIM_NORMAL)
+		tw.tween_property(_image_sprite, "scale", target_scale, ANIM_NORMAL)\
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
-## Створити картку вибору (тоддлер): спрайт тварини + підпис
 func _spawn_toddler_card(pos: Vector2, word_key: String, animal_name: String,
 		is_correct: bool, card_idx: int) -> Node2D:
 	var card: Node2D = Node2D.new()
@@ -557,7 +718,6 @@ func _spawn_toddler_card(pos: Vector2, word_key: String, animal_name: String,
 	card.name = "ToddlerCard_%d" % card_idx
 	add_child(card)
 	_all_round_nodes.append(card)
-	## Фонова панель
 	var panel: Panel = Panel.new()
 	panel.size = Vector2(TODDLER_CARD_W, TODDLER_CARD_H)
 	panel.position = Vector2(-TODDLER_CARD_W * 0.5, -TODDLER_CARD_H * 0.5)
@@ -569,28 +729,25 @@ func _spawn_toddler_card(pos: Vector2, word_key: String, animal_name: String,
 		0.04, 2.0, 0.03, 0.0, 0.06, 0.05, 0.08, "", 0.0, 0.08, 0.18, 0.15)
 	GameData.add_gloss(panel, 12)
 	card.add_child(panel)
-	## Спрайт тварини (~80dp висота)
 	var tex_path: String = "res://assets/sprites/animals/%s.png" % animal_name
 	if ResourceLoader.exists(tex_path):
 		var tex: Texture2D = load(tex_path)
 		var sprite: Sprite2D = Sprite2D.new()
 		sprite.texture = tex
 		var tex_size: Vector2 = Vector2(tex.get_width(), tex.get_height())
-		var s: float = 80.0 / maxf(tex_size.x, tex_size.y)
+		var s: float = 80.0 / maxf(tex_size.x, maxf(tex_size.y, 1.0))
 		sprite.scale = Vector2(s, s)
 		sprite.position = Vector2(0.0, -16.0)
 		card.add_child(sprite)
-	## Підпис — ім'я тварини
 	var lbl: Label = Label.new()
 	lbl.text = tr(word_key)
-	lbl.add_theme_font_size_override("font_size", 26)  ## Research: ≥24sp for kids readability
+	lbl.add_theme_font_size_override("font_size", 26)
 	lbl.add_theme_color_override("font_color", Color(0.2, 0.15, 0.35))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl.size = Vector2(TODDLER_CARD_W, 28.0)
 	lbl.position = Vector2(-TODDLER_CARD_W * 0.5, TODDLER_CARD_H * 0.5 - 32.0)
 	card.add_child(lbl)
-	## Невидима кнопка для тапу
 	var btn: Button = Button.new()
 	btn.flat = true
 	btn.size = Vector2(TODDLER_CARD_W, TODDLER_CARD_H)
@@ -598,13 +755,11 @@ func _spawn_toddler_card(pos: Vector2, word_key: String, animal_name: String,
 	btn.modulate.a = 0.0
 	btn.pressed.connect(_on_toddler_card_tapped.bind(card_idx))
 	card.add_child(btn)
-	## Зберегти мета-дані на ноді
 	card.set_meta("correct", is_correct)
 	card.set_meta("card_idx", card_idx)
 	return card
 
 
-## Обробка натискання на картку тоддлера
 func _on_toddler_card_tapped(idx: int) -> void:
 	if _input_locked or _game_over:
 		return
@@ -622,13 +777,13 @@ func _on_toddler_card_tapped(idx: int) -> void:
 		VFXManager.spawn_match_sparkle(card.global_position)
 		AudioManager.play_sfx("success")
 		HapticsManager.vibrate_success()
-		## Звук нагороди (reward.wav)
 		AudioManager.play_sfx("reward")
-		## Перехід до наступного раунду
-		var round_d: float = 0.15 if SettingsManager.reduced_motion else 0.6
-		var tw: Tween = create_tween()
+		var round_d: float = ANIM_FAST if SettingsManager.reduced_motion else ROUND_DELAY
+		var tw: Tween = _create_game_tween()
 		tw.tween_interval(round_d)
 		tw.tween_callback(func() -> void:
+			if not is_instance_valid(self):
+				return
 			_clear_round()
 			_round += 1
 			if _round >= TOTAL_ROUNDS:
@@ -636,17 +791,16 @@ func _on_toddler_card_tapped(idx: int) -> void:
 			else:
 				_start_round())
 	else:
-		## Неправильна відповідь — м'який wobble, без лічильника помилок (A6)
+		## A6: тоддлер помилки — м'який wobble, без лічильника
 		AudioManager.play_sfx("click")
 		if not SettingsManager.reduced_motion:
-			var tw: Tween = create_tween()
+			var tw: Tween = _create_game_tween()
 			tw.tween_property(card, "position:x", card.position.x - 8.0, 0.06)
 			tw.tween_property(card, "position:x", card.position.x + 8.0, 0.06)
 			tw.tween_property(card, "position:x", card.position.x, 0.06)
 		_reset_idle_timer()
 
 
-## Обробка тач/клік вводу для тоддлера (fallback якщо Button не зловив)
 func _handle_toddler_input(event: InputEvent) -> void:
 	if not event is InputEventScreenTouch and not event is InputEventMouseButton:
 		return
@@ -660,7 +814,6 @@ func _handle_toddler_input(event: InputEvent) -> void:
 		pos = event.position
 	if not pressed:
 		return
-	## Перевірити чи тап потрапив на картку
 	for i: int in _toddler_cards.size():
 		var card: Node2D = _toddler_cards[i]
 		if not is_instance_valid(card):
@@ -673,7 +826,6 @@ func _handle_toddler_input(event: InputEvent) -> void:
 			return
 
 
-## Обрати дистрактори — випадкові тварини відмінні від правильної
 func _pick_distractors(correct_key: String, count: int) -> Array[String]:
 	var pool: Array[String] = []
 	for wk: String in WORD_KEYS:

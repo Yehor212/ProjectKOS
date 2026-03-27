@@ -1,27 +1,45 @@
 extends BaseMiniGame
 
-## Odd One Out — знайди зайве!
-## Toddler: 3 однакові + 1 інша тварина. Preschool: 3 з категорії + 1 інтрудер.
+## Photo Crasher / Фотобомбер — знайди хто влiз у групове фото!
+## Toddler: візуально інший (слон серед зайців).
+## Preschool: категорійний інтрудер (їжа серед тварин, дике серед домашніх).
+## R1: 4 items, obvious. R2: 5. R3: category. R4: 6, subtle. R5: 2 crashers.
 
 const TOTAL_ROUNDS: int = 5
 const ITEM_SCALE: Vector2 = Vector2(0.4, 0.4)
 const GRID_GAP: float = 40.0
 const TAP_RADIUS: float = 110.0
-const DEAL_STAGGER: float = 0.1
-const DEAL_DURATION: float = 0.4
-const TOP_BAR_HEIGHT: float = 64.0
+const DEAL_STAGGER: float = 0.12
+const DEAL_DURATION: float = 0.45
+const TOP_MARGIN: float = 110.0
 const IDLE_HINT_DELAY: float = 5.0
 const SAFETY_TIMEOUT_SEC: float = 120.0
+## Шанс що crasher має "маскування" (вуса/парік-тінт) — падає при знаходженні
+const DISGUISE_CHANCE: float = 0.35
+const DISGUISE_TINT: Color = Color(0.9, 0.85, 1.0, 1.0)
+const CRASHER_EXIT_DURATION: float = 0.5
+const APPLAUSE_BOUNCE_SCALE: float = 1.15
+## Вхідні напрямки для "позування" — items прилітають з різних сторін
+const ENTRY_OFFSETS: Array[Vector2] = [
+	Vector2(-300, 0), Vector2(300, 0), Vector2(0, -300),
+	Vector2(-200, -200), Vector2(200, -200), Vector2(0, 300),
+]
 
 var _is_toddler: bool = false
 var _round: int = 0
 var _items: Array[Node2D] = []
-var _odd_item: Node2D = null
+var _crashers: Array[Node2D] = []
+var _crashers_remaining: int = 0
 var _used_indices: Array[int] = []
 var _start_time: float = 0.0
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _idle_timer: SceneTreeTimer = null
-var _narrative_label: Label = null
+## Кешуємо позиції items для photo-pose повернення після помилкового тапу
+var _item_positions: Dictionary = {}
+## Трекаємо замасковані crashers
+var _disguised_items: Dictionary = {}
+## Flash overlay для "camera flash" при початку раунду
+var _flash_rect: ColorRect = null
 
 
 func _ready() -> void:
@@ -32,22 +50,10 @@ func _ready() -> void:
 	_rng.randomize()
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
-	_build_narrative_label(tr("WHO_IS_HIDING"))
+	_build_instruction_pill(tr("PHOTO_CRASHER_FIND"), 26)
+	_update_round_label("1 / %d" % TOTAL_ROUNDS)
 	_start_round()
 	_start_safety_timeout(SAFETY_TIMEOUT_SEC)
-
-
-## Наратив — "Хто тут заховався?" лейбл зверху
-func _build_narrative_label(text: String) -> void:
-	var vp: Vector2 = get_viewport().get_visible_rect().size
-	_narrative_label = Label.new()
-	_narrative_label.text = text
-	_narrative_label.add_theme_font_size_override("font_size", 28)
-	_narrative_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
-	_narrative_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_narrative_label.position = Vector2(0, TOP_BAR_HEIGHT + 4.0)
-	_narrative_label.size = Vector2(vp.x, 40)
-	_ui_layer.add_child(_narrative_label)
 
 
 func _input(event: InputEvent) -> void:
@@ -64,6 +70,8 @@ func _input(event: InputEvent) -> void:
 		return
 	var pos: Vector2 = get_global_mouse_position()
 	for item: Node2D in _items:
+		if not is_instance_valid(item):
+			continue
 		if pos.distance_to(item.global_position) < TAP_RADIUS:
 			_handle_tap(item)
 			return
@@ -71,139 +79,290 @@ func _input(event: InputEvent) -> void:
 
 func _handle_tap(item: Node2D) -> void:
 	_input_locked = true
-	if item == _odd_item:
-		_handle_correct(item)
+	if _crashers.has(item):
+		_handle_correct_crasher(item)
 	else:
 		_handle_wrong(item)
 
 
-func _handle_correct(item: Node2D) -> void:
+## Crasher знайдений — "oops" анімація виходу + маска падає (якщо є)
+func _handle_correct_crasher(item: Node2D) -> void:
 	_register_correct(item)
-	## VFX golden burst при знаходженні зайвого (LAW 28)
 	VFXManager.spawn_golden_burst(item.global_position)
-	if SettingsManager.reduced_motion:
-		var tw_rm: Tween = create_tween()
-		tw_rm.tween_interval(0.15)
-		tw_rm.tween_callback(_advance_round)
-		return
-	## Silly dance — rotation wiggle + bounce combo
-	var tw: Tween = create_tween()
-	tw.tween_property(item, "rotation_degrees", 15.0, 0.08)
-	tw.tween_property(item, "rotation_degrees", -15.0, 0.08)
-	tw.tween_property(item, "rotation_degrees", 10.0, 0.06)
-	tw.tween_property(item, "rotation_degrees", -10.0, 0.06)
-	tw.tween_property(item, "rotation_degrees", 0.0, 0.06)
-	tw.parallel().tween_property(item, "scale", ITEM_SCALE * 1.3, 0.1)
-	tw.tween_property(item, "scale", ITEM_SCALE * 0.85, 0.08)
-	tw.tween_property(item, "scale", ITEM_SCALE, 0.12)\
-		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-	tw.tween_interval(0.3)
-	tw.tween_callback(_advance_round)
+	_crashers_remaining -= 1
+	## Зняти маскування якщо є — "маска падає"
+	if _disguised_items.has(item):
+		_drop_disguise(item)
+	## Embarrassed exit — crasher тікає зі сцени
+	_animate_crasher_exit(item)
 
 
 func _handle_wrong(item: Node2D) -> void:
 	if _is_toddler:
-		_register_error(item)  ## A11: scaffolding для тоддлера
-		## Gentle head shake — "Ні, я тут живу!"
-		if not SettingsManager.reduced_motion and is_instance_valid(item):
-			var orig_x: float = item.position.x
-			var sh: Tween = create_tween()
-			sh.tween_property(item, "position:x", orig_x - 8.0, 0.06)
-			sh.tween_property(item, "position:x", orig_x + 8.0, 0.06)
-			sh.tween_property(item, "position:x", orig_x - 4.0, 0.04)
-			sh.tween_property(item, "position:x", orig_x, 0.04)
-		var d: float = 0.15 if SettingsManager.reduced_motion else 0.25
-		var tw: Tween = create_tween()
-		tw.tween_interval(d)
-		tw.tween_callback(func() -> void:
-			_input_locked = false
-			_reset_idle_timer()
-		)
+		_register_error(item)
 	else:
 		_errors += 1
 		_register_error(item)
-		## Gentle head shake — "Ні, я тут живу!"
-		if not SettingsManager.reduced_motion and is_instance_valid(item):
-			var orig_x2: float = item.position.x
-			var sh2: Tween = create_tween()
-			sh2.tween_property(item, "position:x", orig_x2 - 8.0, 0.06)
-			sh2.tween_property(item, "position:x", orig_x2 + 8.0, 0.06)
-			sh2.tween_property(item, "position:x", orig_x2 - 4.0, 0.04)
-			sh2.tween_property(item, "position:x", orig_x2, 0.04)
-		var d: float = 0.15 if SettingsManager.reduced_motion else 0.25
-		var tw: Tween = create_tween()
-		tw.tween_interval(d)
-		tw.tween_callback(func() -> void:
+	var delay: float = 0.15 if SettingsManager.reduced_motion else 0.3
+	var tw: Tween = _create_game_tween()
+	tw.tween_interval(delay)
+	tw.tween_callback(func() -> void:
+		_input_locked = false
+		_reset_idle_timer()
+	)
+
+
+## Crasher embarrassed exit — зменшується + з'їжджає вниз + "oops" повертається
+func _animate_crasher_exit(item: Node2D) -> void:
+	if SettingsManager.reduced_motion:
+		_on_crasher_exited(item)
+		return
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var tw: Tween = _create_game_tween()
+	## Embarrassed wobble — "ой, мене спіймали!"
+	tw.tween_property(item, "rotation_degrees", 12.0, 0.08)
+	tw.tween_property(item, "rotation_degrees", -12.0, 0.08)
+	tw.tween_property(item, "rotation_degrees", 0.0, 0.06)
+	## Shrink + slide down off screen
+	tw.set_parallel(true)
+	tw.tween_property(item, "scale", Vector2(0.1, 0.1), CRASHER_EXIT_DURATION)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	tw.tween_property(item, "position:y", vp.y + 100.0, CRASHER_EXIT_DURATION)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_property(item, "modulate:a", 0.0, CRASHER_EXIT_DURATION * 0.8)
+	tw.set_parallel(false)
+	tw.tween_callback(_on_crasher_exited.bind(item))
+
+
+func _on_crasher_exited(item: Node2D) -> void:
+	if not is_instance_valid(self):
+		return
+	## Прибрати crasher з масиву items
+	if _items.has(item):
+		_items.erase(item)
+	if _crashers.has(item):
+		_crashers.erase(item)
+	if _disguised_items.has(item):
+		_disguised_items.erase(item)
+	if _item_positions.has(item):
+		_item_positions.erase(item)
+	if is_instance_valid(item):
+		item.queue_free()
+	## Група аплодує — bounce решта items
+	_animate_group_applause()
+	if _crashers_remaining <= 0:
+		## Всіх crashers знайдено — advance
+		var delay: float = 0.1 if SettingsManager.reduced_motion else 0.6
+		var advance_tw: Tween = _create_game_tween()
+		advance_tw.tween_interval(delay)
+		advance_tw.tween_callback(_advance_round)
+	else:
+		## Є ще crashers — unlock input
+		var delay: float = 0.1 if SettingsManager.reduced_motion else 0.4
+		var unlock_tw: Tween = _create_game_tween()
+		unlock_tw.tween_interval(delay)
+		unlock_tw.tween_callback(func() -> void:
 			_input_locked = false
 			_reset_idle_timer()
 		)
 
 
+## Група "аплодує" — items підстрибують (bounce effect)
+func _animate_group_applause() -> void:
+	if SettingsManager.reduced_motion:
+		return
+	for item: Node2D in _items:
+		if not is_instance_valid(item):
+			continue
+		if _crashers.has(item):
+			continue
+		var tw: Tween = _create_game_tween()
+		var orig_scale: Vector2 = item.scale
+		var delay: float = _rng.randf_range(0.0, 0.15)
+		tw.tween_property(item, "scale", orig_scale * APPLAUSE_BOUNCE_SCALE, 0.1)\
+			.set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		tw.tween_property(item, "scale", orig_scale, 0.15)\
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+## "Маска падає" — зняти тінт disguise
+func _drop_disguise(item: Node2D) -> void:
+	if not is_instance_valid(item):
+		return
+	if SettingsManager.reduced_motion:
+		item.modulate = Color.WHITE
+		return
+	var tw: Tween = _create_game_tween()
+	tw.tween_property(item, "modulate", Color.WHITE, 0.2)
+
+
 func _advance_round() -> void:
+	if _game_over:
+		return
 	_clear_round()
 	_round += 1
 	if _round >= TOTAL_ROUNDS:
 		_finish()
 	else:
+		_update_round_label("%d / %d" % [_round + 1, TOTAL_ROUNDS])
 		_start_round()
 
 
 func _start_round() -> void:
+	var crasher_count: int = 1
+	## R5 (round index 4): два crashers!
+	if _round >= TOTAL_ROUNDS - 1:
+		crasher_count = 2
+		if is_instance_valid(_instruction_label):
+			_instruction_label.text = tr("PHOTO_CRASHER_FIND_TWO")
+	elif is_instance_valid(_instruction_label):
+		_instruction_label.text = tr("PHOTO_CRASHER_FIND")
 	if _is_toddler:
-		_generate_toddler_round()
+		_generate_toddler_round(crasher_count)
 	else:
-		_generate_preschool_round()
+		_generate_preschool_round(crasher_count)
+	## A8: guard — якщо items порожні через fallback failures
+	if _items.size() == 0:
+		push_warning("OddOneOut: no items created, skipping round")
+		_round += 1
+		if _round >= TOTAL_ROUNDS:
+			_finish()
+		else:
+			_start_round()
+		return
 	_deal_items()
+	_fire_camera_flash()
 
 
-func _generate_toddler_round() -> void:
-	var indices: Array[int] = _pick_indices(2)
-	var majority_scene: PackedScene = GameData.ANIMALS_AND_FOOD[indices[0]].animal_scene
-	var odd_scene: PackedScene = GameData.ANIMALS_AND_FOOD[indices[1]].animal_scene
+## Toddler: візуально інша тварина серед однакових
+func _generate_toddler_round(crasher_count: int) -> void:
+	## Кількість majority items зростає з раундами (LAW 6 / A4)
 	var majority_count: int = _scale_by_round_i(3, 5, _round, TOTAL_ROUNDS)
-	for i: int in range(majority_count):
-		_items.append(_create_item(majority_scene))
-	_odd_item = _create_item(odd_scene)
-	_items.append(_odd_item)
-	_items.shuffle()
-
-
-func _generate_preschool_round() -> void:
-	var majority_count: int = _scale_by_round_i(3, 5, _round, TOTAL_ROUNDS)
-	var indices: Array[int] = _pick_indices(majority_count + 1)
-	## A8: guard — якщо індексів менше ніж потрібно, зменшуємо majority_count
+	var total_unique: int = 1 + crasher_count
+	var indices: Array[int] = _pick_indices(total_unique)
+	## A8: fallback guard
+	if indices.size() < total_unique:
+		push_warning("OddOneOut: недостатньо індексів для toddler round")
+		indices = _pick_indices(maxi(total_unique, 2))
 	if indices.size() < 2:
-		push_warning("OddOneOut: недостатньо індексів, fallback")
-		indices = _pick_indices(4)
-	majority_count = mini(majority_count, indices.size() - 1)
-	var use_animals: bool = _rng.randi() % 2 == 0
+		push_warning("OddOneOut: critical fallback — недостатньо даних")
+		return
+	## Majority — всі одного виду
+	var majority_data: Dictionary = GameData.ANIMALS_AND_FOOD[indices[0]]
+	var majority_scene: PackedScene = majority_data.get("animal_scene")
+	if not majority_scene:
+		push_warning("OddOneOut: majority animal_scene відсутня")
+		return
 	for i: int in range(majority_count):
-		var data: Dictionary = GameData.ANIMALS_AND_FOOD[indices[i]]
-		var scene: PackedScene = data.animal_scene if use_animals else data.food_scene
-		_items.append(_create_item(scene))
-	var odd_data: Dictionary = GameData.ANIMALS_AND_FOOD[indices[majority_count]]
-	var odd_scene: PackedScene = odd_data.food_scene if use_animals else odd_data.animal_scene
-	_odd_item = _create_item(odd_scene)
-	_items.append(_odd_item)
+		var item: Node2D = _create_item(majority_scene)
+		if item:
+			_items.append(item)
+	## Crashers — інші тварини
+	for c: int in range(crasher_count):
+		var c_idx: int = mini(1 + c, indices.size() - 1)
+		var crasher_data: Dictionary = GameData.ANIMALS_AND_FOOD[indices[c_idx]]
+		var crasher_scene: PackedScene = crasher_data.get("animal_scene")
+		if not crasher_scene:
+			push_warning("OddOneOut: crasher animal_scene відсутня")
+			continue
+		var crasher: Node2D = _create_item(crasher_scene)
+		if crasher:
+			_items.append(crasher)
+			_crashers.append(crasher)
+			_maybe_apply_disguise(crasher)
+	_crashers_remaining = _crashers.size()
 	_items.shuffle()
 
 
+## Preschool: категорійний інтрудер (їжа серед тварин, або навпаки)
+func _generate_preschool_round(crasher_count: int) -> void:
+	var majority_count: int = _scale_by_round_i(3, 5, _round, TOTAL_ROUNDS)
+	var total_needed: int = majority_count + crasher_count
+	var indices: Array[int] = _pick_indices(total_needed)
+	## A8: guard
+	if indices.size() < 2:
+		push_warning("OddOneOut: preschool fallback — недостатньо індексів")
+		indices = _pick_indices(maxi(total_needed, 4))
+	majority_count = mini(majority_count, maxi(indices.size() - crasher_count, 1))
+	## Majority: тварини. Crasher: їжа (або навпаки)
+	var use_animals_for_majority: bool = _rng.randi() % 2 == 0
+	for i: int in range(majority_count):
+		if i >= indices.size():
+			break
+		var data: Dictionary = GameData.ANIMALS_AND_FOOD[indices[i]]
+		var scene_key: String = "animal_scene" if use_animals_for_majority else "food_scene"
+		var scene: PackedScene = data.get(scene_key)
+		if not scene:
+			push_warning("OddOneOut: preschool majority scene відсутня")
+			continue
+		var item: Node2D = _create_item(scene)
+		if item:
+			_items.append(item)
+	## Crashers — з протилежної категорії
+	var crasher_scene_key: String = "food_scene" if use_animals_for_majority else "animal_scene"
+	for c: int in range(crasher_count):
+		var c_idx: int = majority_count + c
+		if c_idx >= indices.size():
+			c_idx = indices.size() - 1
+		if c_idx < 0:
+			push_warning("OddOneOut: no valid crasher index")
+			continue
+		var crasher_data: Dictionary = GameData.ANIMALS_AND_FOOD[indices[c_idx]]
+		var crasher_scene: PackedScene = crasher_data.get(crasher_scene_key)
+		if not crasher_scene:
+			push_warning("OddOneOut: preschool crasher scene відсутня")
+			continue
+		var crasher: Node2D = _create_item(crasher_scene)
+		if crasher:
+			_items.append(crasher)
+			_crashers.append(crasher)
+			_maybe_apply_disguise(crasher)
+	_crashers_remaining = _crashers.size()
+	_items.shuffle()
+
+
+## Створити item з premium матеріалом (LAW 28)
 func _create_item(scene: PackedScene) -> Node2D:
+	if not scene:
+		push_warning("OddOneOut: null scene passed to _create_item")
+		return null
 	var item: Node2D = scene.instantiate()
-	item.scale = ITEM_SCALE
+	var scale_factor: float = 1.0
+	if _is_toddler:
+		scale_factor = TODDLER_SCALE
+	item.scale = ITEM_SCALE * scale_factor
 	add_child(item)
 	item.material = GameData.create_premium_material(
 		0.05, 2.0, 0.04, 0.06, 0.06, 0.05, 0.08, "", 0.0, 0.12, 0.28, 0.22)
 	return item
 
 
+## Маскування crasher — тонкий тінт "disguise" що падає при знаходженні
+func _maybe_apply_disguise(item: Node2D) -> void:
+	if _rng.randf() > DISGUISE_CHANCE:
+		return
+	if not is_instance_valid(item):
+		return
+	item.modulate = DISGUISE_TINT
+	## Невелике обертання — "парік перекосився"
+	item.rotation_degrees = _rng.randf_range(-6.0, 6.0)
+	_disguised_items[item] = true
+
+
+## Розкласти items на сцені — "photo pose" анімація (LAW 23: input locked)
 func _deal_items() -> void:
 	var vp: Vector2 = get_viewport().get_visible_rect().size
-	var item_size: float = 512.0 * ITEM_SCALE.x
+	var scale_factor: float = 1.0
+	if _is_toddler:
+		scale_factor = TODDLER_SCALE
+	var item_size: float = 512.0 * ITEM_SCALE.x * scale_factor
 	var cx: float = vp.x * 0.5
-	var cy: float = (vp.y + TOP_BAR_HEIGHT) * 0.5
+	var cy: float = (vp.y + TOP_MARGIN) * 0.5
 	var total: int = _items.size()
-	## Динамічна сітка: 2 стовпці для 4, 3 для 5-6
+	if total == 0:
+		push_warning("OddOneOut: _deal_items called with 0 items")
+		return
+	## Динамічна сітка: 2 стовпці для 4, 3 для 5-6+ (LAW 2: min 3 choices)
 	var cols: int = 2 if total <= 4 else 3
 	@warning_ignore("integer_division")
 	var rows: int = (total + cols - 1) / cols
@@ -215,43 +374,92 @@ func _deal_items() -> void:
 		var c: int = idx % cols
 		@warning_ignore("integer_division")
 		var r: int = idx / cols
+		## Невелике випадкове зміщення для "неформального фото" відчуття
+		var jitter: Vector2 = Vector2(
+			_rng.randf_range(-8.0, 8.0),
+			_rng.randf_range(-6.0, 6.0)
+		)
 		positions.append(Vector2(
 			cx - grid_w * 0.5 + cell * (float(c) + 0.5),
-			cy - grid_h * 0.5 + cell * (float(r) + 0.5)))
-	for i: int in range(_items.size()):
+			cy - grid_h * 0.5 + cell * (float(r) + 0.5)) + jitter)
+	for i: int in range(total):
+		if i >= _items.size():
+			break
 		var item: Node2D = _items[i]
+		if not is_instance_valid(item):
+			continue
 		var target: Vector2 = positions[i]
+		_item_positions[item] = target
 		if SettingsManager.reduced_motion:
 			item.position = target
-			item.scale = ITEM_SCALE
-			item.modulate.a = 1.0
-			if i == _items.size() - 1:
+			item.modulate.a = 1.0 if not _disguised_items.has(item) else DISGUISE_TINT.a
+			if i == total - 1:
 				_input_locked = false
 				_reset_idle_timer()
 		else:
-			item.position = Vector2(target.x, -200.0)
-			item.scale = Vector2(0.2, 0.2)
+			## Photo pose entry — items прилітають з різних боків
+			var entry_offset: Vector2 = ENTRY_OFFSETS[i % ENTRY_OFFSETS.size()]
+			item.position = target + entry_offset
 			item.modulate.a = 0.0
+			## Невелике випадкове обертання при вході — "позування"
+			var pose_rotation: float = _rng.randf_range(-5.0, 5.0)
+			if _disguised_items.has(item):
+				pose_rotation = item.rotation_degrees
 			var delay: float = float(i) * DEAL_STAGGER
-			var tw: Tween = create_tween().set_parallel(true)
+			var tw: Tween = _create_game_tween().set_parallel(true)
 			tw.tween_property(item, "position", target, DEAL_DURATION)\
 				.set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-			tw.tween_property(item, "scale", ITEM_SCALE, DEAL_DURATION)\
+			tw.tween_property(item, "scale", item.scale, DEAL_DURATION)\
 				.set_delay(delay).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 			tw.tween_property(item, "modulate:a", 1.0, 0.2).set_delay(delay)
-			if i == _items.size() - 1:
-				tw.chain().tween_callback(func() -> void:
+			tw.tween_property(item, "rotation_degrees", pose_rotation, DEAL_DURATION * 0.8)\
+				.set_delay(delay).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			if i == total - 1:
+				tw.set_parallel(false)
+				tw.tween_callback(func() -> void:
 					_input_locked = false
 					_reset_idle_timer()
 				)
 
 
+## Camera flash — short white overlay для фото-нарративу
+func _fire_camera_flash() -> void:
+	if SettingsManager.reduced_motion:
+		return
+	if is_instance_valid(_flash_rect):
+		_flash_rect.queue_free()
+	_flash_rect = ColorRect.new()
+	_flash_rect.color = Color(1.0, 1.0, 1.0, 0.25)
+	_flash_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_flash_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_layer.add_child(_flash_rect)
+	var tw: Tween = _create_game_tween()
+	tw.tween_property(_flash_rect, "color:a", 0.0, 0.4)
+	tw.tween_callback(func() -> void:
+		if is_instance_valid(_flash_rect):
+			_flash_rect.queue_free()
+			_flash_rect = null
+	)
+
+
+## Очистити раунд — LAW 9 round hygiene, LAW 11 no orphans
 func _clear_round() -> void:
+	## Erase з dictionaries ПЕРЕД queue_free (LAW 9)
 	for item: Node2D in _items:
+		if _item_positions.has(item):
+			_item_positions.erase(item)
+		if _disguised_items.has(item):
+			_disguised_items.erase(item)
 		if is_instance_valid(item):
 			item.queue_free()
 	_items.clear()
-	_odd_item = null
+	_crashers.clear()
+	_crashers_remaining = 0
+	_item_positions.clear()
+	_disguised_items.clear()
+	if is_instance_valid(_flash_rect):
+		_flash_rect.queue_free()
+		_flash_rect = null
 
 
 func _finish() -> void:
@@ -260,19 +468,28 @@ func _finish() -> void:
 	VFXManager.spawn_premium_celebration(get_viewport().get_visible_rect().size * 0.5)
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
 	var earned: int = _calculate_stars(_errors)
-	finish_game(earned, {"time_sec": elapsed, "errors": _errors,
-		"rounds_played": TOTAL_ROUNDS, "earned_stars": earned})
+	finish_game(earned, {
+		"time_sec": elapsed,
+		"errors": _errors,
+		"rounds_played": TOTAL_ROUNDS,
+		"earned_stars": earned,
+	})
 
 
+## Обрати N унікальних індексів з ANIMALS_AND_FOOD (LAW 13: bounds safety)
 func _pick_indices(count: int) -> Array[int]:
+	var pool_size: int = GameData.ANIMALS_AND_FOOD.size()
+	if pool_size == 0:
+		push_warning("OddOneOut: ANIMALS_AND_FOOD порожній")
+		return []
 	var available: Array[int] = []
-	for i: int in range(GameData.ANIMALS_AND_FOOD.size()):
+	for i: int in range(pool_size):
 		if not _used_indices.has(i):
 			available.append(i)
 	if available.size() < count:
 		_used_indices.clear()
 		available.clear()
-		for i: int in range(GameData.ANIMALS_AND_FOOD.size()):
+		for i: int in range(pool_size):
 			available.append(i)
 	available.shuffle()
 	var picked: Array[int] = []
@@ -282,6 +499,7 @@ func _pick_indices(count: int) -> Array[int]:
 	return picked
 
 
+## Idle hint — пульсувати перший невідомий crasher (A10)
 func _reset_idle_timer() -> void:
 	if _game_over:
 		return
@@ -293,16 +511,26 @@ func _reset_idle_timer() -> void:
 
 
 func _show_idle_hint() -> void:
-	if _input_locked or _game_over or not is_instance_valid(_odd_item):
+	if _input_locked or _game_over:
+		return
+	## Знайти перший валідний crasher для підказки
+	var hint_target: Node2D = null
+	for crasher: Node2D in _crashers:
+		if is_instance_valid(crasher):
+			hint_target = crasher
+			break
+	if not hint_target:
 		return
 	var level: int = _advance_idle_hint()
 	if level >= 2:
+		## Level 2+: tutorial hand — покаже точку для тапу
 		_reset_idle_timer()
 		return
-	_pulse_node(_odd_item, 1.2)
+	_pulse_node(hint_target, 1.2)
 	_reset_idle_timer()
 
 
+## Tutorial — A1: zero-text onboarding
 func get_tutorial_instruction() -> String:
 	if _is_toddler:
 		return tr("ODD_TUTORIAL_TODDLER")
@@ -310,6 +538,8 @@ func get_tutorial_instruction() -> String:
 
 
 func get_tutorial_demo() -> Dictionary:
-	if not is_instance_valid(_odd_item):
-		return {}
-	return {"type": "tap", "target": _odd_item.global_position}
+	## Показати де перший crasher для demo тапу
+	for crasher: Node2D in _crashers:
+		if is_instance_valid(crasher):
+			return {"type": "tap", "target": crasher.global_position}
+	return {}

@@ -17,6 +17,11 @@ const COLOR_BLIND_PATTERNS: Dictionary = {
 	"yellow": "star", "purple": "diamond", "orange": "cross",
 	"pink": "heart", "white": "ring", "cream": "triangle",
 	"light_blue": "chevron",
+	## Результуючі кольори color_lab (Magic Potions)
+	"brown": "stripes", "dark_brown": "stripes", "olive": "diamond",
+	"lime": "waves", "scarlet": "cross", "peach": "triangle",
+	"lavender": "diamond", "mint": "chevron", "salmon": "heart",
+	"lavender_blue": "dots",
 }
 ## Color value → pattern (for games that use Color objects instead of string IDs)
 const _CB_COLOR_MAP: Dictionary = {
