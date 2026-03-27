@@ -54,6 +54,7 @@ func _do_save() -> void:
 	}
 	data.merge(ProgressManager.get_save_data(), false)  ## false = не перезаписувати settings ключі
 	data.merge(RewardManager.get_save_data(), false)
+	data.merge(MasteryManager.get_save_data(), false)
 	var tmp_path: String = SAVE_PATH + ".tmp"
 	var file: FileAccess = FileAccess.open_encrypted_with_pass(
 		tmp_path, FileAccess.WRITE, SAVE_KEY)
@@ -121,6 +122,7 @@ func load_settings() -> void:
 		session_limit_minutes = clampi(data.get("session_limit_minutes", 20), 0, 60)
 		ProgressManager.apply_save_data(data)
 		RewardManager.apply_save_data(data)
+		MasteryManager.apply_save_data(data)
 	else:
 		push_warning("SettingsManager: corrupt save file, overwriting with defaults")
 		save_settings()

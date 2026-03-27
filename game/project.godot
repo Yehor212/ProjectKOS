@@ -36,6 +36,7 @@ AnalyticsManager="*res://scripts/autoloads/analytics_manager.gd"
 AudioManager="*res://scripts/autoloads/audio_manager.gd"
 HapticsManager="*res://scripts/autoloads/haptics_manager.gd"
 VFXManager="*res://scenes/autoloads/vfx_manager.tscn"
+MasteryManager="*res://scripts/autoloads/mastery_manager.gd"
 
 [display]
 

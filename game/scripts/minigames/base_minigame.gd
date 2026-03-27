@@ -46,6 +46,8 @@ var _game_over: bool = false  ## Прапорець завершення гри 
 @warning_ignore("unused_private_class_variable")
 var _errors: int = 0  ## Лічильник помилок гравця (використовується в дочірніх класах)
 const STREAK_THRESHOLD: int = 3
+## Музична лестниця: C-D-E-F-G-A-B — ascending pitch для streak серії
+const PITCH_SCALE: Array[float] = [1.0, 1.122, 1.26, 1.335, 1.498, 1.682, 1.888]
 
 
 func _ready() -> void:
@@ -230,6 +232,12 @@ func _notification(what: int) -> void:
 			or what == NOTIFICATION_APPLICATION_PAUSED:
 		if not _game_finished and _pause_menu:
 			_pause_menu.show_pause()
+
+
+func _exit_tree() -> void:
+	## Гарантуємо відновлення time_scale при виході зі сцени (hit-stop safety net)
+	if not is_equal_approx(Engine.time_scale, 1.0):
+		Engine.time_scale = 1.0
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -1292,9 +1300,15 @@ func _register_correct(node: Node2D = null) -> void:
 	_idle_hint_level = 0
 	_remove_glow_hint()
 	_streak_count += 1
+	## Hit-stop: 30ms мікро-пауза для "ваги" моменту (ігровий juice)
+	if not SettingsManager.reduced_motion:
+		Engine.time_scale = 0.05
+		get_tree().create_timer(0.03, true, false, true).timeout.connect(
+			func() -> void: Engine.time_scale = 1.0)
 	## Auto-feedback: audio + haptics + VFX коли node передано
 	if node and is_instance_valid(node):
-		AudioManager.play_sfx("success", 1.0 + 0.05 * float(mini(_streak_count, 10)))
+		var pitch: float = PITCH_SCALE[mini(_streak_count, PITCH_SCALE.size() - 1)]
+		AudioManager.play_sfx("success", pitch)
 		HapticsManager.vibrate_success()
 		_animate_correct_item(node)
 
@@ -1384,10 +1398,10 @@ func _play_round_celebration(pos: Vector2 = Vector2.ZERO) -> void:
 
 
 ## Уніфікована послідовність помилки — SFX + вібрація + wobble.
-## Toddler: м'який click + wobble. Preschool: error SFX + smoke + wobble.
+## Toddler: comic bounce + wobble. Preschool: error SFX + smoke + wobble.
 func _play_error_sequence(node: Node2D) -> void:
 	if SettingsManager.age_group == 1:
-		AudioManager.play_sfx("click")
+		AudioManager.play_sfx("bounce")  ## Comic звук для Toddler — м'якіший та веселіший
 	else:
 		AudioManager.play_sfx("error")
 		HapticsManager.vibrate_light()
@@ -1541,6 +1555,10 @@ func _animate_correct_item(node: Node2D) -> void:
 	if _streak_count >= STREAK_THRESHOLD:
 		JuicyEffects.screen_shake(self, 3.0)
 		JuicyEffects.combo_flash(node, self)
+	## Variable celebration — 15% шанс premium VFX на звичайний correct (surprise & delight)
+	if randf() < 0.15 and _streak_count >= 2:
+		VFXManager.spawn_premium_celebration(node.global_position)
+		AudioManager.play_sfx("reward")
 	## Snap pulse VFX (без scale tween — bounce нижче вже є)
 	VFXManager.spawn_snap_pulse(node.global_position)
 	## Textured sparkle для streak ≥ 2 (LAW 28 premium feedback)
