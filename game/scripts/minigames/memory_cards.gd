@@ -260,7 +260,7 @@ func _deal_cards() -> void:
 			card.modulate.a = 0.0
 			card.rotation = 0.15
 			var delay: float = float(i) * DEAL_STAGGER
-			var tw: Tween = create_tween().set_parallel(true)
+			var tw: Tween = _create_game_tween().set_parallel(true)
 			tw.tween_property(card, "position", target, DEAL_DURATION) \
 				.set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 			tw.tween_property(card, "scale", Vector2.ONE, DEAL_DURATION) \
@@ -309,7 +309,7 @@ func _dissolve_hiding_overlay(card: Node2D) -> void:
 		_hiding_overlays.erase(card)
 		return
 	## Плавне розчинення укриття — тварину "знайдено"
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_property(overlay, "modulate:a", 0.0, 0.4) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tw.tween_callback(func() -> void:
@@ -383,7 +383,7 @@ func _try_tap_toddler(card: Node2D) -> void:
 		card.set_highlighted(true)
 		_flipped.append(card)
 		var d: float = 0.15 if SettingsManager.reduced_motion else 0.2
-		var tw: Tween = create_tween()
+		var tw: Tween = _create_game_tween()
 		tw.tween_interval(d)
 		tw.tween_callback(_evaluate)
 
@@ -440,7 +440,7 @@ func _handle_match() -> void:
 	for card: Node2D in _flipped:
 		card.set_highlighted(false)
 		if not SettingsManager.reduced_motion:
-			var tw: Tween = create_tween()
+			var tw: Tween = _create_game_tween()
 			tw.tween_property(card, "scale", Vector2(1.25, 0.75), 0.07)
 			tw.tween_property(card, "scale", Vector2(0.85, 1.15), 0.07)
 			tw.tween_property(card, "scale", Vector2(1.05, 0.95), 0.05)
@@ -465,7 +465,7 @@ func _handle_match() -> void:
 		## Затримка для celebration анімації перед victory
 		var delay: float = 0.15 if SettingsManager.reduced_motion \
 			else CELEBRATION_MEET_DUR + CELEBRATION_HUG_DUR + 0.3
-		var tw: Tween = create_tween()
+		var tw: Tween = _create_game_tween()
 		tw.tween_interval(delay)
 		tw.tween_callback(_play_victory)
 	else:
@@ -518,7 +518,7 @@ func _play_pair_celebration(card_a: Node2D, card_b: Node2D) -> void:
 		sprite_a.modulate.a = 1.0
 		sprite_b.modulate.a = 1.0
 		## Зникнення після паузи
-		var fade_tw: Tween = create_tween()
+		var fade_tw: Tween = _create_game_tween()
 		fade_tw.tween_interval(0.8)
 		fade_tw.tween_callback(func() -> void:
 			if is_instance_valid(sprite_a):
@@ -529,7 +529,7 @@ func _play_pair_celebration(card_a: Node2D, card_b: Node2D) -> void:
 		return
 
 	## Фаза 1: вибігають до midpoint
-	var tw_a: Tween = create_tween().set_parallel(true)
+	var tw_a: Tween = _create_game_tween().set_parallel(true)
 	tw_a.tween_property(sprite_a, "global_position",
 		midpoint + Vector2(-20.0, 0.0), CELEBRATION_MEET_DUR) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -538,7 +538,7 @@ func _play_pair_celebration(card_a: Node2D, card_b: Node2D) -> void:
 		Vector2(0.24, 0.24), CELEBRATION_MEET_DUR) \
 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
-	var tw_b: Tween = create_tween().set_parallel(true)
+	var tw_b: Tween = _create_game_tween().set_parallel(true)
 	tw_b.tween_property(sprite_b, "global_position",
 		midpoint + Vector2(20.0, 0.0), CELEBRATION_MEET_DUR) \
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -606,13 +606,13 @@ func _handle_mismatch_preschool() -> void:
 	if not SettingsManager.reduced_motion:
 		for card: Node2D in _flipped:
 			## Червоний flash (0.2s)
-			var flash_tw: Tween = create_tween()
+			var flash_tw: Tween = _create_game_tween()
 			flash_tw.tween_property(card, "modulate",
 				Color(1.3, 0.85, 0.85, 1.0), 0.1)
 			flash_tw.tween_property(card, "modulate", Color.WHITE, 0.15)
 			## Shake
 			var orig_x: float = card.position.x
-			var tw_shake: Tween = create_tween()
+			var tw_shake: Tween = _create_game_tween()
 			tw_shake.tween_property(card, "position:x", orig_x - 5.0, 0.06)
 			tw_shake.tween_property(card, "position:x", orig_x + 5.0, 0.06)
 			tw_shake.tween_property(card, "position:x", orig_x - 2.5, 0.05)
@@ -620,7 +620,7 @@ func _handle_mismatch_preschool() -> void:
 
 	## Пауза — дитина запам'ятовує позиції
 	var d2: float = 0.15 if SettingsManager.reduced_motion else _peek_duration
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(d2)
 	tw.tween_callback(func() -> void:
 		if _flipped.size() < 2:
@@ -655,7 +655,7 @@ func _play_victory() -> void:
 			if not is_instance_valid(card):
 				continue
 			var delay: float = float(i) * VICTORY_STAGGER
-			var tw: Tween = create_tween()
+			var tw: Tween = _create_game_tween()
 			tw.tween_interval(delay)
 			## Golden flash per card
 			tw.tween_property(card, "modulate",
@@ -673,7 +673,7 @@ func _play_victory() -> void:
 	## Фініш або наступний раунд після танцю
 	var d3: float = 0.15 if SettingsManager.reduced_motion \
 		else float(_cards.size()) * VICTORY_STAGGER + 0.8
-	var finish_tw: Tween = create_tween()
+	var finish_tw: Tween = _create_game_tween()
 	finish_tw.tween_interval(d3)
 	finish_tw.tween_callback(_advance_round)
 
@@ -713,7 +713,7 @@ func _show_idle_hint() -> void:
 				_pulse_node(card, 1.3)
 				## Яскравий golden flash
 				if not SettingsManager.reduced_motion:
-					var flash_tw: Tween = create_tween()
+					var flash_tw: Tween = _create_game_tween()
 					flash_tw.tween_property(card, "modulate",
 						Color(1.5, 1.3, 0.7, 1.0), 0.15)
 					flash_tw.tween_property(card, "modulate",

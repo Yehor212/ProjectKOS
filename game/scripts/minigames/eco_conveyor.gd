@@ -110,6 +110,9 @@ var _spawn_timer: float = 0.0
 var _spawning: bool = false
 var _current_fall_speed: float = FALL_SPEED_EASY
 
+## Кешовані текстури chip (LAW 28: preload замість load у _process chain)
+var _chip_cache: Dictionary = {}
+
 ## Idle та narrative
 var _idle_timer: SceneTreeTimer = null
 var _earth_node: Node2D = null
@@ -123,6 +126,7 @@ func _ready() -> void:
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
 	_start_time = Time.get_ticks_msec() / 1000.0
+	_preload_chip_textures()
 	_apply_background()
 	_build_hud()
 	_build_earth_face()
@@ -130,6 +134,20 @@ func _ready() -> void:
 	_start_round()
 	## A2: гра ЗАВЖДИ завершується — safety timeout (LAW 14)
 	_start_safety_timeout(SAFETY_TIMEOUT_SEC)
+
+
+## Preload chip текстур один раз, щоб не викликати load() з _process chain
+func _preload_chip_textures() -> void:
+	var chip_names: Array[String] = [
+		"chipBlueWhite", "chipRedWhite", "chipGreenWhite",
+		"chipWhite",
+	]
+	for chip_name: String in chip_names:
+		var path: String = "res://assets/textures/kenney/boardgame/%s.png" % chip_name
+		if ResourceLoader.exists(path):
+			_chip_cache[path] = load(path)
+		else:
+			push_warning("EcoConveyor: chip texture not found at preload: %s" % path)
 
 
 ## --- Tutorial (A1) ---
@@ -290,7 +308,7 @@ func _update_earth_mood_on_correct() -> void:
 	_redraw_earth()
 	## Bounce анімація Землі
 	if is_instance_valid(_earth_node) and not SettingsManager.reduced_motion:
-		var tw: Tween = create_tween()
+		var tw: Tween = _create_game_tween()
 		tw.tween_property(_earth_node, "scale", Vector2(1.15, 1.15), 0.1)\
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tw.tween_property(_earth_node, "scale", Vector2.ONE, 0.15)\
@@ -302,7 +320,7 @@ func _earth_cough() -> void:
 	if not is_instance_valid(_earth_node) or SettingsManager.reduced_motion:
 		return
 	var orig_pos: Vector2 = _earth_node.position
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_property(_earth_node, "position:x", orig_pos.x - 5.0, 0.04)
 	tw.tween_property(_earth_node, "position:x", orig_pos.x + 5.0, 0.04)
 	tw.tween_property(_earth_node, "position:x", orig_pos.x - 3.0, 0.03)
@@ -492,7 +510,7 @@ func _start_round() -> void:
 	_spawn_next_item()
 
 	var start_d: float = ANIM_FAST if SettingsManager.reduced_motion else ANIM_NORMAL
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(start_d)
 	tw.tween_callback(func() -> void:
 		_input_locked = false
@@ -524,7 +542,7 @@ func _spawn_next_item() -> void:
 	if not (SettingsManager and SettingsManager.reduced_motion):
 		item.scale = Vector2.ZERO
 		item.modulate.a = 0.0
-		var etw: Tween = create_tween().set_parallel(true)
+		var etw: Tween = _create_game_tween().set_parallel(true)
 		etw.tween_property(item, "scale", Vector2.ONE, 0.2)\
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 		etw.tween_property(item, "modulate:a", 1.0, 0.15)
@@ -558,8 +576,11 @@ func _create_trash_item(item_data: Dictionary) -> Node2D:
 	var bin_id: String = item_data.get("bin_id", "")
 	var chip_name: String = chip_map.get(bin_id, "chipWhite")
 	var chip_path: String = "res://assets/textures/kenney/boardgame/%s.png" % chip_name
-	if ResourceLoader.exists(chip_path):
-		var chip_tex: Texture2D = load(chip_path)
+	var chip_tex: Texture2D = _chip_cache.get(chip_path, null) as Texture2D
+	if chip_tex == null and ResourceLoader.exists(chip_path):
+		push_warning("EcoConveyor: chip cache miss for %s, fallback load" % chip_path)
+		chip_tex = load(chip_path)
+	if chip_tex:
 		var chip_sz: float = ITEM_SIZE * 0.9
 		var chip_ctrl: Control = Control.new()
 		chip_ctrl.size = Vector2(chip_sz, chip_sz)
@@ -718,7 +739,7 @@ func _try_pick() -> void:
 	AudioManager.play_sfx("click")
 	HapticsManager.vibrate_light()
 	if not SettingsManager.reduced_motion:
-		var tw: Tween = create_tween()
+		var tw: Tween = _create_game_tween()
 		tw.tween_property(best, "scale", Vector2(0.85, 1.15), 0.06)
 		tw.tween_property(best, "scale", Vector2.ONE, 0.06)
 
@@ -733,7 +754,7 @@ func _try_drop() -> void:
 
 	## Squish при відпусканні
 	if not SettingsManager.reduced_motion:
-		var sq: Tween = create_tween()
+		var sq: Tween = _create_game_tween()
 		sq.tween_property(item, "scale", Vector2(1.2, 0.8), 0.06)
 		sq.tween_property(item, "scale", Vector2.ONE, 0.08)\
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
@@ -778,7 +799,7 @@ func _handle_correct(item: Node2D, bin: Dictionary) -> void:
 		var panel: Panel = bin.get("panel", null) as Panel
 		if is_instance_valid(panel):
 			var orig_y: float = panel.position.y
-			var tw_b: Tween = create_tween()
+			var tw_b: Tween = _create_game_tween()
 			tw_b.tween_property(panel, "position:y", orig_y - 15.0, 0.1)\
 				.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 			tw_b.tween_property(panel, "position:y", orig_y, 0.15)\
@@ -796,7 +817,7 @@ func _handle_correct(item: Node2D, bin: Dictionary) -> void:
 		else:
 			_reset_idle_timer()
 	else:
-		var tw: Tween = create_tween()
+		var tw: Tween = _create_game_tween()
 		tw.tween_property(item, "global_position", center, 0.2)\
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
 		tw.parallel().tween_property(item, "scale", Vector2(0.3, 0.3), 0.2)
@@ -832,7 +853,7 @@ func _snap_back_to_conveyor(item: Node2D) -> void:
 		item.position = target_pos
 		item.rotation = 0.0
 		return
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_property(item, "position", target_pos, 0.3)\
 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(item, "rotation", 0.0, 0.15)
@@ -850,7 +871,7 @@ func _on_round_complete() -> void:
 	_redraw_earth()
 
 	var round_d: float = ANIM_FAST if SettingsManager.reduced_motion else ROUND_DELAY
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(round_d)
 	tw.tween_callback(func() -> void:
 		if not is_instance_valid(self):
@@ -931,7 +952,7 @@ func _spawn_victory_flowers() -> void:
 		flower.add_child(fctrl)
 
 		## Анімація появи з затримкою
-		var tw: Tween = create_tween()
+		var tw: Tween = _create_game_tween()
 		tw.tween_interval(0.1 * float(i))
 		tw.tween_property(flower, "scale", Vector2.ONE, 0.3)\
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)

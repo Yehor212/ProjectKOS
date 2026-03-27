@@ -25,6 +25,8 @@ const DROP_RADIUS: float = 100.0
 const TD_PAIRS_PER_ROUND: Array[int] = [2, 3, 4]
 ## Preschool: кількість раундів
 const PS_TOTAL_ROUNDS: int = 6
+## LAW 11: максимум одночасних облаків (щоб не накопичувались)
+const MAX_CLOUDS: int = 5
 
 
 ## ============================================================
@@ -33,6 +35,8 @@ const PS_TOTAL_ROUNDS: int = 6
 
 var _is_preschool: bool = false
 var _cloud_timer: Timer = null
+var _cloud_nodes: Array[Node2D] = []  ## LAW 11: tracking для cleanup
+var _cloud_scene_cache: PackedScene = null  ## Preloaded cloud scene
 var _start_time_ms: int = 0
 var _total_fed: int = 0  ## Загальна кількість накормлених (для "Клієнт Дня")
 var _idle_timer: SceneTreeTimer = null
@@ -232,6 +236,7 @@ func _on_food_dropped_on_empty(food: Node2D) -> void:
 func _on_game_won(stats: Dictionary) -> void:
 	_game_over = true
 	_input_locked = true
+	_cleanup_clouds()
 	if _hint_system:
 		_hint_system.stop_idle_timer()
 	## LAW 16: єдине джерело зірок
@@ -243,6 +248,7 @@ func _on_game_won(stats: Dictionary) -> void:
 func _on_mini_game_finished(stats: Dictionary) -> void:
 	_game_over = true
 	_input_locked = true
+	_cleanup_clouds()
 	if _hint_system:
 		_hint_system.stop_idle_timer()
 	var earned: int = _calculate_stars(_errors)
@@ -752,6 +758,7 @@ func _ps_auto_reveal_last() -> void:
 func _ps_finish_game() -> void:
 	_game_over = true
 	_input_locked = true
+	_cleanup_clouds()
 	var elapsed_ms: int = Time.get_ticks_msec() - _start_time_ms
 	## LAW 13: guard division
 	var time_sec: float = float(elapsed_ms) / 1000.0
@@ -854,6 +861,12 @@ func _on_viewport_resized() -> void:
 
 ## Атмосферні хмарки (спільні для обох режимів)
 func _start_ambient_clouds() -> void:
+	## Preload cloud scene один раз
+	var cloud_path: String = "res://scenes/entities/floating_cloud.tscn"
+	if ResourceLoader.exists(cloud_path):
+		_cloud_scene_cache = load(cloud_path)
+	else:
+		push_warning("FoodGame: Missing cloud scene at startup: " + cloud_path)
 	_cloud_timer = Timer.new()
 	_cloud_timer.wait_time = randf_range(8.0, 15.0)
 	_cloud_timer.one_shot = true
@@ -865,20 +878,37 @@ func _start_ambient_clouds() -> void:
 func _on_cloud_timer_timeout() -> void:
 	if _game_over:
 		return
-	var cloud_path: String = "res://scenes/entities/floating_cloud.tscn"
-	if not ResourceLoader.exists(cloud_path):
-		push_warning("FoodGame: Missing cloud scene: " + cloud_path)
-		_cloud_timer.wait_time = randf_range(8.0, 15.0)
-		_cloud_timer.start()
+	## Очистити мертві посилання перед перевіркою ліміту
+	_cloud_nodes = _cloud_nodes.filter(func(n: Node2D) -> bool:
+		return is_instance_valid(n) and n.is_inside_tree()
+	)
+	## LAW 11: обмеження кількості одночасних облаків
+	if _cloud_nodes.size() >= MAX_CLOUDS:
+		if is_instance_valid(_cloud_timer):
+			_cloud_timer.wait_time = randf_range(8.0, 15.0)
+			_cloud_timer.start()
 		return
-	var cloud_scene: PackedScene = load(cloud_path)
-	if cloud_scene:
-		var cloud: Node2D = cloud_scene.instantiate()
-		cloud.position = Vector2(-100, randf_range(30, 200))
-		add_child(cloud)
+	if _cloud_scene_cache == null:
+		push_warning("FoodGame: cloud scene not cached, skip spawn")
+		if is_instance_valid(_cloud_timer):
+			_cloud_timer.wait_time = randf_range(8.0, 15.0)
+			_cloud_timer.start()
+		return
+	var cloud: Node2D = _cloud_scene_cache.instantiate()
+	cloud.position = Vector2(-100, randf_range(30, 200))
+	add_child(cloud)
+	_cloud_nodes.append(cloud)
 	if is_instance_valid(_cloud_timer):
 		_cloud_timer.wait_time = randf_range(8.0, 15.0)
 		_cloud_timer.start()
+
+
+## LAW 11: очистити всі хмарки (виклик при cleanup раунду та finish)
+func _cleanup_clouds() -> void:
+	for cloud: Node2D in _cloud_nodes:
+		if is_instance_valid(cloud):
+			cloud.queue_free()
+	_cloud_nodes.clear()
 
 
 ## A10: Idle escalation — 3 рівні (pulse -> stronger -> tutorial hand)

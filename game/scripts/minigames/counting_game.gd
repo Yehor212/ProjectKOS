@@ -289,7 +289,7 @@ func _spawn_buyer(vp: Vector2, target_count: int) -> void:
 		var target_pos: Vector2 = _buyer_node.position
 		_buyer_node.position = Vector2(-120.0, target_pos.y)
 		_buyer_node.modulate.a = 0.0
-		var tw: Tween = create_tween().set_parallel(true)
+		var tw: Tween = _create_game_tween().set_parallel(true)
 		tw.tween_property(_buyer_node, "position", target_pos, 0.5)\
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tw.tween_property(_buyer_node, "modulate:a", 1.0, 0.3)
@@ -357,7 +357,7 @@ func _draw_thought_bubble(parent: Node2D, count: int) -> void:
 	if not SettingsManager.reduced_motion:
 		_thought_bubble.scale = Vector2(0.3, 0.3)
 		_thought_bubble.modulate.a = 0.0
-		var tw: Tween = create_tween().set_parallel(true)
+		var tw: Tween = _create_game_tween().set_parallel(true)
 		tw.tween_property(_thought_bubble, "scale", Vector2.ONE, 0.35)\
 			.set_delay(0.3).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 		tw.tween_property(_thought_bubble, "modulate:a", 1.0, 0.2).set_delay(0.3)
@@ -371,10 +371,10 @@ func _animate_buyer_happy() -> void:
 		return
 	## Сховати thought bubble
 	if is_instance_valid(_thought_bubble):
-		var hide_tw: Tween = create_tween()
+		var hide_tw: Tween = _create_game_tween()
 		hide_tw.tween_property(_thought_bubble, "modulate:a", 0.0, 0.2)
 	## Happy bounce — тварина підстрибує
-	var bounce_tw: Tween = create_tween()
+	var bounce_tw: Tween = _create_game_tween()
 	var orig_y: float = _buyer_node.position.y
 	bounce_tw.tween_property(_buyer_node, "position:y",
 		orig_y - ANIMAL_HAPPY_BOUNCE, 0.15)\
@@ -384,7 +384,7 @@ func _animate_buyer_happy() -> void:
 		.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	## Squish ефект (стиснення-розтягнення)
 	bounce_tw.set_parallel(false)
-	var squish_tw: Tween = create_tween()
+	var squish_tw: Tween = _create_game_tween()
 	squish_tw.tween_property(_buyer_node, "scale", Vector2(1.2, 0.85), 0.08)
 	squish_tw.tween_property(_buyer_node, "scale", Vector2(0.9, 1.15), 0.1)
 	squish_tw.tween_property(_buyer_node, "scale", Vector2.ONE, 0.15)\
@@ -398,7 +398,7 @@ func _animate_buyer_backflip() -> void:
 	if SettingsManager.reduced_motion:
 		return
 	var orig_y: float = _buyer_node.position.y
-	var flip_tw: Tween = create_tween()
+	var flip_tw: Tween = _create_game_tween()
 	## Стрибок вгору + обертання 360
 	flip_tw.set_parallel(true)
 	flip_tw.tween_property(_buyer_node, "position:y",
@@ -589,7 +589,7 @@ func _on_dropped_on_target(item: Node2D, _target: Node2D) -> void:
 		else:
 			var basket_pos: Vector2 = _basket.global_position if is_instance_valid(_basket) \
 				else item.global_position
-			var tw: Tween = create_tween().set_parallel(true)
+			var tw: Tween = _create_game_tween().set_parallel(true)
 			tw.tween_property(item, "global_position", basket_pos, 0.25)\
 				.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 			tw.tween_property(item, "scale", Vector2(0.2, 0.2), 0.25)
@@ -600,7 +600,7 @@ func _on_dropped_on_target(item: Node2D, _target: Node2D) -> void:
 					item.queue_free())
 			## Squish кошика
 			if is_instance_valid(_basket):
-				var bsq: Tween = create_tween()
+				var bsq: Tween = _create_game_tween()
 				bsq.tween_property(_basket, "scale", Vector2(1.15, 0.9), 0.08)
 				bsq.tween_property(_basket, "scale", Vector2.ONE, 0.12)\
 					.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
@@ -615,7 +615,7 @@ func _on_dropped_on_target(item: Node2D, _target: Node2D) -> void:
 			if is_instance_valid(_basket):
 				VFXManager.spawn_premium_celebration(_basket.global_position)
 			var delay_d: float = 0.15 if SettingsManager.reduced_motion else 0.8
-			var delay: Tween = create_tween()
+			var delay: Tween = _create_game_tween()
 			delay.tween_interval(delay_d)
 			delay.tween_callback(_advance_round)
 		else:
@@ -695,17 +695,17 @@ func _handle_answer_tap(node: Node2D) -> void:
 		else:
 			_animate_buyer_happy()
 		if not SettingsManager.reduced_motion:
-			var tw: Tween = create_tween()
+			var tw: Tween = _create_game_tween()
 			tw.tween_property(node, "scale", Vector2(1.4, 1.4), 0.15)
 			tw.tween_property(node, "scale", Vector2(1.2, 1.2), 0.1)\
 				.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 			for other: Node2D in _answer_nodes:
 				if other != node and is_instance_valid(other):
-					create_tween().tween_property(other, "modulate:a", 0.3, 0.3)
+					_create_game_tween().tween_property(other, "modulate:a", 0.3, 0.3)
 			tw.tween_interval(0.6)
 			tw.tween_callback(_advance_round)
 		else:
-			var tw_d: Tween = create_tween()
+			var tw_d: Tween = _create_game_tween()
 			tw_d.tween_interval(0.15)
 			tw_d.tween_callback(_advance_round)
 	else:
@@ -716,7 +716,7 @@ func _handle_answer_tap(node: Node2D) -> void:
 		node.modulate = Color(0.5, 0.5, 0.5)
 		if not SettingsManager.reduced_motion:
 			var orig_x: float = node.position.x
-			var tw: Tween = create_tween()
+			var tw: Tween = _create_game_tween()
 			tw.tween_property(node, "position:x", orig_x - 6.0, 0.06)
 			tw.tween_property(node, "position:x", orig_x + 6.0, 0.06)
 			tw.tween_property(node, "position:x", orig_x - 3.0, 0.04)
@@ -791,7 +791,7 @@ func _deal_item_in(item: Node2D, pos: Vector2, idx: int, total: int) -> void:
 	item.scale = Vector2(0.2, 0.2)
 	item.modulate.a = 0.0
 	var delay: float = float(idx) * DEAL_STAGGER
-	var tw: Tween = create_tween().set_parallel(true)
+	var tw: Tween = _create_game_tween().set_parallel(true)
 	tw.tween_property(item, "position", pos, DEAL_DURATION)\
 		.set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(item, "scale", Vector2.ONE, DEAL_DURATION)\

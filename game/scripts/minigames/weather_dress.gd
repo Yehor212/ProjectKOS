@@ -416,7 +416,7 @@ func _spawn_clothing(correct: Array, wrong: Array) -> void:
 			item.position = Vector2(target.x, vp.y + 100.0)
 			item.modulate.a = 0.0
 			var delay: float = float(i) * DEAL_STAGGER
-			var tw: Tween = create_tween().set_parallel(true)
+			var tw: Tween = _create_game_tween().set_parallel(true)
 			tw.tween_property(item, "position", target, DEAL_DURATION)\
 				.set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 			tw.tween_property(item, "modulate:a", 1.0, 0.2).set_delay(delay)
@@ -474,6 +474,7 @@ func _on_dropped_empty(item: Node2D) -> void:
 
 func _handle_correct(item: Node2D, target: Node2D) -> void:
 	_register_correct(item)
+	VFXManager.spawn_success_ripple(item.global_position, Color(0.4, 1.0, 0.4))
 	_item_correct.erase(item)
 	_item_origins.erase(item)
 	_item_clothing_id.erase(item)
@@ -491,13 +492,13 @@ func _handle_correct(item: Node2D, target: Node2D) -> void:
 		else:
 			_reset_idle_timer()
 		return
-	var tw: Tween = create_tween().set_parallel(true)
+	var tw: Tween = _create_game_tween().set_parallel(true)
 	tw.tween_property(item, "global_position", target.global_position, 0.25)\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(item, "scale", Vector2(0.8, 0.8), 0.2)
 	## Тофі "радіє" — маленький bounce
 	if is_instance_valid(_tofie_node):
-		var tofie_tw: Tween = create_tween()
+		var tofie_tw: Tween = _create_game_tween()
 		tofie_tw.tween_property(_tofie_node, "scale", Vector2(1.05, 0.95), 0.1)
 		tofie_tw.tween_property(_tofie_node, "scale", Vector2(0.98, 1.02), 0.1)
 		tofie_tw.tween_property(_tofie_node, "scale", Vector2.ONE, 0.1)
@@ -523,7 +524,7 @@ func _animate_tofie_reaction() -> void:
 	if not is_instance_valid(_tofie_node) or SettingsManager.reduced_motion:
 		return
 	var orig_x: float = _tofie_node.position.x
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	## Тремтіння
 	tw.tween_property(_tofie_node, "position:x", orig_x - 4.0, 0.04)
 	tw.tween_property(_tofie_node, "position:x", orig_x + 4.0, 0.04)
@@ -547,7 +548,7 @@ func _animate_zone_hint(zone_id: int) -> void:
 		return
 	if SettingsManager.reduced_motion:
 		return
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_property(panel, "modulate:a", 0.8, 0.15)
 	tw.tween_property(panel, "modulate:a", 0.0, 0.5)
 
@@ -566,7 +567,7 @@ func _show_zone_hints(show: bool) -> void:
 			if SettingsManager.reduced_motion:
 				panel.modulate.a = 0.5 if show else 0.0
 			else:
-				var tw: Tween = create_tween()
+				var tw: Tween = _create_game_tween()
 				tw.tween_property(panel, "modulate:a", 0.5 if show else 0.0, 0.2)
 
 
@@ -577,11 +578,12 @@ func _on_round_complete() -> void:
 	_drag.enabled = false
 	AudioManager.play_sfx("success")
 	HapticsManager.vibrate_success()
+	VFXManager.spawn_correct_sparkle(get_viewport().get_visible_rect().size / 2.0)
 	VFXManager.spawn_premium_celebration(get_viewport().get_visible_rect().size * 0.5)
 	## Тофі святкує — bounce + walk away
 	_animate_tofie_celebration()
 	var round_d: float = 0.15 if SettingsManager.reduced_motion else 1.2
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(round_d)
 	tw.tween_callback(func() -> void:
 		if not is_instance_valid(self):  ## LAW 20: await safety
@@ -598,7 +600,7 @@ func _on_round_complete() -> void:
 func _animate_tofie_celebration() -> void:
 	if not is_instance_valid(_tofie_node) or SettingsManager.reduced_motion:
 		return
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_property(_tofie_node, "position:y",
 		_tofie_node.position.y - 20.0, 0.2)\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -647,6 +649,7 @@ func _clear_round() -> void:
 func _finish() -> void:
 	_game_over = true
 	_input_locked = true
+	VFXManager.spawn_premium_celebration(get_viewport().get_visible_rect().size / 2.0)
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
 	var earned: int = _calculate_stars(_errors)
 	finish_game(earned, {"time_sec": elapsed, "errors": _errors,

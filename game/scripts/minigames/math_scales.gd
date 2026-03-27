@@ -124,7 +124,7 @@ func _start_round() -> void:
 	_spawn_plates(vp)
 	_spawn_food(vp)
 	var d: float = ANIM_FAST if SettingsManager.reduced_motion else ANIM_NORMAL
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(d)
 	tw.tween_callback(func() -> void:
 		if _game_over:
@@ -473,6 +473,7 @@ func _on_dropped_target(item: Node2D, target: Node2D) -> void:
 	_drag.draggable_items.erase(item)
 	AudioManager.play_sfx("coin")
 	HapticsManager.vibrate_light()
+	VFXManager.spawn_success_ripple(item.global_position, Color(0.4, 1.0, 0.4))
 	## Анімація snap до тарілки
 	if SettingsManager.reduced_motion:
 		item.global_position = target.global_position + Vector2(
@@ -481,7 +482,7 @@ func _on_dropped_target(item: Node2D, target: Node2D) -> void:
 		_update_faces()
 		_check_completion()
 		return
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	var offset: Vector2 = Vector2(randf_range(-20, 20), randf_range(-15, 15))
 	tw.tween_property(item, "global_position",
 		target.global_position + offset, 0.2)\
@@ -562,7 +563,7 @@ func _on_shared_equally() -> void:
 			face.text = "🥳"
 		if not SettingsManager.reduced_motion:
 			## Танок радості (LAW 28: premium feel)
-			var dance: Tween = create_tween().set_loops(3)
+			var dance: Tween = _create_game_tween().set_loops(3)
 			dance.tween_property(animal, "rotation", 0.1, 0.1)
 			dance.tween_property(animal, "rotation", -0.1, 0.1)
 			dance.tween_property(animal, "rotation", 0.0, 0.1)
@@ -574,7 +575,7 @@ func _on_shared_equally() -> void:
 	AudioManager.play_sfx("success")
 	HapticsManager.vibrate_success()
 	var delay: float = ANIM_FAST if SettingsManager.reduced_motion else 1.2
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_interval(delay)
 	tw.tween_callback(func() -> void:
 		if _game_over:
@@ -603,7 +604,7 @@ func _play_eating_sequence() -> void:
 			if not is_instance_valid(food):
 				continue
 			if _food_plate.get(food, -1) == plate_idx:
-				var eat_tw: Tween = create_tween()
+				var eat_tw: Tween = _create_game_tween()
 				eat_tw.tween_interval(eat_delay)
 				eat_tw.tween_property(food, "scale",
 					Vector2(0.3, 0.3), 0.2)\
@@ -628,7 +629,7 @@ func _on_unfair_share() -> void:
 		_register_error()
 		_return_all_food_to_pile()
 		var d3: float = ANIM_FAST if SettingsManager.reduced_motion else ANIM_SLOW
-		var tw: Tween = create_tween()
+		var tw: Tween = _create_game_tween()
 		tw.tween_interval(d3)
 		tw.tween_callback(func() -> void:
 			if _game_over:
@@ -644,7 +645,7 @@ func _on_unfair_share() -> void:
 		if not SettingsManager.reduced_motion:
 			for animal: Node2D in _animal_nodes:
 				if is_instance_valid(animal):
-					var shiver: Tween = create_tween()
+					var shiver: Tween = _create_game_tween()
 					shiver.tween_property(animal, "position:x",
 						animal.position.x - 4, 0.05)
 					shiver.tween_property(animal, "position:x",
@@ -652,7 +653,7 @@ func _on_unfair_share() -> void:
 					shiver.tween_property(animal, "position:x",
 						animal.position.x, 0.05)
 		var d4: float = ANIM_FAST if SettingsManager.reduced_motion else 0.6
-		var tw: Tween = create_tween()
+		var tw: Tween = _create_game_tween()
 		tw.tween_interval(d4)
 		tw.tween_callback(func() -> void:
 			if _game_over:
@@ -712,6 +713,7 @@ func _clear_round() -> void:
 func _finish() -> void:
 	_game_over = true
 	_input_locked = true
+	VFXManager.spawn_premium_celebration(get_viewport().get_visible_rect().size / 2.0)
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
 	var earned: int = _calculate_stars(_errors)
 	finish_game(earned, {

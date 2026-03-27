@@ -92,11 +92,17 @@ func _build_hud() -> void:
 
 func _setup_drag() -> void:
 	_drag = UniversalDrag.new(self)
+	_drag.item_picked_up.connect(_on_bead_picked)
 	_drag.item_dropped_on_target.connect(_on_bead_dropped)
 	_drag.item_dropped_on_empty.connect(_on_bead_missed)
 	if _is_toddler:
 		_drag.magnetic_assist = true
 		_drag.snap_radius_override = TODDLER_SNAP_RADIUS
+
+
+func _on_bead_picked(_item: Node2D) -> void:
+	AudioManager.play_sfx("click")
+	HapticsManager.vibrate_light()
 
 
 func _input(event: InputEvent) -> void:
@@ -352,7 +358,7 @@ func _spawn_animal() -> void:
 	if not SettingsManager.reduced_motion and is_instance_valid(_animal_node):
 		_animal_node.modulate.a = 0.0
 		_animal_node.scale = Vector2(ANIMAL_SCALE * 0.3, ANIMAL_SCALE * 0.3)
-		var atw: Tween = create_tween().set_parallel(true)
+		var atw: Tween = _create_game_tween().set_parallel(true)
 		atw.tween_property(_animal_node, "modulate:a", 1.0, 0.3).set_delay(0.2)
 		atw.tween_property(_animal_node, "scale",
 			Vector2(ANIMAL_SCALE, ANIMAL_SCALE), 0.4)\
@@ -578,12 +584,18 @@ func _deal_node_in(node: Node2D, target: Vector2, delay: float, unlock_on_finish
 	node.position = Vector2(target.x, target.y + 180.0)
 	node.scale = Vector2(0.2, 0.2)
 	node.modulate.a = 0.0
-	var tw: Tween = create_tween().set_parallel(true)
+	var tw: Tween = _create_game_tween().set_parallel(true)
 	tw.tween_property(node, "position", target, DEAL_DURATION)\
 		.set_delay(delay).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(node, "scale", Vector2.ONE, DEAL_DURATION)\
 		.set_delay(delay).set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	tw.tween_property(node, "modulate:a", 1.0, 0.2).set_delay(delay)
+	## Pop sound при появі кожної бусини (staggered)
+	var pop_tw: Tween = _create_game_tween()
+	pop_tw.tween_interval(delay + DEAL_DURATION * 0.5)
+	pop_tw.tween_callback(func() -> void:
+		if is_instance_valid(self):
+			AudioManager.play_sfx("pop"))
 	if unlock_on_finish:
 		tw.chain().tween_callback(func() -> void:
 			_input_locked = false
@@ -619,7 +631,9 @@ func _on_bead_missed(item: Node2D) -> void:
 
 
 func _handle_correct_drop(item: Node2D) -> void:
+	AudioManager.play_sfx("success")
 	_register_correct(item)
+	VFXManager.spawn_success_ripple(item.global_position, Color(0.4, 1.0, 0.4))
 
 	## Перемістити бусину на позицію слоту
 	var correct_bead: Node2D = _create_bead_node(_correct_bead_def, BEAD_RADIUS, false)
@@ -636,7 +650,7 @@ func _handle_correct_drop(item: Node2D) -> void:
 		correct_bead.scale = Vector2(0.5, 0.5)
 		correct_bead.modulate.a = 0.0
 
-		var snap_tw: Tween = create_tween().set_parallel(true)
+		var snap_tw: Tween = _create_game_tween().set_parallel(true)
 		snap_tw.tween_property(correct_bead, "position", _slot_position, 0.25)\
 			.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		snap_tw.tween_property(correct_bead, "scale", Vector2.ONE, 0.25)\
@@ -645,7 +659,7 @@ func _handle_correct_drop(item: Node2D) -> void:
 
 		## Зникнення оригінальної бусини з лотка
 		if is_instance_valid(item):
-			create_tween().tween_property(item, "modulate:a", 0.0, 0.15)
+			_create_game_tween().tween_property(item, "modulate:a", 0.0, 0.15)
 
 	_bead_nodes.append(correct_bead)
 
@@ -654,7 +668,7 @@ func _handle_correct_drop(item: Node2D) -> void:
 		if SettingsManager.reduced_motion:
 			_slot_node.modulate.a = 0.0
 		else:
-			create_tween().tween_property(_slot_node, "modulate:a", 0.0, 0.15)
+			_create_game_tween().tween_property(_slot_node, "modulate:a", 0.0, 0.15)
 
 	## VFX sparkle на місці
 	VFXManager.spawn_correct_sparkle(_slot_position)
@@ -663,15 +677,17 @@ func _handle_correct_drop(item: Node2D) -> void:
 	if not SettingsManager.reduced_motion:
 		for tray_bead: Node2D in _tray_nodes:
 			if is_instance_valid(tray_bead) and tray_bead != item:
-				create_tween().tween_property(tray_bead, "modulate:a", 0.3, 0.2)
+				_create_game_tween().tween_property(tray_bead, "modulate:a", 0.3, 0.2)
 
 	## Тварина радіє — celebration spin + хвиля бусин
 	_play_animal_celebration()
 	_play_bead_wave()
+	AudioManager.play_sfx("reward")
+	VFXManager.spawn_premium_celebration(get_viewport().get_visible_rect().size / 2.0)
 
 	## Перехід до наступного раунду
 	var delay: float = 0.15 if SettingsManager.reduced_motion else 1.2
-	var advance_tw: Tween = create_tween()
+	var advance_tw: Tween = _create_game_tween()
 	advance_tw.tween_interval(delay)
 	advance_tw.tween_callback(_advance_round)
 
@@ -699,7 +715,7 @@ func _handle_wrong_drop(item: Node2D) -> void:
 
 	## Розблокувати input
 	var unlock_delay: float = 0.1 if SettingsManager.reduced_motion else 0.35
-	var unlock_tw: Tween = create_tween()
+	var unlock_tw: Tween = _create_game_tween()
 	unlock_tw.tween_interval(unlock_delay)
 	unlock_tw.tween_callback(func() -> void:
 		_input_locked = false
@@ -720,7 +736,7 @@ func _play_animal_celebration() -> void:
 	var orig_pos: Vector2 = _animal_node.position
 	var orig_rot: float = _animal_node.rotation
 
-	var dance_tw: Tween = create_tween()
+	var dance_tw: Tween = _create_game_tween()
 	## Підскік
 	dance_tw.tween_property(_animal_node, "position:y", orig_pos.y - 30.0, 0.15)\
 		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
@@ -746,7 +762,7 @@ func _play_bead_wave() -> void:
 		if not is_instance_valid(bead):
 			continue
 		var delay: float = float(idx) * 0.06
-		var wave_tw: Tween = create_tween()
+		var wave_tw: Tween = _create_game_tween()
 		wave_tw.tween_interval(delay)
 		wave_tw.tween_property(bead, "rotation", deg_to_rad(10.0), 0.08)\
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
@@ -811,6 +827,7 @@ func _finish() -> void:
 	_game_over = true
 	_input_locked = true
 	_drag.enabled = false
+	VFXManager.spawn_premium_celebration(get_viewport().get_visible_rect().size / 2.0)
 
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
 	var earned: int = _calculate_stars(_errors)
@@ -836,7 +853,7 @@ func _show_scaffold_hint() -> void:
 			## Тимчасове яскраве підсвічування (1.5 сек)
 			var orig_mod: Color = bead.modulate
 			bead.modulate = Color(1.4, 1.4, 1.0, 1.0)
-			var hint_tw: Tween = create_tween()
+			var hint_tw: Tween = _create_game_tween()
 			hint_tw.tween_property(bead, "modulate", orig_mod, 1.5)\
 				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 			return

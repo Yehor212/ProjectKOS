@@ -115,7 +115,7 @@ func _process(_delta: float) -> void:
 				_warned_low_time = true
 				AudioManager.play_sfx("click")
 				if not (SettingsManager and SettingsManager.reduced_motion):
-					_pulse_tween = create_tween().set_loops()
+					_pulse_tween = _create_game_tween().set_loops()
 					_pulse_tween.tween_property(_timer_bar, "scale:y", 1.08, 0.3)\
 						.set_trans(Tween.TRANS_SINE)
 					_pulse_tween.tween_property(_timer_bar, "scale:y", 1.0, 0.3)\
@@ -327,7 +327,7 @@ func _on_bubble_popped(bubble: Node2D) -> void:
 	## Score bounce анімація
 	if not (SettingsManager and SettingsManager.reduced_motion):
 		_score_label.pivot_offset = _score_label.size / 2.0
-		var stw: Tween = create_tween()
+		var stw: Tween = _create_game_tween()
 		stw.tween_property(_score_label, "scale", Vector2(1.3, 1.3), 0.06)\
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		stw.tween_property(_score_label, "scale", Vector2.ONE, 0.1)\
@@ -360,7 +360,7 @@ func _spawn_freed_fish(bubble: Node2D) -> void:
 		return
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var target_x: float = randf_range(MARGIN_X, vp.x - MARGIN_X)
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_property(fish, "position:y", pos.y - 100.0, 0.3)\
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(fish, "position:x", target_x, 0.5)
@@ -422,7 +422,7 @@ func _trigger_whale_bonus() -> void:
 		_whale_active = false
 		return
 	## Кит пливе через екран
-	var tw: Tween = create_tween()
+	var tw: Tween = _create_game_tween()
 	tw.tween_property(whale, "position:x", vp.x + 120.0, 1.5)\
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	tw.tween_callback(func() -> void:
@@ -473,7 +473,7 @@ func _trigger_treasure_chest() -> void:
 			return
 		if is_instance_valid(chest):
 			_treasure_active = false
-			var tw: Tween = create_tween()
+			var tw: Tween = _create_game_tween()
 			tw.tween_property(chest, "modulate:a", 0.0, 0.3)
 			tw.finished.connect(chest.queue_free)
 	)
@@ -489,7 +489,7 @@ func _on_treasure_tapped(chest: Node2D) -> void:
 	HapticsManager.vibrate_success()
 	if is_instance_valid(chest):
 		VFXManager.spawn_correct_sparkle(chest.global_position)
-		var tw: Tween = create_tween()
+		var tw: Tween = _create_game_tween()
 		tw.tween_property(chest, "scale", Vector2(1.5, 1.5), 0.1)
 		tw.parallel().tween_property(chest, "modulate:a", 0.0, 0.2)
 		tw.finished.connect(chest.queue_free)
@@ -526,7 +526,7 @@ func _on_giant_bubble_tap() -> void:
 	if is_instance_valid(_giant_bubble_node):
 		## Масштабна пульсація при кожному тапі
 		if not SettingsManager.reduced_motion:
-			var tw: Tween = create_tween()
+			var tw: Tween = _create_game_tween()
 			tw.tween_property(_giant_bubble_node, "scale", Vector2(1.15, 1.15), 0.05)
 			tw.tween_property(_giant_bubble_node, "scale", Vector2.ONE, 0.1)\
 				.set_trans(Tween.TRANS_ELASTIC)
@@ -548,7 +548,7 @@ func _on_giant_bubble_tap() -> void:
 				fish.position = pos + Vector2(randf_range(-30, 30), randf_range(-30, 30))
 				add_child(fish)
 				if not SettingsManager.reduced_motion:
-					var tw: Tween = create_tween()
+					var tw: Tween = _create_game_tween()
 					var angle: float = TAU * float(i) / 5.0
 					var target: Vector2 = pos + Vector2(cos(angle), sin(angle)) * 200.0
 					tw.tween_property(fish, "position", target, 0.5)\
@@ -586,7 +586,7 @@ func _change_target_color() -> void:
 		var parent: Node = _target_label.get_parent()
 		if parent and parent is Control:
 			(parent as Control).pivot_offset = (parent as Control).size / 2.0
-			var tw: Tween = create_tween()
+			var tw: Tween = _create_game_tween()
 			tw.tween_property(parent, "scale", Vector2(1.3, 1.3), 0.1)
 			tw.tween_property(parent, "scale", Vector2.ONE, 0.15)\
 				.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
