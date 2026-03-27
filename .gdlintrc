@@ -1,0 +1,4 @@
+[gdlint]
+max-line-length=120
+tab-size=4
+disable=max-public-methods

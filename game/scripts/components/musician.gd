@@ -23,7 +23,7 @@ func setup(id: int, animal_name: String, color: Color,
 	musician_id = id
 	instrument_color = color
 	sfx_name = sound_name
-	sfx_pitch = pitch
+	sfx_pitch = maxf(pitch, 0.1)  ## LAW 13: guard pitch > 0
 	material = GameData.create_premium_material(0.06, 2.0, 0.0, 0.0, 0.04, 0.06, 0.06, "", 0.0, 0.08, 0.18, 0.15)
 	queue_redraw()
 	## Спрайт тварини

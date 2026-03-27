@@ -1,51 +1,59 @@
-# Screenshot Guide — Feed the Animals
+# Screenshot Guide — Tofie Play & Learn Adventures
 
-## Required Screenshots
+## Format
+- Resolution: 1280x720 (landscape)
+- Format: PNG, no device frame
+- 8 screenshots for Google Play + Apple App Store
 
-### Screenshot 1: Core Gameplay
-- Show 3 animals (Bunny, Dog, Bear) in top row
-- Food items (Carrot, Bone, Honey) in bottom row
-- A finger/hand dragging Carrot toward Bunny
-- Tutorial overlay arrow visible
-- **Message**: Shows the drag-and-drop mechanic instantly
+## Screenshot 1: Main Menu
+- Tofie mascot in center, animated (breathing idle)
+- 3 large buttons: Play, Collection, Playground
+- Colorful meadow background with animated bokeh
+- **Message**: Friendly, safe, child-appropriate entry
 
-### Screenshot 2: Fever Mode
-- Combo counter at 5+ showing "FEVER! x5"
-- Background tinted red
-- Gold match particles visible
-- Multiple animals on screen
-- **Message**: Shows excitement and energy
+## Screenshot 2: Game Hub
+- Grid of 27 game cards with animal icons
+- Age toggle visible (Toddler/Preschool)
+- Star counter in top bar
+- **Message**: Huge variety of educational games
 
-### Screenshot 3: Sticker Book
-- Open sticker book screen with 8-10 animals unlocked
-- Some slots still locked (gray silhouettes)
-- **Message**: Shows collectible progression
+## Screenshot 3: Counting Game ("Tofie's Fruit Market")
+- Animal customer with thought bubble showing "3"
+- Colorful fruits arranged below
+- Finger dragging a fruit to basket
+- Ascending pitch visual (musical notes)
+- **Message**: Learn counting through play
 
-### Screenshot 4: Daily Reward
-- Main menu with "Daily Reward: +100 Coins!" banner
-- Coin counter visible
-- **Message**: Shows daily engagement loop
+## Screenshot 4: Shadow Theater
+- Theater stage with curtain
+- 4 animal silhouettes performing
+- One colored animal being dragged to match
+- Sparkle VFX on successful match
+- **Message**: Shape recognition with narrative
 
-### Screenshot 5 (optional): Win Screen
-- "You fed everyone!" message with confetti
-- All slots cleared
-- **Message**: Shows satisfying completion
+## Screenshot 5: Planet Guardian (Eco Conveyor)
+- Happy Earth face with flowers
+- Trash items falling, bins at bottom
+- Child sorting correctly, Earth smiling
+- **Message**: Environmental awareness for kids
 
-## Required Sizes
+## Screenshot 6: Dress Up Tofie (Weather Dress)
+- Tofie paper doll in center
+- Snowy weather with particle effects
+- Clothing items around (coat, boots, scarf)
+- Body zone highlights
+- **Message**: Cause-effect reasoning + life skills
 
-| Platform | Device | Resolution |
-|----------|--------|------------|
-| iOS | iPhone 6.7" (15 Pro Max) | 1290 x 2796 |
-| iOS | iPhone 6.5" (11 Pro Max) | 1242 x 2688 |
-| iOS | iPad Pro 12.9" | 2048 x 2732 |
-| Android | Phone | 1080 x 1920 (minimum) |
-| Android | Tablet 7" | 1200 x 1920 |
-| Android | Tablet 10" | 1600 x 2560 |
+## Screenshot 7: Star Celebration
+- 5-star celebration with confetti rain
+- Rainbow ring VFX
+- Golden burst particles
+- Animal character dancing
+- **Message**: Positive reinforcement, no punishment
 
-## Notes
-
-- Game runs in landscape (1280x720) — screenshots need device frame in portrait orientation showing landscape gameplay
-- Use bright, saturated colors for thumbnails
-- First screenshot is most important — it appears in search results
-- Add minimal text overlays (2-3 words max per screenshot)
-- Text overlays should be localized for each store region
+## Screenshot 8: Parent Zone
+- Progress radar chart (behind parental gate)
+- Session timer settings
+- Language selector (4 flags)
+- "No ads, no tracking" badge
+- **Message**: Parents trust our safety measures
