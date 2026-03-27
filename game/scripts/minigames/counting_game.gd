@@ -25,6 +25,11 @@ const PLOP_PITCH_STEP: float = 0.12
 const ANIMAL_SCALE: float = 0.25
 const ANIMAL_HAPPY_BOUNCE: float = 20.0
 const THOUGHT_BUBBLE_RADIUS: float = 40.0
+## Фізична метафора: живіт росте при кожному зібраному фрукті
+const BELLY_SCALE_STEP: float = 0.03
+const BELLY_MAX_EXTRA: float = 0.25
+const BELLY_SETTLE_DURATION: float = 0.4
+const BELLY_WOBBLE_ANGLE: float = 0.06
 
 const FRUITS: Array[Dictionary] = [
 	{"type": "apple", "color": Color("ff6b6b")},
@@ -420,6 +425,80 @@ func _animate_buyer_backflip() -> void:
 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
+## Кумедна реакція покупця на неправильний фрукт — здивоване обличчя + wobble.
+## Toddler: ніжний wobble (менша амплітуда). Preschool: виразніша реакція.
+func _play_funny_wrong_fruit(item: Node2D) -> void:
+	if SettingsManager.reduced_motion:
+		return
+	## Покупець робить здивоване обличчя: очі ширше (scale Y up) + rotation wobble
+	if is_instance_valid(_buyer_node):
+		var amp: float = 5.0 if _is_toddler_mode else 10.0
+		var buyer_tw: Tween = _create_game_tween()
+		buyer_tw.tween_property(_buyer_node, "scale", Vector2(0.9, 1.15), 0.1)
+		buyer_tw.tween_property(_buyer_node, "rotation_degrees", amp, 0.08)
+		buyer_tw.tween_property(_buyer_node, "rotation_degrees", -amp, 0.08)
+		buyer_tw.tween_property(_buyer_node, "rotation_degrees", amp * 0.5, 0.06)
+		buyer_tw.tween_property(_buyer_node, "rotation_degrees", 0.0, 0.06)
+		buyer_tw.tween_property(_buyer_node, "scale", Vector2.ONE, 0.15)\
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	## Фрукт відскакує як м'яч — bounce physics
+	if is_instance_valid(item):
+		var bounce_h: float = 25.0 if _is_toddler_mode else 45.0
+		var orig_y: float = item.position.y
+		var fruit_tw: Tween = _create_game_tween()
+		fruit_tw.tween_property(item, "position:y", orig_y - bounce_h, 0.1)\
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		fruit_tw.tween_property(item, "position:y", orig_y, 0.12)\
+			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		fruit_tw.tween_property(item, "scale", Vector2(1.2, 0.8), 0.05)
+		fruit_tw.tween_property(item, "scale", Vector2.ONE, 0.1)\
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		AudioManager.play_sfx("bounce", 1.3)
+
+
+## Фізична метафора: живіт тварини збільшується після кожного правильного фрукта.
+## Дитина БАЧИТЬ, скільки вже зібрано, без абстрактного лічильника.
+func _animate_belly_grow() -> void:
+	if not is_instance_valid(_buyer_node):
+		push_warning("CountingGame: _buyer_node invalid in _animate_belly_grow")
+		return
+	if SettingsManager.reduced_motion:
+		var target: float = 1.0 + minf(float(_current_count) * BELLY_SCALE_STEP, BELLY_MAX_EXTRA)
+		_buyer_node.scale = Vector2(target, target)
+		return
+	var target_scale: float = 1.0 + minf(float(_current_count) * BELLY_SCALE_STEP, BELLY_MAX_EXTRA)
+	var tw: Tween = _create_game_tween()
+	## Спочатку squish вширину (як ковтнув), потім рівномірне збільшення
+	tw.tween_property(_buyer_node, "scale",
+		Vector2(target_scale + 0.04, target_scale - 0.03), 0.08)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_buyer_node, "scale",
+		Vector2(target_scale, target_scale), 0.12)\
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+## Задоволена реакція: тварина потирає живіт (wobble) і повертається до scale 1.0.
+func _animate_belly_settle() -> void:
+	if not is_instance_valid(_buyer_node):
+		push_warning("CountingGame: _buyer_node invalid in _animate_belly_settle")
+		return
+	if SettingsManager.reduced_motion:
+		_buyer_node.scale = Vector2.ONE
+		_buyer_node.rotation = 0.0
+		return
+	var tw: Tween = _create_game_tween()
+	## Потирання живота -- rotation wobble
+	tw.tween_property(_buyer_node, "rotation", BELLY_WOBBLE_ANGLE, 0.1)
+	tw.tween_property(_buyer_node, "rotation", -BELLY_WOBBLE_ANGLE, 0.1)
+	tw.tween_property(_buyer_node, "rotation", BELLY_WOBBLE_ANGLE * 0.5, 0.08)
+	tw.tween_property(_buyer_node, "rotation", 0.0, 0.08)
+	## Живіт повертається до норми
+	tw.tween_property(_buyer_node, "scale",
+		Vector2(1.08, 0.94), 0.1)
+	tw.tween_property(_buyer_node, "scale", Vector2.ONE, BELLY_SETTLE_DURATION)\
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
 ## ---- Toddler: збери фрукти у кошик тварини ----
 
 
@@ -566,6 +645,8 @@ func _on_dropped_on_target(item: Node2D, _target: Node2D) -> void:
 		if is_instance_valid(item):
 			_animate_correct_item(item)
 		_current_count += 1
+		## Фізична метафора: живіт росте з кожним фруктом
+		_animate_belly_grow()
 		if is_instance_valid(_counter_label):
 			_counter_label.text = tr("COUNTING_COUNTER") % [_current_count, _target_count]
 		## Заповнити крапку прогресу
@@ -607,6 +688,8 @@ func _on_dropped_on_target(item: Node2D, _target: Node2D) -> void:
 		## Перевірка завершення раунду
 		if _current_count >= _target_count:
 			_input_locked = true
+			## Фізична метафора: задоволений живіт (wobble + settle)
+			_animate_belly_settle()
 			## Реакція тварини: happy dance або backflip
 			if _round_errors_local == 0:
 				_animate_buyer_backflip()
@@ -626,6 +709,7 @@ func _on_dropped_on_target(item: Node2D, _target: Node2D) -> void:
 		if not _is_toddler_mode:
 			_errors += 1
 		_register_error(item)
+		_play_funny_wrong_fruit(item)
 		if _origins.has(item):
 			_drag.snap_back(item, _origins[item])
 		_reset_idle_timer()
@@ -689,6 +773,10 @@ func _handle_answer_tap(node: Node2D) -> void:
 	if node.get_meta("is_correct", false):
 		_register_correct(node)
 		VFXManager.spawn_premium_celebration(node.global_position)
+		## Фізична метафора: живіт росте + settle для preschool
+		_current_count = _target_count
+		_animate_belly_grow()
+		_animate_belly_settle()
 		## Реакція тварини
 		if _round_errors_local == 0:
 			_animate_buyer_backflip()
@@ -712,6 +800,7 @@ func _handle_answer_tap(node: Node2D) -> void:
 		_errors += 1
 		_round_errors_local += 1
 		_register_error(node)
+		_play_funny_wrong_fruit(node)
 		node.set_meta("disabled", true)
 		node.modulate = Color(0.5, 0.5, 0.5)
 		if not SettingsManager.reduced_motion:

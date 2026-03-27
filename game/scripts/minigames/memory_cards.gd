@@ -591,6 +591,16 @@ func _handle_mismatch() -> void:
 func _handle_mismatch_toddler() -> void:
 	## М'який фідбек без штрафу (A6), але з scaffolding (A11)
 	_register_error(_flipped[0])
+	## Кумедна реакція: карти дрожать перед тим як сховатися (squeaky hide)
+	if not SettingsManager.reduced_motion:
+		for card: Node2D in _flipped:
+			if is_instance_valid(card):
+				var orig_x: float = card.position.x
+				var shake_tw: Tween = _create_game_tween()
+				shake_tw.tween_property(card, "position:x", orig_x - 3.0, 0.04)
+				shake_tw.tween_property(card, "position:x", orig_x + 3.0, 0.04)
+				shake_tw.tween_property(card, "position:x", orig_x, 0.03)
+		AudioManager.play_sfx("pop", 1.5)
 	_flipped[0].set_highlighted(false)
 	_flipped[1].set_highlighted(false)
 	_flipped.clear()
@@ -602,21 +612,31 @@ func _handle_mismatch_preschool() -> void:
 	_errors += 1
 	_register_error(_flipped[0])
 
-	## Gentle red flash + shake (LAW 28 — м'який, не агресивний)
+	## Кумедна реакція: карти дрожать + squeaky звук перед ховком
 	if not SettingsManager.reduced_motion:
 		for card: Node2D in _flipped:
+			if not is_instance_valid(card):
+				continue
 			## Червоний flash (0.2s)
 			var flash_tw: Tween = _create_game_tween()
 			flash_tw.tween_property(card, "modulate",
 				Color(1.3, 0.85, 0.85, 1.0), 0.1)
 			flash_tw.tween_property(card, "modulate", Color.WHITE, 0.15)
-			## Shake
+			## Shake — карти дрожать наче соромляться
 			var orig_x: float = card.position.x
 			var tw_shake: Tween = _create_game_tween()
-			tw_shake.tween_property(card, "position:x", orig_x - 5.0, 0.06)
-			tw_shake.tween_property(card, "position:x", orig_x + 5.0, 0.06)
-			tw_shake.tween_property(card, "position:x", orig_x - 2.5, 0.05)
-			tw_shake.tween_property(card, "position:x", orig_x, 0.05)
+			tw_shake.tween_property(card, "position:x", orig_x - 5.0, 0.05)
+			tw_shake.tween_property(card, "position:x", orig_x + 5.0, 0.05)
+			tw_shake.tween_property(card, "position:x", orig_x - 3.0, 0.04)
+			tw_shake.tween_property(card, "position:x", orig_x + 3.0, 0.04)
+			tw_shake.tween_property(card, "position:x", orig_x, 0.03)
+			## Squeaky shrink перед flip — карта зменшується і "пищить"
+			var shrink_tw: Tween = _create_game_tween()
+			shrink_tw.tween_interval(0.1)
+			shrink_tw.tween_property(card, "scale", card.scale * 0.92, 0.08)
+			shrink_tw.tween_property(card, "scale", card.scale, 0.1)\
+				.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		AudioManager.play_sfx("pop", 1.4)
 
 	## Пауза — дитина запам'ятовує позиції
 	var d2: float = 0.15 if SettingsManager.reduced_motion else _peek_duration

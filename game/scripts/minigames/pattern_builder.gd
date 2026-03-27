@@ -709,6 +709,9 @@ func _handle_wrong_drop(item: Node2D) -> void:
 		if idx >= 0:
 			_drag.draggable_items.remove_at(idx)
 
+	## Кумедна реакція: бусина "відскакує" від нитки + нитка тремтить
+	_play_funny_bead_bounce(item)
+
 	## Snap back
 	if _origins.has(item):
 		_drag.snap_back(item, _origins[item])
@@ -721,6 +724,43 @@ func _handle_wrong_drop(item: Node2D) -> void:
 		_input_locked = false
 		_reset_idle_timer()
 	)
+
+
+## Кумедна реакція на неправильну бусину — elastic bounce + хвиля по нитці.
+func _play_funny_bead_bounce(item: Node2D) -> void:
+	if SettingsManager.reduced_motion:
+		return
+	## Бусина відскакує з elastic bounce (наче гумовий м'яч від нитки)
+	if is_instance_valid(item):
+		var bounce_h: float = 20.0 if _is_toddler else 35.0
+		var orig_y: float = item.position.y
+		var bead_tw: Tween = _create_game_tween()
+		bead_tw.tween_property(item, "position:y", orig_y - bounce_h, 0.1)\
+			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		bead_tw.tween_property(item, "position:y", orig_y, 0.15)\
+			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		## Обертання при відскоку
+		var spin: float = 15.0 if _is_toddler else 25.0
+		bead_tw.parallel().tween_property(item, "rotation_degrees", spin, 0.12)
+		bead_tw.tween_property(item, "rotation_degrees", 0.0, 0.1)\
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		AudioManager.play_sfx("bounce", 1.2)
+	## Нитка дрожить — wave анімація по всіх бусинах на нитці
+	if _bead_nodes.size() > 0:
+		for i: int in _bead_nodes.size():
+			var bead: Node2D = _bead_nodes[i]
+			if not is_instance_valid(bead):
+				continue
+			var wave_amp: float = 3.0 if _is_toddler else 5.0
+			var delay: float = float(i) * 0.04
+			var wave_tw: Tween = _create_game_tween()
+			wave_tw.tween_interval(delay)
+			wave_tw.tween_property(bead, "position:y",
+				bead.position.y - wave_amp, 0.06)
+			wave_tw.tween_property(bead, "position:y",
+				bead.position.y + wave_amp * 0.5, 0.06)
+			wave_tw.tween_property(bead, "position:y",
+				bead.position.y, 0.06)
 
 
 ## ---- Святкові анімації ----

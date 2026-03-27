@@ -506,9 +506,14 @@ func _on_dropped_target(item: Node2D, _target: Node2D) -> void:
 	AudioManager.play_sfx("coin")
 	HapticsManager.vibrate_light()
 
-	## Змінюємо колір котла — показуємо перший колір
+	## Змінюємо колір котла -- показуємо перший колір
+	var pour_color: Color = COLOR_VALUES.get(color_name, Color.GRAY)
 	if _dropped_colors.size() == 1:
-		_tint_cauldron(COLOR_VALUES.get(color_name, Color.GRAY))
+		_tint_cauldron(pour_color)
+
+	## Фізична метафора: trail "вливання" рідини від пробірки до котла
+	if not SettingsManager.reduced_motion and is_instance_valid(item) and is_instance_valid(_cauldron):
+		_spawn_pour_trail(item.global_position, _cauldron.global_position, pour_color)
 
 	## Анімація зникнення у котел
 	if SettingsManager.reduced_motion:
@@ -541,20 +546,92 @@ func _on_dropped_empty(item: Node2D) -> void:
 
 ## ---- Візуальні ефекти котла ----
 
+
+## Фізична метафора: при drag пробірки до котла, "рідина вливається" --
+## кілька крапель летять від пробірки до котла, створюючи trail ефект.
+func _spawn_pour_trail(from_pos: Vector2, to_pos: Vector2, color: Color) -> void:
+	var drop_count: int = 4
+	for i: int in drop_count:
+		var drop: Node2D = Node2D.new()
+		drop.global_position = from_pos
+		add_child(drop)
+		_all_round_nodes.append(drop)
+		var dot_ctrl: Control = IconDraw.color_dot(randf_range(5.0, 10.0), color.lightened(0.1))
+		dot_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		dot_ctrl.position = Vector2(-5, -5)
+		drop.add_child(dot_ctrl)
+		## Staggered drop -- кожна крапля з затримкою
+		var delay: float = float(i) * 0.06
+		var drop_tw: Tween = _create_game_tween()
+		drop_tw.tween_property(drop, "global_position", to_pos, 0.2)\
+			.set_delay(delay).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		drop_tw.tween_property(drop, "modulate:a", 0.0, 0.08)
+		drop_tw.tween_callback(func() -> void:
+			if is_instance_valid(drop):
+				_all_round_nodes.erase(drop)
+				drop.queue_free())
+
+
+## Фізична метафора: котел ПЛАВНО змінює колір (gradient transition, не instant).
+## Дитина бачить "рідину вливається" через поступову зміну кольору.
 func _tint_cauldron(color: Color) -> void:
 	if not is_instance_valid(_cauldron_panel):
 		push_warning("ColorLab: _cauldron_panel invalid in _tint_cauldron")
 		return
 	var style: StyleBoxFlat = _cauldron_panel.get_theme_stylebox("panel").duplicate()
-	style.bg_color = color.lightened(0.2)
-	_cauldron_panel.add_theme_stylebox_override("panel", style)
+	var target_color: Color = color.lightened(0.2)
+	if SettingsManager.reduced_motion:
+		style.bg_color = target_color
+		_cauldron_panel.add_theme_stylebox_override("panel", style)
+		return
+	## Плавний gradient transition -- колір "вливається"
+	var from_color: Color = style.bg_color
+	var tw: Tween = _create_game_tween()
+	tw.tween_method(func(t: float) -> void:
+		if not is_instance_valid(_cauldron_panel):
+			return
+		var s: StyleBoxFlat = _cauldron_panel.get_theme_stylebox("panel").duplicate()
+		s.bg_color = from_color.lerp(target_color, t)
+		_cauldron_panel.add_theme_stylebox_override("panel", s),
+		0.0, 1.0, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
 
 
+## Бурління котла: бульбашки змінюють колір + інтенсивність зростає при другому кольорі.
 func _animate_cauldron_bubbling(color: Color) -> void:
-	## Бурління котла — бульбашки міняють колір на результуючий
+	var is_second_color: bool = _dropped_colors.size() >= 2
 	for bubble: Node2D in _bubble_nodes:
-		if is_instance_valid(bubble):
-			bubble.modulate = color.lightened(0.3)
+		if not is_instance_valid(bubble):
+			continue
+		bubble.modulate = color.lightened(0.3)
+		## Фізична метафора: другий колір = сильніше бурління
+		if is_second_color and not SettingsManager.reduced_motion:
+			var intense_tw: Tween = _create_game_tween().set_loops(3)
+			intense_tw.tween_property(bubble, "scale", Vector2(1.5, 1.5), 0.15)\
+				.set_trans(Tween.TRANS_SINE)
+			intense_tw.tween_property(bubble, "scale", Vector2.ONE, 0.15)\
+				.set_trans(Tween.TRANS_SINE)
+
+
+## Фізична метафора: котел ПИХАЄ вгору при правильному змішуванні.
+## Гейзер VFX -- фонтан кольорових краплин вгору з котла.
+func _animate_cauldron_geyser(color: Color) -> void:
+	if not is_instance_valid(_cauldron):
+		push_warning("ColorLab: _cauldron invalid in _animate_cauldron_geyser")
+		return
+	## VFX фонтан вгору
+	VFXManager.spawn_firework_fountain(_cauldron.global_position + Vector2(0, -20))
+	VFXManager.spawn_bubble_pop(_cauldron.global_position, color)
+	## Котел підстрибує від сили реакції
+	var orig_y: float = _cauldron.position.y
+	var geyser_tw: Tween = _create_game_tween()
+	geyser_tw.tween_property(_cauldron, "position:y",
+		orig_y - 12.0, 0.1).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	geyser_tw.tween_property(_cauldron, "position:y",
+		orig_y, 0.2).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	## Squish при поверненні
+	geyser_tw.tween_property(_cauldron, "scale", Vector2(1.1, 0.92), 0.06)
+	geyser_tw.tween_property(_cauldron, "scale", Vector2.ONE, 0.15)\
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
 ## ---- Перевірка суміші ----
@@ -591,7 +668,6 @@ func _handle_correct_mix() -> void:
 	VFXManager.spawn_success_ripple(_cauldron.global_position, mixed_color)
 
 	if SettingsManager.reduced_motion:
-		## Швидкий шлях без анімацій
 		_heal_animal_instant()
 		VFXManager.spawn_premium_celebration(_cauldron.global_position)
 		var tw: Tween = _create_game_tween()
@@ -599,7 +675,10 @@ func _handle_correct_mix() -> void:
 		tw.tween_callback(_advance_after_correct)
 		return
 
-	## Анімація: зілля "летить" від котла до тварини
+	## Фізична метафора: котел ПИХАЄ вгору (geyser puff) перед польотом зілля
+	_animate_cauldron_geyser(mixed_color)
+
+	## Зілля "летить" від котла до тварини ДУГОЮ (arc trajectory)
 	var potion_orb: Node2D = _create_potion_orb(mixed_color)
 	if not is_instance_valid(potion_orb):
 		push_warning("ColorLab: failed to create potion orb")
@@ -613,10 +692,24 @@ func _handle_correct_mix() -> void:
 	var target_pos: Vector2 = _animal_node.global_position if is_instance_valid(_animal_node) \
 		else Vector2(200, 300)
 
+	## Arc trajectory: кулька летить вверх дугою, потім спускається до тварини
+	var start_pos: Vector2 = _cauldron.global_position
+	var arc_peak_y: float = minf(start_pos.y, target_pos.y) - 80.0
+	var mid_x: float = (start_pos.x + target_pos.x) * 0.5
+	var mid_pos: Vector2 = Vector2(mid_x, arc_peak_y)
+
 	var tw: Tween = _create_game_tween()
-	tw.tween_property(potion_orb, "global_position", target_pos, 0.5)\
-		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
-	tw.tween_property(potion_orb, "modulate:a", 0.0, 0.2)
+	## Перша половина дуги: вгору
+	tw.tween_method(func(t: float) -> void:
+		if is_instance_valid(potion_orb):
+			potion_orb.global_position = start_pos.lerp(mid_pos, t),
+		0.0, 1.0, 0.25).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	## Друга половина дуги: вниз до тварини
+	tw.tween_method(func(t: float) -> void:
+		if is_instance_valid(potion_orb):
+			potion_orb.global_position = mid_pos.lerp(target_pos, t),
+		0.0, 1.0, 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tw.tween_property(potion_orb, "modulate:a", 0.0, 0.15)
 	tw.tween_callback(func() -> void:
 		if is_instance_valid(potion_orb):
 			_all_round_nodes.erase(potion_orb)

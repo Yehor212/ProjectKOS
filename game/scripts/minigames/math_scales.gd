@@ -627,6 +627,8 @@ func _on_unfair_share() -> void:
 	if _is_toddler:
 		## Toddler (A6): м'яке повернення — тварини сумні, їжа повертається
 		_register_error()
+		## Кумедна реакція: тварини з меншим кількістю їжі сумно зменшуються
+		_play_funny_unfair_reaction()
 		_return_all_food_to_pile()
 		var d3: float = ANIM_FAST if SettingsManager.reduced_motion else ANIM_SLOW
 		var tw: Tween = _create_game_tween()
@@ -641,17 +643,8 @@ func _on_unfair_share() -> void:
 		## Preschool (A7): помилка + рестарт раунду
 		_errors += 1
 		_register_error()
-		## Анімація "shiver" сумних тварин
-		if not SettingsManager.reduced_motion:
-			for animal: Node2D in _animal_nodes:
-				if is_instance_valid(animal):
-					var shiver: Tween = _create_game_tween()
-					shiver.tween_property(animal, "position:x",
-						animal.position.x - 4, 0.05)
-					shiver.tween_property(animal, "position:x",
-						animal.position.x + 4, 0.05)
-					shiver.tween_property(animal, "position:x",
-						animal.position.x, 0.05)
+		## Кумедна реакція: тварини з меншим кількістю — сумні, з більшим — embarrassed
+		_play_funny_unfair_reaction()
 		var d4: float = ANIM_FAST if SettingsManager.reduced_motion else 0.6
 		var tw: Tween = _create_game_tween()
 		tw.tween_interval(d4)

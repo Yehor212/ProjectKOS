@@ -593,10 +593,27 @@ func _handle_wrong(item: Node2D, zone: Dictionary) -> void:
 		item.position = origin
 		item.rotation = 0.0
 		return
+	## Кумедна реакція: хабітат "виплювує" тварину вгору з rotation
+	var zone_rect: Rect2 = zone.get("rect", Rect2()) as Rect2
+	var spit_y: float = zone_rect.position.y - 40.0
+	var spin_deg: float = 15.0 if _is_toddler else 30.0
 	var tw: Tween = _create_game_tween()
-	tw.tween_property(item, "position", origin, 0.3)\
+	## Фаза 1: тварина злітає вгору з обертанням ("виплювування")
+	tw.set_parallel(true)
+	tw.tween_property(item, "position:y", spit_y, 0.15)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(item, "rotation_degrees", spin_deg, 0.15)
+	## Фаза 2: приземлення з "бойнг" bounce
+	tw.chain().set_parallel(true)
+	tw.tween_property(item, "position", origin, 0.25)\
+		.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(item, "rotation_degrees", 0.0, 0.15)
+	## Фаза 3: squish при приземленні
+	tw.chain().set_parallel(false)
+	tw.tween_property(item, "scale", Vector2(1.2, 0.8), 0.06)
+	tw.tween_property(item, "scale", Vector2.ONE, 0.12)\
 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-	tw.parallel().tween_property(item, "rotation", 0.0, 0.15)
+	AudioManager.play_sfx("bounce")
 
 
 func _snap_back(item: Node2D) -> void:

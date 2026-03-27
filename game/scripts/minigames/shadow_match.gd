@@ -512,7 +512,7 @@ func _handle_wrong_match(item: Node2D, target: Node2D) -> void:
 		push_warning("ShadowMatch: no origin for wrong item")
 		var vp: Vector2 = get_viewport().get_visible_rect().size
 		_drag.snap_back(item, Vector2(vp.x * 0.5, vp.y * ANIMAL_Y_CENTER))
-	## Wag animation на силуеті (тінь хитає пальцем)
+	## Wag animation на силуеті (тінь "вагає пальцем") + тварина смущується
 	if SettingsManager.reduced_motion:
 		_input_locked = false
 		_drag.enabled = true
@@ -523,13 +523,30 @@ func _handle_wrong_match(item: Node2D, target: Node2D) -> void:
 		_drag.enabled = true
 		_reset_idle_timer()
 		return
+	## Тінь хитає пальцем — 3 осциляції з убуванням (кумедний "ні-ні-ні")
+	var wag_amp: float = 8.0 if _is_toddler else 12.0
 	var orig_rot: float = target.rotation_degrees
 	var tw: Tween = _create_game_tween()
-	tw.tween_property(target, "rotation_degrees", orig_rot - 10.0, 0.1)
-	tw.tween_property(target, "rotation_degrees", orig_rot + 10.0, 0.1)
-	tw.tween_property(target, "rotation_degrees", orig_rot - 6.0, 0.08)
-	tw.tween_property(target, "rotation_degrees", orig_rot + 6.0, 0.08)
-	tw.tween_property(target, "rotation_degrees", orig_rot, 0.06)
+	tw.tween_property(target, "rotation_degrees", orig_rot - wag_amp, 0.08)
+	tw.tween_property(target, "rotation_degrees", orig_rot + wag_amp, 0.08)
+	tw.tween_property(target, "rotation_degrees", orig_rot - wag_amp * 0.7, 0.07)
+	tw.tween_property(target, "rotation_degrees", orig_rot + wag_amp * 0.7, 0.07)
+	tw.tween_property(target, "rotation_degrees", orig_rot - wag_amp * 0.3, 0.06)
+	tw.tween_property(target, "rotation_degrees", orig_rot, 0.05)
+	## Тварина смущено відвертається — невеликий поворот + зменшення (shrink від сорому)
+	if is_instance_valid(item):
+		var shy_deg: float = -15.0 if _is_toddler else -25.0
+		var shy_tw: Tween = _create_game_tween()
+		shy_tw.tween_property(item, "rotation_degrees", shy_deg, 0.15)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+		shy_tw.parallel().tween_property(item, "scale",
+			item.scale * 0.9, 0.15)
+		shy_tw.tween_property(item, "rotation_degrees", 0.0, 0.2)\
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		shy_tw.parallel().tween_property(item, "scale",
+			item.scale, 0.2)\
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	AudioManager.play_sfx("bounce", 0.7)
 	tw.finished.connect(func() -> void:
 		if _game_over:
 			return

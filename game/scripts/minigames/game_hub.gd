@@ -61,6 +61,7 @@ func _ready() -> void:
 	star_bar.get_parent().add_child(star_pill)
 	star_bar.get_parent().move_child(star_pill, star_bar.get_index())
 	star_bar.reparent(star_pill)
+	_build_collection_button()
 	_populate_cards()
 	_animate_title()
 	_animate_star_counter()
@@ -86,6 +87,36 @@ func _apply_safe_area() -> void:
 	$HeaderBar.offset_right = minf($HeaderBar.offset_right, -(right + 8.0))
 	$HeaderBar.offset_top = maxf($HeaderBar.offset_top, top + 4.0)
 	$ScrollContainer.offset_top = maxf($ScrollContainer.offset_top, top + 72.0)
+
+
+func _build_collection_button() -> void:
+	## Кнопка "Collection" — відкриває екран колекції тварин
+	var btn: Button = Button.new()
+	btn.text = tr("BTN_COLLECTION")
+	btn.custom_minimum_size = Vector2(120, 48)
+	btn.add_theme_font_size_override("font_size", 20)
+	btn.add_theme_color_override("font_color", Color.WHITE)
+	btn.add_theme_stylebox_override("normal", ThemeManager.make_soft_style(
+		ThemeManager.COLOR_GOLD, ThemeManager.COLOR_GOLD_DEPTH, 16, false))
+	btn.add_theme_stylebox_override("hover", ThemeManager.make_soft_style(
+		ThemeManager.COLOR_GOLD.lightened(0.05), ThemeManager.COLOR_GOLD_DEPTH, 16, false))
+	btn.add_theme_stylebox_override("pressed", ThemeManager.make_soft_style(
+		ThemeManager.COLOR_GOLD, ThemeManager.COLOR_GOLD_DEPTH, 16, true))
+	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+	btn.pressed.connect(_on_collection_pressed)
+	## Додаємо перед Spacer щоб кнопка була поруч з заголовком
+	var spacer: Control = $HeaderBar/Spacer
+	$HeaderBar.add_child(btn)
+	$HeaderBar.move_child(btn, spacer.get_index())
+	JuicyEffects.button_press_squish(btn, self)
+
+
+func _on_collection_pressed() -> void:
+	if _buttons_disabled or _info_panel_animating:
+		return
+	_buttons_disabled = true
+	AudioManager.play_sfx("click")
+	SceneManager.goto_scene("res://scenes/ui/collection_screen.tscn")
 
 
 func _populate_cards() -> void:

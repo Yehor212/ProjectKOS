@@ -62,6 +62,30 @@ const BACKFLIP_DURATION: float = 0.6
 const SLIDE_PITCH_BASE: float = 0.9  ## Базовий pitch для slide SFX (зростає за кроком)
 const SLIDE_PITCH_STEP: float = 0.05  ## Приріст pitch за кожен крок
 
+## ── Command Slot Limit constants (Preschool puzzle constraint) ──
+const SLOT_UNLIMITED: int = 99  ## Toddler: без ліміту
+const SLOT_EARLY_PRESCHOOL: int = 6  ## Preschool R1-R2: щедро
+const SLOT_LATE_PRESCHOOL: int = 5  ## Preschool R3-R4: оптимізуй шлях
+const SLOT_EMPTY_COLOR: Color = Color(0.78, 0.78, 0.84, 0.5)  ## Сірий порожній слот
+const SLOT_ITEM_SIZE: float = 36.0
+const SLOT_ITEM_GAP: float = 4.0
+
+## ── Coin constants (optional collectibles, Preschool only) ──
+const COIN_COLOR: Color = Color("ffd166")  ## Жовтий (як ціль)
+const COIN_BORDER_COLOR: Color = Color("e6a817")  ## Темніший контур
+const COIN_RADIUS: float = 12.0
+const COIN_COLLECT_DURATION: float = 0.25
+
+## ── Function Block constants (Preschool R3+, teaches procedures) ──
+const F1_COLOR: Color = Color("a78bfa")  ## Фіолетовий (як бордер сітки)
+const F1_DEFINED_COLOR: Color = Color("7c3aed")  ## Насичений фіолетовий (визначено)
+const F1_SLOT_COUNT_BASE: int = 2  ## Кількість слотів у f1 блоці
+const F1_TOKEN: String = "f1"  ## Маркер f1 у послідовності команд
+
+## ── Anticipation pause constants ──
+const ANTICIPATION_DURATION: float = 0.5  ## Пауза перед виконанням
+const ANTICIPATION_SCALE: Vector2 = Vector2(1.1, 1.1)  ## Scale pulse при моргуванні
+
 const DIRECTIONS: Dictionary = {
 	"up": Vector2i(0, -1), "down": Vector2i(0, 1),
 	"left": Vector2i(-1, 0), "right": Vector2i(1, 0),
@@ -122,6 +146,27 @@ var _theme_overlays: Array[Node] = []  ## Ноди оверлеїв тем дл�
 var _last_move_dir: String = ""  ## Попередній напрямок для wobble detection
 var _execution_step: int = 0  ## Поточний крок виконання (для pitch escalation)
 var _optimal_length: int = 0  ## BFS optimal path length для bonus detection
+
+## ── Command Slot Limit state ──
+var _slot_limit: int = SLOT_UNLIMITED  ## Поточний ліміт слотів
+var _slot_panels: Array[Panel] = []  ## Візуальні панелі слотів (порожні/заповнені)
+var _dir_buttons: Array[Button] = []  ## Посилання на кнопки напрямків (для dim)
+
+## ── Coin state ──
+var _coin_positions: Array[Vector2i] = []  ## Позиції монет на сітці
+var _coin_nodes: Dictionary = {}  ## Vector2i -> Node2D (монета на сітці)
+var _collected_coins: int = 0  ## Зібрані монети в цьому раунді
+var _total_coins_collected: int = 0  ## Всього зібраних за всі раунди
+
+## ── Function Block state ──
+var _f1_defined: bool = false  ## Чи визначено f1 блок
+var _f1_commands: Array[String] = []  ## Команди у f1 блоці
+var _f1_editing: bool = false  ## Чи зараз режим редагування f1
+var _f1_btn: Button = null  ## Кнопка f1
+var _f1_editor_panel: Panel = null  ## Панель редактора f1
+var _f1_slot_displays: Array[Panel] = []  ## Візуальні слоти f1 редактора
+var _f1_confirm_btn: Button = null  ## Кнопка підтвердження f1
+var _f1_available: bool = false  ## Чи доступний f1 у цьому раунді
 
 
 func _ready() -> void:
@@ -204,14 +249,27 @@ func _start_round() -> void:
 	_executing = false
 	_demo_path.clear()
 	_toddler_replay_idx = 0
+	_slot_panels.clear()
+	_dir_buttons.clear()
+	_collected_coins = 0
+	_f1_defined = false
+	_f1_commands.clear()
+	_f1_editing = false
+	_f1_slot_displays.clear()
+	_f1_available = not _is_toddler and _round >= 2
 	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
 	_select_grid_theme()
 	_generate_puzzle()
 	## Обчислити optimal path для bonus detection
 	_optimal_length = _compute_solution_path(_robot_pos, _goal_pos).size()
+	## Обчислити slot limit (LAW 6: progressive difficulty)
+	_slot_limit = _compute_slot_limit()
+	## Розмістити монети (Preschool only)
+	_generate_coins()
 	_spawn_grid()
 	_spawn_themed_overlays()
+	_spawn_coins()
 	_spawn_robot_and_goal()
 	_spawn_robot_face()
 	_spawn_command_buttons()
@@ -219,6 +277,8 @@ func _start_round() -> void:
 	## Preschool: створити preview line (порожню)
 	if not _is_toddler:
 		_spawn_preview_line()
+	## Preschool: показати слот дисплей
+	_spawn_slot_display()
 	var d: float = 0.15 if SettingsManager.reduced_motion else 0.3
 	var tw: Tween = _create_game_tween()
 	tw.tween_interval(d)
@@ -284,6 +344,134 @@ func _select_grid_theme() -> void:
 			break
 		_themed_cells[pos] = _current_theme
 		placed += 1
+
+
+## ── Command Slot Limit: обчислити ліміт слотів для поточного раунду ──
+## Toddler: unlimited. Preschool: прогресивне зменшення (LAW 6).
+## GUARD: slot_limit >= optimal_length щоб пазл завжди мав розв'язок.
+## GUARD: slot_limit >= 3 (LAW 2: мінімум 3 вибори).
+func _compute_slot_limit() -> int:
+	if _is_toddler:
+		return SLOT_UNLIMITED
+	var base_limit: int = SLOT_EARLY_PRESCHOOL if _round < 2 else SLOT_LATE_PRESCHOOL
+	## Гарантія розв'язності: слотів >= optimal path length
+	if _optimal_length > 0 and base_limit < _optimal_length:
+		base_limit = _optimal_length
+	## LAW 2: мінімум 3 слоти завжди
+	if base_limit < 3:
+		base_limit = 3
+	return base_limit
+
+
+## ── Coins: генерація позицій монет на пустих клітинках ──
+## Toddler: 0 монет. Preschool R0: 0, R1-R2: 1, R3+: 2 (LAW 6: progressive).
+func _generate_coins() -> void:
+	_coin_positions.clear()
+	if _is_toddler:
+		return
+	var coin_count: int = 0
+	if _round >= 2:
+		coin_count = 2
+	elif _round >= 1:
+		coin_count = 1
+	if coin_count == 0:
+		return
+	## Зібрати вільні клітинки (не старт, не ціль, не themed)
+	var free_cells: Array[Vector2i] = []
+	for row: int in _grid_size:
+		for col: int in _grid_size:
+			var pos: Vector2i = Vector2i(col, row)
+			if pos == Vector2i.ZERO or pos == _goal_pos:
+				continue
+			if _themed_cells.has(pos):
+				continue
+			free_cells.append(pos)
+	free_cells.shuffle()
+	## Розмістити монети на вільних клітинках (LAW 13: bounds guard)
+	var placed: int = 0
+	for pos: Vector2i in free_cells:
+		if placed >= coin_count:
+			break
+		_coin_positions.append(pos)
+		placed += 1
+
+
+## ── Coins: спавн монет на сітці ──
+## Візуал: жовтий круг зі зірочкою всередині (LAW 25: форма + колір).
+func _spawn_coins() -> void:
+	_coin_nodes.clear()
+	for coin_pos: Vector2i in _coin_positions:
+		var center: Vector2 = _cell_center(coin_pos)
+		var coin_node: Node2D = Node2D.new()
+		coin_node.position = center
+		coin_node.z_index = 2
+		add_child(coin_node)
+		_all_round_nodes.append(coin_node)
+		## Жовтий круг (фон монети)
+		var coin_bg: Control = Control.new()
+		var coin_sz: float = COIN_RADIUS * 2.0
+		coin_bg.size = Vector2(coin_sz, coin_sz)
+		coin_bg.position = Vector2(-COIN_RADIUS, -COIN_RADIUS)
+		coin_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		coin_bg.draw.connect(func() -> void:
+			if not is_instance_valid(coin_bg):
+				return
+			## Заповнений круг
+			coin_bg.draw_circle(Vector2(COIN_RADIUS, COIN_RADIUS), COIN_RADIUS, COIN_COLOR)
+			## Контур (LAW 25: не тільки колір)
+			coin_bg.draw_arc(Vector2(COIN_RADIUS, COIN_RADIUS), COIN_RADIUS, 0.0, TAU, 20, COIN_BORDER_COLOR, 2.0)
+			## Зірочка в центрі (LAW 25: форма + колір)
+			var star_r: float = COIN_RADIUS * 0.5
+			var cx: float = COIN_RADIUS
+			var cy: float = COIN_RADIUS
+			var pts: PackedVector2Array = PackedVector2Array()
+			for pt_i: int in 10:
+				var angle: float = float(pt_i) * TAU / 10.0 - PI * 0.5
+				var r: float = star_r if pt_i % 2 == 0 else star_r * 0.4
+				pts.append(Vector2(cx + cos(angle) * r, cy + sin(angle) * r))
+			if pts.size() >= 3:
+				coin_bg.draw_colored_polygon(pts, COIN_BORDER_COLOR))
+		coin_node.add_child(coin_bg)
+		_coin_nodes[coin_pos] = coin_node
+		## Idle pulse анімація монети
+		if not SettingsManager.reduced_motion:
+			var pulse_tw: Tween = _create_game_tween().set_loops()
+			pulse_tw.tween_property(coin_node, "scale",
+				Vector2(1.1, 1.1), 0.6)\
+				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+			pulse_tw.tween_property(coin_node, "scale",
+				Vector2.ONE, 0.6)\
+				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+## ── Coins: збирання монети під час execution ──
+func _try_collect_coin(pos: Vector2i) -> void:
+	if not _coin_nodes.has(pos):
+		return
+	_collected_coins += 1
+	_total_coins_collected += 1
+	var coin_node: Node2D = _coin_nodes.get(pos, null)
+	_coin_nodes.erase(pos)  ## erase BEFORE queue_free (LAW 11)
+	if not is_instance_valid(coin_node):
+		push_warning("AlgoRobot: _try_collect_coin — coin node invalid")
+		return
+	AudioManager.play_sfx("reward")
+	HapticsManager.vibrate_light()
+	if SettingsManager.reduced_motion:
+		coin_node.queue_free()
+		return
+	## Анімація збору: scale up + fade out
+	var tw: Tween = _create_game_tween()
+	tw.set_parallel(true)
+	tw.tween_property(coin_node, "scale",
+		Vector2(1.5, 1.5), COIN_COLLECT_DURATION)\
+		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tw.tween_property(coin_node, "modulate:a",
+		0.0, COIN_COLLECT_DURATION)\
+		.set_trans(Tween.TRANS_SINE)
+	tw.chain().tween_callback(func() -> void:
+		if is_instance_valid(coin_node):
+			coin_node.queue_free())
 
 
 ## ── Спавн декоративних оверлеїв на тематичні клітинки ──
@@ -560,6 +748,7 @@ func _set_robot_mood(mood: int) -> void:
 
 
 func _spawn_command_buttons() -> void:
+	_dir_buttons.clear()
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var grid_bottom: float = _grid_origin.y + float(_grid_size) * CELL_SIZE + 20.0
 	## Команди стрічка
@@ -588,6 +777,7 @@ func _spawn_command_buttons() -> void:
 		add_child(btn)
 		JuicyEffects.button_press_squish(btn, self)
 		_all_round_nodes.append(btn)
+		_dir_buttons.append(btn)
 	## x2 кнопка повтору — тільки Preschool, раунди 2+
 	if not _is_toddler and _round >= 2:
 		_repeat_btn = Button.new()
@@ -601,6 +791,8 @@ func _spawn_command_buttons() -> void:
 		add_child(_repeat_btn)
 		JuicyEffects.button_press_squish(_repeat_btn, self)
 		_all_round_nodes.append(_repeat_btn)
+	## f1 кнопка — Preschool R3+ (teaches procedures)
+	_spawn_f1_button()
 
 
 func _spawn_action_buttons() -> void:
@@ -638,6 +830,18 @@ func _spawn_action_buttons() -> void:
 
 
 func _update_cmd_display() -> void:
+	## Якщо є slot display (Preschool з лімітом) — оновлюємо слоти замість окремих панелей
+	if not _is_toddler and _slot_limit < SLOT_UNLIMITED:
+		## Прибрати старі cmd_display панелі (якщо є)
+		for p: Panel in _cmd_display:
+			if is_instance_valid(p):
+				p.queue_free()
+		_cmd_display.clear()
+		## Slot display вже показує команди — просто оновити
+		_update_slot_display()
+		_update_direction_buttons_state()
+		return
+	## Toddler або unlimited: старий режим (окремі панелі)
 	for p: Panel in _cmd_display:
 		if is_instance_valid(p):
 			p.queue_free()
@@ -651,15 +855,27 @@ func _update_cmd_display() -> void:
 	for i: int in _commands.size():
 		var d: String = _commands[i]
 		var col: Color = DIR_COLORS.get(d, ROBOT_COLOR)
+		if d == F1_TOKEN:
+			col = F1_DEFINED_COLOR
 		var cmd_panel: Panel = Panel.new()
 		cmd_panel.size = Vector2(item_size, item_size)
 		cmd_panel.position = Vector2(start_x + float(i) * (item_size + item_gap), grid_bottom)
 		cmd_panel.add_theme_stylebox_override("panel",
 			GameData.candy_circle(col, item_size * 0.5, false))
 		cmd_panel.material = GameData.create_premium_material(0.04, 2.0, 0.0, 0.0, 0.06, 0.05, 0.08, "", 0.0, 0.10, 0.22, 0.18) ## Grain overlay (LAW 28)
-		var cmd_icon: Control = IconDraw.direction_arrow(d, item_size * 0.55)
-		cmd_icon.position = Vector2(item_size * 0.22, item_size * 0.22)
-		cmd_panel.add_child(cmd_icon)
+		if d == F1_TOKEN:
+			var f1_lbl: Label = Label.new()
+			f1_lbl.text = "f1"
+			f1_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			f1_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			f1_lbl.size = Vector2(item_size, item_size)
+			f1_lbl.add_theme_font_size_override("font_size", 14)
+			f1_lbl.add_theme_color_override("font_color", Color.WHITE)
+			cmd_panel.add_child(f1_lbl)
+		else:
+			var cmd_icon: Control = IconDraw.direction_arrow(d, item_size * 0.55)
+			cmd_icon.position = Vector2(item_size * 0.22, item_size * 0.22)
+			cmd_panel.add_child(cmd_icon)
 		add_child(cmd_panel)
 		_cmd_display.append(cmd_panel)
 		_all_round_nodes.append(cmd_panel)
@@ -703,6 +919,294 @@ func _update_preview_line() -> void:
 func _clear_preview_line() -> void:
 	if is_instance_valid(_preview_line):
 		_preview_line.clear_points()
+
+
+## ---- Slot Display (Preschool command limit visualization) ----
+
+## Спавн візуальних слотів: порожні сірі прямокутники зверху command strip.
+## Заповнені слоти показують кольорові стрілки. Toddler: не показуємо.
+func _spawn_slot_display() -> void:
+	if _is_toddler or _slot_limit >= SLOT_UNLIMITED:
+		return
+	_update_slot_display()
+
+
+## Оновити візуальний стан слотів — видалити старі, створити нові.
+func _update_slot_display() -> void:
+	## Прибрати попередні панелі
+	for p: Panel in _slot_panels:
+		if is_instance_valid(p):
+			p.queue_free()
+	_slot_panels.clear()
+	if _is_toddler or _slot_limit >= SLOT_UNLIMITED:
+		return
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var grid_bottom: float = _grid_origin.y + float(_grid_size) * CELL_SIZE + 8.0
+	var total_w: float = float(_slot_limit) * (SLOT_ITEM_SIZE + SLOT_ITEM_GAP)
+	var start_x: float = (vp.x - total_w) * 0.5
+	for i: int in _slot_limit:
+		var slot_panel: Panel = Panel.new()
+		slot_panel.size = Vector2(SLOT_ITEM_SIZE, SLOT_ITEM_SIZE)
+		slot_panel.position = Vector2(
+			start_x + float(i) * (SLOT_ITEM_SIZE + SLOT_ITEM_GAP), grid_bottom)
+		slot_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		if i < _commands.size():
+			## Заповнений слот — кольорова стрілка
+			var cmd: String = _commands[i]
+			var col: Color = DIR_COLORS.get(cmd, ROBOT_COLOR)
+			if cmd == F1_TOKEN:
+				col = F1_DEFINED_COLOR
+			slot_panel.add_theme_stylebox_override("panel",
+				GameData.candy_circle(col, SLOT_ITEM_SIZE * 0.5, false))
+			## Іконка напрямку або f1
+			if cmd == F1_TOKEN:
+				var f1_lbl: Label = Label.new()
+				f1_lbl.text = "f1"
+				f1_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				f1_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+				f1_lbl.size = Vector2(SLOT_ITEM_SIZE, SLOT_ITEM_SIZE)
+				f1_lbl.add_theme_font_size_override("font_size", 16)
+				f1_lbl.add_theme_color_override("font_color", Color.WHITE)
+				slot_panel.add_child(f1_lbl)
+			else:
+				var cmd_icon: Control = IconDraw.direction_arrow(cmd, SLOT_ITEM_SIZE * 0.55)
+				cmd_icon.position = Vector2(SLOT_ITEM_SIZE * 0.22, SLOT_ITEM_SIZE * 0.22)
+				slot_panel.add_child(cmd_icon)
+		else:
+			## Порожній слот — сірий прямокутник
+			var empty_style: StyleBoxFlat = StyleBoxFlat.new()
+			empty_style.bg_color = SLOT_EMPTY_COLOR
+			empty_style.corner_radius_top_left = 8
+			empty_style.corner_radius_top_right = 8
+			empty_style.corner_radius_bottom_left = 8
+			empty_style.corner_radius_bottom_right = 8
+			## Пунктирний бордер (LAW 25: не тільки колір)
+			empty_style.border_color = Color(0.6, 0.6, 0.68, 0.6)
+			empty_style.border_width_left = 2
+			empty_style.border_width_right = 2
+			empty_style.border_width_top = 2
+			empty_style.border_width_bottom = 2
+			slot_panel.add_theme_stylebox_override("panel", empty_style)
+		add_child(slot_panel)
+		_slot_panels.append(slot_panel)
+		_all_round_nodes.append(slot_panel)
+
+
+## Оновити стан dim кнопок напрямків коли всі слоти заповнені.
+func _update_direction_buttons_state() -> void:
+	if _is_toddler or _slot_limit >= SLOT_UNLIMITED:
+		return
+	var slots_full: bool = _commands.size() >= _slot_limit
+	for btn: Button in _dir_buttons:
+		if is_instance_valid(btn):
+			btn.disabled = slots_full
+			btn.modulate.a = 0.4 if slots_full else 1.0
+	## F1 кнопка теж dim якщо слоти повні
+	if is_instance_valid(_f1_btn):
+		if _f1_defined:
+			_f1_btn.disabled = slots_full
+			_f1_btn.modulate.a = 0.4 if slots_full else 1.0
+
+
+## ---- Function Block (f1) Editor ----
+
+## Спавн кнопки f1 та sub-editor панелі (Preschool R3+ only).
+func _spawn_f1_button() -> void:
+	if not _f1_available:
+		return
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var grid_bottom: float = _grid_origin.y + float(_grid_size) * CELL_SIZE + 20.0
+	var btn_y: float = grid_bottom + 40.0
+	## Розміщуємо f1 після repeat кнопки (або після direction buttons)
+	var dirs_count: int = 4
+	var has_repeat: bool = not _is_toddler and _round >= 2
+	var extra_btns: int = 1 if has_repeat else 0
+	var total_w: float = float(dirs_count) * (CMD_SIZE.x + CMD_GAP)
+	var start_x: float = (vp.x - total_w) * 0.5
+	var f1_x: float = start_x + float(dirs_count + extra_btns) * (CMD_SIZE.x + CMD_GAP)
+	_f1_btn = Button.new()
+	_f1_btn.text = ""
+	_f1_btn.size = CMD_SIZE
+	_f1_btn.position = Vector2(f1_x, btn_y)
+	## Стиль: фіолетовий (як F1_COLOR)
+	_f1_btn.add_theme_stylebox_override("normal",
+		ThemeManager.make_soft_style(F1_COLOR, F1_COLOR.darkened(0.2), 999, false))
+	_f1_btn.add_theme_stylebox_override("hover",
+		ThemeManager.make_soft_style(F1_COLOR.lightened(0.05), F1_COLOR.darkened(0.15), 999, false))
+	_f1_btn.add_theme_stylebox_override("pressed",
+		ThemeManager.make_soft_style(F1_COLOR, F1_COLOR.darkened(0.2), 999, true))
+	## Текст "f1" на кнопці
+	var f1_label: Label = Label.new()
+	f1_label.text = "f1"
+	f1_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	f1_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	f1_label.size = CMD_SIZE
+	f1_label.add_theme_font_size_override("font_size", 24)
+	f1_label.add_theme_color_override("font_color", Color.WHITE)
+	f1_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_f1_btn.add_child(f1_label)
+	_f1_btn.pressed.connect(_on_f1_pressed)
+	add_child(_f1_btn)
+	JuicyEffects.button_press_squish(_f1_btn, self)
+	_all_round_nodes.append(_f1_btn)
+
+
+## Обробка натискання кнопки f1.
+func _on_f1_pressed() -> void:
+	if _input_locked or _game_over or _executing:
+		return
+	if _f1_editing:
+		## Вже у режимі редагування — ігноруємо
+		return
+	if _f1_defined:
+		## f1 вже визначено — додати F1_TOKEN до main sequence
+		if _commands.size() >= _slot_limit and _slot_limit < SLOT_UNLIMITED:
+			return  ## Слоти повні
+		_commands.append(F1_TOKEN)
+		AudioManager.play_sfx("click")
+		_update_slot_display()
+		_update_cmd_display()
+		if not _is_toddler:
+			_update_preview_line()
+		_update_direction_buttons_state()
+		_reset_idle_timer()
+	else:
+		## Відкрити sub-editor для визначення f1
+		_open_f1_editor()
+
+
+## Відкрити панель sub-editor для f1 блоку.
+func _open_f1_editor() -> void:
+	_f1_editing = true
+	_f1_commands.clear()
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	## Панель з'являється під кнопками напрямків
+	var grid_bottom: float = _grid_origin.y + float(_grid_size) * CELL_SIZE + 20.0
+	var btn_y: float = grid_bottom + 40.0
+	var editor_y: float = btn_y - CMD_SIZE.y - 12.0
+	var slot_count: int = F1_SLOT_COUNT_BASE
+	var panel_w: float = float(slot_count) * (SLOT_ITEM_SIZE + SLOT_ITEM_GAP) + 60.0
+	var panel_h: float = SLOT_ITEM_SIZE + 20.0
+	_f1_editor_panel = Panel.new()
+	_f1_editor_panel.size = Vector2(panel_w, panel_h)
+	_f1_editor_panel.position = Vector2((vp.x - panel_w) * 0.5, editor_y)
+	var editor_style: StyleBoxFlat = StyleBoxFlat.new()
+	editor_style.bg_color = Color(F1_COLOR, 0.25)
+	editor_style.corner_radius_top_left = 12
+	editor_style.corner_radius_top_right = 12
+	editor_style.corner_radius_bottom_left = 12
+	editor_style.corner_radius_bottom_right = 12
+	editor_style.border_color = F1_COLOR
+	editor_style.border_width_left = 2
+	editor_style.border_width_right = 2
+	editor_style.border_width_top = 2
+	editor_style.border_width_bottom = 2
+	_f1_editor_panel.add_theme_stylebox_override("panel", editor_style)
+	_f1_editor_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_f1_editor_panel)
+	_all_round_nodes.append(_f1_editor_panel)
+	## Слоти f1 редактора
+	_f1_slot_displays.clear()
+	var slots_start_x: float = 10.0
+	for i: int in slot_count:
+		var slot: Panel = Panel.new()
+		slot.size = Vector2(SLOT_ITEM_SIZE, SLOT_ITEM_SIZE)
+		slot.position = Vector2(
+			slots_start_x + float(i) * (SLOT_ITEM_SIZE + SLOT_ITEM_GAP), 10.0)
+		var empty_style: StyleBoxFlat = StyleBoxFlat.new()
+		empty_style.bg_color = SLOT_EMPTY_COLOR
+		empty_style.corner_radius_top_left = 8
+		empty_style.corner_radius_top_right = 8
+		empty_style.corner_radius_bottom_left = 8
+		empty_style.corner_radius_bottom_right = 8
+		empty_style.border_color = F1_COLOR
+		empty_style.border_width_left = 2
+		empty_style.border_width_right = 2
+		empty_style.border_width_top = 2
+		empty_style.border_width_bottom = 2
+		slot.add_theme_stylebox_override("panel", empty_style)
+		slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_f1_editor_panel.add_child(slot)
+		_f1_slot_displays.append(slot)
+	## Кнопка OK для підтвердження
+	_f1_confirm_btn = Button.new()
+	_f1_confirm_btn.text = ""
+	var ok_size: float = SLOT_ITEM_SIZE
+	_f1_confirm_btn.size = Vector2(ok_size, ok_size)
+	_f1_confirm_btn.position = Vector2(
+		panel_w - ok_size - 10.0, 10.0)
+	_f1_confirm_btn.theme_type_variation = &"AccentButton"
+	## Галочка на кнопці OK
+	var ok_icon: Control = IconDraw.checkmark(ok_size * 0.5)
+	ok_icon.position = Vector2(ok_size * 0.25, ok_size * 0.25)
+	_f1_confirm_btn.add_child(ok_icon)
+	_f1_confirm_btn.pressed.connect(_on_f1_confirm)
+	_f1_editor_panel.add_child(_f1_confirm_btn)
+	## Оновити інструкцію
+	_fade_instruction(_instruction_label, tr("ALGO_F1_DEFINE"))
+	## Змінити стиль f1 кнопки (підсвітити)
+	if is_instance_valid(_f1_btn):
+		_f1_btn.add_theme_stylebox_override("normal",
+			ThemeManager.make_soft_style(F1_COLOR.lightened(0.2), F1_COLOR, 999, false))
+
+
+## Оновити візуальні слоти f1 редактора.
+func _update_f1_editor_display() -> void:
+	for i: int in _f1_slot_displays.size():
+		var slot: Panel = _f1_slot_displays[i]
+		if not is_instance_valid(slot):
+			continue
+		## Очистити дочірні елементи (іконки)
+		for child: Node in slot.get_children():
+			child.queue_free()
+		if i < _f1_commands.size():
+			var cmd: String = _f1_commands[i]
+			var col: Color = DIR_COLORS.get(cmd, ROBOT_COLOR)
+			slot.add_theme_stylebox_override("panel",
+				GameData.candy_circle(col, SLOT_ITEM_SIZE * 0.5, false))
+			var cmd_icon: Control = IconDraw.direction_arrow(cmd, SLOT_ITEM_SIZE * 0.55)
+			cmd_icon.position = Vector2(SLOT_ITEM_SIZE * 0.22, SLOT_ITEM_SIZE * 0.22)
+			slot.add_child(cmd_icon)
+		else:
+			var empty_style: StyleBoxFlat = StyleBoxFlat.new()
+			empty_style.bg_color = SLOT_EMPTY_COLOR
+			empty_style.corner_radius_top_left = 8
+			empty_style.corner_radius_top_right = 8
+			empty_style.corner_radius_bottom_left = 8
+			empty_style.corner_radius_bottom_right = 8
+			empty_style.border_color = F1_COLOR
+			empty_style.border_width_left = 2
+			empty_style.border_width_right = 2
+			empty_style.border_width_top = 2
+			empty_style.border_width_bottom = 2
+			slot.add_theme_stylebox_override("panel", empty_style)
+
+
+## Підтвердити f1 блок.
+func _on_f1_confirm() -> void:
+	if _f1_commands.is_empty():
+		## Порожній f1 — не підтверджуємо (A8: impossible state guard)
+		AudioManager.play_sfx("error")
+		push_warning("AlgoRobot: _on_f1_confirm — empty f1, ignoring")
+		return
+	_f1_defined = true
+	_f1_editing = false
+	AudioManager.play_sfx("success")
+	## Прибрати editor panel
+	if is_instance_valid(_f1_editor_panel):
+		_f1_editor_panel.queue_free()
+	_f1_editor_panel = null
+	_f1_confirm_btn = null
+	_f1_slot_displays.clear()
+	## Оновити стиль f1 кнопки — насичений фіолетовий (визначено)
+	if is_instance_valid(_f1_btn):
+		_f1_btn.add_theme_stylebox_override("normal",
+			ThemeManager.make_soft_style(F1_DEFINED_COLOR, F1_DEFINED_COLOR.darkened(0.2), 999, false))
+		_f1_btn.add_theme_stylebox_override("hover",
+			ThemeManager.make_soft_style(F1_DEFINED_COLOR.lightened(0.05), F1_DEFINED_COLOR.darkened(0.15), 999, false))
+	## Повернути інструкцію
+	_fade_instruction(_instruction_label, get_tutorial_instruction())
+	_reset_idle_timer()
 
 
 ## ---- Toddler demo path ----
@@ -797,11 +1301,21 @@ func _on_demo_complete() -> void:
 func _on_cmd_pressed(dir: String) -> void:
 	if _input_locked or _game_over or _executing:
 		return
+	## F1 editing mode: напрямки заповнюють f1 блок замість main sequence
+	if _f1_editing:
+		if _f1_commands.size() >= F1_SLOT_COUNT_BASE:
+			return  ## f1 слоти повні
+		_f1_commands.append(dir)
+		AudioManager.play_sfx("click")
+		_update_f1_editor_display()
+		_reset_idle_timer()
+		return
 	## Toddler "Follow My Path" — перевірка replay послідовності
 	if _is_toddler and _demo_path.size() > 0:
 		_handle_toddler_replay(dir)
 		return
-	var max_cmds: int = 5 if _is_toddler else (10 if _round >= 2 else 8)
+	## Slot limit check (Preschool puzzle constraint, LAW 6)
+	var max_cmds: int = _slot_limit if _slot_limit < SLOT_UNLIMITED else (5 if _is_toddler else (10 if _round >= 2 else 8))
 	if _commands.size() >= max_cmds:
 		return
 	_commands.append(dir)
@@ -905,9 +1419,11 @@ func _on_clear_pressed() -> void:
 func _on_repeat_pressed() -> void:
 	if _input_locked or _game_over or _executing:
 		return
+	if _f1_editing:
+		return  ## Не повторюємо під час f1 editing
 	if _commands.is_empty():
 		return
-	var max_cmds: int = 10
+	var max_cmds: int = _slot_limit if _slot_limit < SLOT_UNLIMITED else 10
 	if _commands.size() >= max_cmds:
 		return
 	var last_cmd: String = _commands[_commands.size() - 1]
@@ -924,6 +1440,8 @@ func _on_repeat_pressed() -> void:
 func _on_play_pressed() -> void:
 	if _input_locked or _game_over or _executing or _commands.is_empty():
 		return
+	if _f1_editing:
+		return  ## Не запускаємо під час f1 editing
 	_executing = true
 	_input_locked = true
 	_execution_step = 0
@@ -931,18 +1449,62 @@ func _on_play_pressed() -> void:
 	_set_robot_mood(RobotMood.NEUTRAL)
 	## Preschool: прибрати preview line при запуску
 	_clear_preview_line()
-	_execute_commands(0)
+	## Expand f1 tokens to actual commands before execution
+	var expanded: Array[String] = _expand_commands(_commands)
+	## Anticipation pause: робот "моргає" (scale pulse) перед виконанням
+	_play_anticipation_pause(expanded)
 
 
-func _execute_commands(idx: int) -> void:
-	if idx >= _commands.size():
+## Розгорнути f1 токени в реальні команди.
+## "up", "f1", "down" з f1=["left","right"] -> "up","left","right","down"
+func _expand_commands(cmds: Array[String]) -> Array[String]:
+	var result: Array[String] = []
+	for cmd: String in cmds:
+		if cmd == F1_TOKEN and _f1_defined and _f1_commands.size() > 0:
+			for sub_cmd: String in _f1_commands:
+				result.append(sub_cmd)
+		else:
+			result.append(cmd)
+	return result
+
+
+## Anticipation pause: 0.5с пауза, робот scale pulse ("моргає").
+## Після завершення — запуск _execute_commands_expanded.
+func _play_anticipation_pause(expanded_cmds: Array[String]) -> void:
+	if not is_instance_valid(_robot_node):
+		push_warning("AlgoRobot: _play_anticipation_pause — robot freed")
+		_execute_commands_expanded(expanded_cmds, 0)
+		return
+	if SettingsManager.reduced_motion:
+		_execute_commands_expanded(expanded_cmds, 0)
+		return
+	var tw: Tween = _create_game_tween()
+	## Scale pulse: 1.0 -> 1.1 -> 1.0 (моргання)
+	tw.tween_property(_robot_node, "scale",
+		ANTICIPATION_SCALE, ANTICIPATION_DURATION * 0.4)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_robot_node, "scale",
+		Vector2.ONE, ANTICIPATION_DURATION * 0.3)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	tw.tween_interval(ANTICIPATION_DURATION * 0.3)
+	tw.tween_callback(func() -> void:
+		if not is_instance_valid(_robot_node):
+			push_warning("AlgoRobot: robot freed after anticipation")
+			return
+		_execute_commands_expanded(expanded_cmds, 0))
+
+
+## Виконання розгорнутих команд (з f1 expansion).
+## expanded_cmds — розгорнуті команди (f1 замінено на під-команди).
+func _execute_commands_expanded(expanded_cmds: Array[String], idx: int) -> void:
+	if idx >= expanded_cmds.size():
 		## Перевірити чи робот на цілі
 		if _robot_pos == _goal_pos:
 			_on_puzzle_solved()
 		else:
 			_on_puzzle_failed()
 		return
-	var dir: String = _commands[idx]
+	var dir: String = expanded_cmds[idx]
 	var delta_pos: Vector2i = DIRECTIONS.get(dir, Vector2i.ZERO)
 	var new_pos: Vector2i = _robot_pos + delta_pos
 	if new_pos.x < 0 or new_pos.x >= _grid_size or \
@@ -953,10 +1515,12 @@ func _execute_commands(idx: int) -> void:
 	_robot_pos = new_pos
 	var target: Vector2 = _cell_center(new_pos)
 	_execution_step += 1
-	## Audio: slide SFX з зростаючим pitch за кроком
+	## Audio: slide SFX з зростаючим pitch за кроком (ascending pitch)
 	var pitch: float = SLIDE_PITCH_BASE + float(_execution_step) * SLIDE_PITCH_STEP
 	AudioManager.play_sfx("slide", clampf(pitch, 0.8, 1.5))
 	HapticsManager.vibrate_light()
+	## Coin collection: перевірити чи на цій клітинці є монета
+	_try_collect_coin(new_pos)
 	## Personality: wobble при зміні напрямку, stretch при русі вперед
 	var direction_changed: bool = _last_move_dir != "" and _last_move_dir != dir
 	_last_move_dir = dir
@@ -972,7 +1536,7 @@ func _execute_commands(idx: int) -> void:
 	if SettingsManager.reduced_motion:
 		if is_instance_valid(_robot_node):
 			_robot_node.position = target
-		_execute_commands(idx + 1)
+		_execute_commands_expanded(expanded_cmds, idx + 1)
 		return
 	_move_tween = _create_game_tween()
 	## Personality animation: wobble при повороті
@@ -999,7 +1563,7 @@ func _execute_commands(idx: int) -> void:
 		if not is_instance_valid(_robot_node):
 			push_warning("AlgoRobot: robot freed during execution")
 			return
-		_execute_commands(idx + 1))
+		_execute_commands_expanded(expanded_cmds, idx + 1))
 
 
 ## ── Wall bonk animation — робот вдаряється в стіну та відскакує ──

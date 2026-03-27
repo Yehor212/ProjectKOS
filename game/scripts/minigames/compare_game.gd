@@ -461,21 +461,24 @@ func _handle_correct(side: int) -> void:
 	delay_tw.tween_callback(_animate_sharing)
 
 
-## Анімація ділення — "teaching sharing" момент
+## Анімація ділення -- "teaching sharing" момент.
+## Фізична метафора: предмет ФІЗИЧНО летить від більшої купи до меншої.
+## Обидві тварини радіють -- вчимося ділитися через gameplay.
 func _animate_sharing() -> void:
 	if _game_over:
 		return
 	## Визначити "більшу" та "меншу" сторону
 	var bigger_items: Array[Node2D] = _left_items if _left_count > _right_count else _right_items
 	var smaller_items: Array[Node2D] = _right_items if _left_count > _right_count else _left_items
+	var bigger_animal: Node2D = _left_animal if _left_count > _right_count else _right_animal
 	var smaller_animal: Node2D = _right_animal if _left_count > _right_count else _left_animal
 
-	## Рівно — обидва раді, без ділення
+	## Рівно -- обидва раді, без ділення
 	if _left_count == _right_count:
 		_animate_both_happy()
 		return
 
-	## Знайти target позицію — до "меншої" тварини
+	## Знайти target позицію -- до "меншої" тварини
 	var target_pos: Vector2 = Vector2.ZERO
 	if is_instance_valid(smaller_animal):
 		target_pos = smaller_animal.position + Vector2(0, 30)
@@ -501,6 +504,12 @@ func _animate_sharing() -> void:
 		_advance_round_delayed()
 		return
 
+	## "Дай" кивок від тварини-дарувальника перед польотом
+	if is_instance_valid(bigger_animal):
+		var nod_tw: Tween = _create_game_tween()
+		nod_tw.tween_property(bigger_animal, "rotation", 0.08, 0.1)
+		nod_tw.tween_property(bigger_animal, "rotation", 0.0, 0.1)
+
 	## Анімація польоту
 	var fly_tw: Tween = _create_game_tween()
 	fly_tw.tween_property(shared_item, "position", target_pos, SHARE_FLY_DURATION)\
@@ -513,14 +522,8 @@ func _animate_sharing() -> void:
 		if not is_instance_valid(self):
 			return
 		_show_sharing_label()
-		## Happy bounce для "меншої" тварини — радість від подарунку
-		if is_instance_valid(smaller_animal) and not SettingsManager.reduced_motion:
-			var bounce_tw: Tween = _create_game_tween()
-			var orig_y: float = smaller_animal.position.y
-			bounce_tw.tween_property(smaller_animal, "position:y",
-				orig_y - 15.0, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-			bounce_tw.tween_property(smaller_animal, "position:y",
-				orig_y, 0.15).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		## Обидві тварини радіють -- вони тепер fair!
+		_animate_both_happy_after_share(bigger_animal, smaller_animal)
 		_advance_round_delayed()
 	)
 
@@ -538,6 +541,34 @@ func _animate_both_happy() -> void:
 					orig_y, 0.15).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	_show_sharing_label()
 	_advance_round_delayed()
+
+
+## Фізична метафора: обидві тварини радіють ПІСЛЯ ділення -- вони тепер fair.
+## Giver гордий, receiver вдячний -- вчимо empathy через тіло.
+func _animate_both_happy_after_share(giver: Node2D, receiver: Node2D) -> void:
+	if SettingsManager.reduced_motion:
+		return
+	## Receiver: радісний стрибок + sparkle
+	if is_instance_valid(receiver):
+		var recv_tw: Tween = _create_game_tween()
+		var recv_y: float = receiver.position.y
+		recv_tw.tween_property(receiver, "position:y",
+			recv_y - 18.0, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		recv_tw.tween_property(receiver, "position:y",
+			recv_y, 0.18).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		VFXManager.spawn_heart_particles(receiver.position)
+	## Giver: гордий кивок + менший стрибок (задоволений собою)
+	if is_instance_valid(giver):
+		var give_tw: Tween = _create_game_tween()
+		var give_y: float = giver.position.y
+		give_tw.tween_property(giver, "position:y",
+			give_y - 10.0, 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		give_tw.tween_property(giver, "position:y",
+			give_y, 0.18).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		## Squish ефект задоволення
+		give_tw.tween_property(giver, "scale", Vector2(1.12, 0.92), 0.06)
+		give_tw.tween_property(giver, "scale", Vector2.ONE, 0.14)\
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 
 
 ## Показати "Вони діляться!" лейбл

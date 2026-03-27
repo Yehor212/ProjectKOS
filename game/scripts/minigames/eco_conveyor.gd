@@ -327,6 +327,50 @@ func _earth_cough() -> void:
 	tw.tween_property(_earth_node, "position:x", orig_pos.x, 0.03)
 
 
+## Кумедна реакція: предмет "виплюнутий" вгору при неправильному біні.
+func _play_funny_bin_spit(item: Node2D) -> void:
+	if not is_instance_valid(item) or SettingsManager.reduced_motion:
+		return
+	var spit_height: float = 30.0 if _is_toddler else 50.0
+	var orig_y: float = item.position.y
+	var spit_tw: Tween = _create_game_tween()
+	## Предмет вилітає вгору з обертанням
+	spit_tw.set_parallel(true)
+	spit_tw.tween_property(item, "position:y", orig_y - spit_height, 0.12)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	var spin: float = 20.0 if _is_toddler else 40.0
+	spit_tw.tween_property(item, "rotation_degrees", spin, 0.12)
+	## Стиснення при вильоті
+	spit_tw.chain().set_parallel(false)
+	spit_tw.tween_property(item, "scale", Vector2(1.15, 0.85), 0.06)
+	spit_tw.tween_property(item, "scale", Vector2.ONE, 0.1)\
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	AudioManager.play_sfx("whoosh", 1.2)
+
+
+## Кумедна Earth реакція — "кашляє" з підскоком + стисненням.
+func _earth_cough_funny() -> void:
+	if not is_instance_valid(_earth_node) or SettingsManager.reduced_motion:
+		return
+	var orig_pos: Vector2 = _earth_node.position
+	var tw: Tween = _create_game_tween()
+	## Підскік вгору — наче кашляє
+	tw.tween_property(_earth_node, "position:y", orig_pos.y - 8.0, 0.06)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_earth_node, "position:y", orig_pos.y, 0.08)\
+		.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	## Squish — як від кашлю
+	tw.parallel().tween_property(_earth_node, "scale", Vector2(1.1, 0.9), 0.06)
+	tw.tween_property(_earth_node, "scale", Vector2(0.95, 1.05), 0.06)
+	tw.tween_property(_earth_node, "scale", Vector2.ONE, 0.1)\
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	## Shake по X (класичний кашель)
+	tw.parallel().tween_property(_earth_node, "position:x", orig_pos.x - 4.0, 0.04)
+	tw.tween_property(_earth_node, "position:x", orig_pos.x + 4.0, 0.04)
+	tw.tween_property(_earth_node, "position:x", orig_pos.x, 0.03)
+	AudioManager.play_sfx("pop", 0.7)
+
+
 ## --- Будуємо біни відповідно до раунду та віку ---
 
 func _build_bins_for_round() -> void:
@@ -838,7 +882,9 @@ func _handle_wrong(item: Node2D) -> void:
 		## A7: preschool — лічильник помилок
 		_errors += 1
 		_register_error(item)
-	_earth_cough()
+	## Кумедна реакція: предмет "виплюнутий" вгору з біна + Earth кашляє
+	_play_funny_bin_spit(item)
+	_earth_cough_funny()
 	_snap_back_to_conveyor(item)
 
 
