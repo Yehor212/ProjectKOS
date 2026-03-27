@@ -726,23 +726,17 @@ func _handle_wrong_drop(item: Node2D) -> void:
 	)
 
 
-## Кумедна реакція на неправильну бусину — elastic bounce + хвиля по нитці.
+## Кумедна реакція на неправильну бусину — scale squish + хвиля по нитці.
+## Позиція та rotation не анімуються бо snap_back вже їх рухає.
 func _play_funny_bead_bounce(item: Node2D) -> void:
 	if SettingsManager.reduced_motion:
 		return
-	## Бусина відскакує з elastic bounce (наче гумовий м'яч від нитки)
+	## Бусина "squish" — стиснення при відмові (snap_back рухає position/rotation)
 	if is_instance_valid(item):
-		var bounce_h: float = 20.0 if _is_toddler else 35.0
-		var orig_y: float = item.position.y
 		var bead_tw: Tween = _create_game_tween()
-		bead_tw.tween_property(item, "position:y", orig_y - bounce_h, 0.1)\
-			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		bead_tw.tween_property(item, "position:y", orig_y, 0.15)\
-			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
-		## Обертання при відскоку
-		var spin: float = 15.0 if _is_toddler else 25.0
-		bead_tw.parallel().tween_property(item, "rotation_degrees", spin, 0.12)
-		bead_tw.tween_property(item, "rotation_degrees", 0.0, 0.1)\
+		bead_tw.tween_property(item, "scale", Vector2(1.25, 0.75), 0.07)
+		bead_tw.tween_property(item, "scale", Vector2(0.9, 1.1), 0.07)
+		bead_tw.tween_property(item, "scale", Vector2.ONE, 0.12)\
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 		AudioManager.play_sfx("bounce", 1.2)
 	## Нитка дрожить — wave анімація по всіх бусинах на нитці

@@ -786,12 +786,63 @@ func _handle_wrong_mix() -> void:
 	if is_instance_valid(_cauldron):
 		VFXManager.spawn_error_smoke(_cauldron.global_position)
 
+	## Кумедна реакція: котел бурхливо булькає + тварина "чихає"
+	_play_funny_cauldron_poof()
+	_play_funny_animal_sneeze()
+
 	## Скидаємо лише пробірки — тварина і котел залишаються
 	var d: float = ANIM_FAST if SettingsManager.reduced_motion else ANIM_SLOW
 	var tw: Tween = _create_game_tween()
 	tw.tween_interval(d)
 	tw.tween_callback(func() -> void:
 		_reset_tubes_only())
+
+
+## Кумедна реакція котла — бурхливе булькання + підскік.
+func _play_funny_cauldron_poof() -> void:
+	if not is_instance_valid(_cauldron) or SettingsManager.reduced_motion:
+		return
+	var orig_y: float = _cauldron.position.y
+	var tw: Tween = _create_game_tween()
+	## Котел підскакує від "вибуху"
+	tw.tween_property(_cauldron, "position:y", orig_y - 12.0, 0.08)\
+		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_cauldron, "position:y", orig_y, 0.1)\
+		.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	## Squish — котел роздувається і стискується
+	tw.parallel().tween_property(_cauldron, "scale", Vector2(1.15, 0.88), 0.07)
+	tw.tween_property(_cauldron, "scale", Vector2(0.95, 1.08), 0.07)
+	tw.tween_property(_cauldron, "scale", Vector2.ONE, 0.12)\
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	## Кольоровий тінт від невдалого зілля
+	var wrong_tint: Color = Color(1.2, 0.8, 1.2) if not _is_toddler else Color(1.1, 0.9, 1.1)
+	tw.parallel().tween_property(_cauldron, "modulate", wrong_tint, 0.1)
+	tw.tween_property(_cauldron, "modulate", Color.WHITE, 0.25)
+	AudioManager.play_sfx("pop", 0.6)
+
+
+## Кумедна реакція тварини-пацієнта — "чихає" від неправильного зілля.
+func _play_funny_animal_sneeze() -> void:
+	if not is_instance_valid(_animal_node) or SettingsManager.reduced_motion:
+		return
+	var orig_pos: Vector2 = _animal_node.position
+	var sneeze_tw: Tween = _create_game_tween()
+	## Фаза 1: "вдих" — тварина стискується (набирає повітря)
+	sneeze_tw.tween_property(_animal_node, "scale",
+		_animal_node.scale * Vector2(0.92, 1.08), 0.12)
+	## Фаза 2: "чих!" — розширення + поштовх вперед
+	sneeze_tw.tween_property(_animal_node, "scale",
+		_animal_node.scale * Vector2(1.12, 0.9), 0.06)
+	sneeze_tw.parallel().tween_property(_animal_node, "position:x",
+		orig_pos.x + 10.0, 0.06)
+	## Фаза 3: повернення
+	sneeze_tw.tween_property(_animal_node, "position:x",
+		orig_pos.x, 0.15)\
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	sneeze_tw.parallel().tween_property(_animal_node, "scale",
+		_animal_node.scale, 0.15)\
+		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	AudioManager.play_sfx("whoosh", 1.4)
 
 
 func _reset_tubes_only() -> void:

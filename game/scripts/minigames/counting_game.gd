@@ -427,7 +427,9 @@ func _animate_buyer_backflip() -> void:
 
 ## Кумедна реакція покупця на неправильний фрукт — здивоване обличчя + wobble.
 ## Toddler: ніжний wobble (менша амплітуда). Preschool: виразніша реакція.
-func _play_funny_wrong_fruit(item: Node2D) -> void:
+## Параметр include_item_bounce: false коли snap_back вже рухає item (toddler drag),
+## true для preschool tap-mode де snap_back не використовується.
+func _play_funny_wrong_fruit(item: Node2D, include_item_bounce: bool = true) -> void:
 	if SettingsManager.reduced_motion:
 		return
 	## Покупець робить здивоване обличчя: очі ширше (scale Y up) + rotation wobble
@@ -441,8 +443,8 @@ func _play_funny_wrong_fruit(item: Node2D) -> void:
 		buyer_tw.tween_property(_buyer_node, "rotation_degrees", 0.0, 0.06)
 		buyer_tw.tween_property(_buyer_node, "scale", Vector2.ONE, 0.15)\
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-	## Фрукт відскакує як м'яч — bounce physics
-	if is_instance_valid(item):
+	## Фрукт відскакує як м'яч — bounce physics (лише коли snap_back не конфліктує)
+	if include_item_bounce and is_instance_valid(item):
 		var bounce_h: float = 25.0 if _is_toddler_mode else 45.0
 		var orig_y: float = item.position.y
 		var fruit_tw: Tween = _create_game_tween()
@@ -453,7 +455,7 @@ func _play_funny_wrong_fruit(item: Node2D) -> void:
 		fruit_tw.tween_property(item, "scale", Vector2(1.2, 0.8), 0.05)
 		fruit_tw.tween_property(item, "scale", Vector2.ONE, 0.1)\
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-		AudioManager.play_sfx("bounce", 1.3)
+	AudioManager.play_sfx("bounce", 1.3)
 
 
 ## Фізична метафора: живіт тварини збільшується після кожного правильного фрукта.
@@ -709,7 +711,7 @@ func _on_dropped_on_target(item: Node2D, _target: Node2D) -> void:
 		if not _is_toddler_mode:
 			_errors += 1
 		_register_error(item)
-		_play_funny_wrong_fruit(item)
+		_play_funny_wrong_fruit(item, false)  ## false: snap_back рухає item
 		if _origins.has(item):
 			_drag.snap_back(item, _origins[item])
 		_reset_idle_timer()

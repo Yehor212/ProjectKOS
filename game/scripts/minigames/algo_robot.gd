@@ -445,22 +445,24 @@ func _spawn_coins() -> void:
 
 
 ## ── Coins: збирання монети під час execution ──
+## Монета ховається візуально, але не знищується. Якщо робот провалиться —
+## монети відновлюються. Якщо успіх — монети видаляються остаточно.
 func _try_collect_coin(pos: Vector2i) -> void:
 	if not _coin_nodes.has(pos):
 		return
-	_collected_coins += 1
-	_total_coins_collected += 1
 	var coin_node: Node2D = _coin_nodes.get(pos, null)
-	_coin_nodes.erase(pos)  ## erase BEFORE queue_free (LAW 11)
 	if not is_instance_valid(coin_node):
 		push_warning("AlgoRobot: _try_collect_coin — coin node invalid")
+		_coin_nodes.erase(pos)
 		return
+	## Візуально приховати (але не queue_free — потрібно для restore on fail)
+	_collected_coins += 1
 	AudioManager.play_sfx("reward")
 	HapticsManager.vibrate_light()
 	if SettingsManager.reduced_motion:
-		coin_node.queue_free()
+		coin_node.visible = false
 		return
-	## Анімація збору: scale up + fade out
+	## Анімація збору: scale up + fade out (не queue_free!)
 	var tw: Tween = _create_game_tween()
 	tw.set_parallel(true)
 	tw.tween_property(coin_node, "scale",
@@ -469,9 +471,35 @@ func _try_collect_coin(pos: Vector2i) -> void:
 	tw.tween_property(coin_node, "modulate:a",
 		0.0, COIN_COLLECT_DURATION)\
 		.set_trans(Tween.TRANS_SINE)
-	tw.chain().tween_callback(func() -> void:
-		if is_instance_valid(coin_node):
-			coin_node.queue_free())
+
+
+## Відновити всі монети після невдалої спроби (робот не дійшов до цілі).
+func _restore_coins() -> void:
+	_collected_coins = 0
+	for coin_pos: Vector2i in _coin_nodes:
+		var coin_node: Node2D = _coin_nodes.get(coin_pos, null)
+		if not is_instance_valid(coin_node):
+			continue
+		coin_node.visible = true
+		coin_node.modulate.a = 1.0
+		coin_node.scale = Vector2.ONE
+
+
+## Остаточно зібрати монети після успішного розв'язку.
+func _commit_coins() -> void:
+	_total_coins_collected += _collected_coins
+	for coin_pos: Vector2i in _coin_nodes:
+		var coin_node: Node2D = _coin_nodes.get(coin_pos, null)
+		if is_instance_valid(coin_node) and not coin_node.visible:
+			coin_node.queue_free()
+	## Очистити зібрані з dict
+	var to_remove: Array[Vector2i] = []
+	for coin_pos: Vector2i in _coin_nodes:
+		var coin_node: Node2D = _coin_nodes.get(coin_pos, null)
+		if not is_instance_valid(coin_node) or not coin_node.visible:
+			to_remove.append(coin_pos)
+	for pos: Vector2i in to_remove:
+		_coin_nodes.erase(pos)
 
 
 ## ── Спавн декоративних оверлеїв на тематичні клітинки ──
@@ -895,16 +923,18 @@ func _spawn_preview_line() -> void:
 	_all_round_nodes.append(_preview_line)
 
 
-## Оновити preview line на основі поточних _commands.
+## Оновити preview line на основі поточних _commands (з f1 expansion).
 func _update_preview_line() -> void:
 	if not is_instance_valid(_preview_line):
 		return
 	_preview_line.clear_points()
 	if _commands.is_empty():
 		return
+	## Expand f1 tokens для коректного preview
+	var expanded: Array[String] = _expand_commands(_commands)
 	var pos: Vector2i = Vector2i.ZERO  ## Робот завжди стартує з (0,0)
 	_preview_line.add_point(_cell_center(pos))
-	for cmd: String in _commands:
+	for cmd: String in expanded:
 		var delta: Vector2i = DIRECTIONS.get(cmd, Vector2i.ZERO)
 		var new_pos: Vector2i = pos + delta
 		## Перевірка меж — якщо виходить за сітку, зупиняємо
@@ -989,7 +1019,8 @@ func _update_slot_display() -> void:
 			slot_panel.add_theme_stylebox_override("panel", empty_style)
 		add_child(slot_panel)
 		_slot_panels.append(slot_panel)
-		_all_round_nodes.append(slot_panel)
+		## НЕ додаємо в _all_round_nodes — _slot_panels керуються окремо
+		## (оновлюються на кожну команду, _clear_round очищує через _slot_panels)
 
 
 ## Оновити стан dim кнопок напрямків коли всі слоти заповнені.
@@ -1611,6 +1642,8 @@ func _play_wall_bonk(dir: String) -> void:
 func _on_puzzle_solved() -> void:
 	_set_robot_mood(RobotMood.HAPPY)
 	_register_correct(_robot_node)
+	## Commit зібраних монет (остаточно видалити з сітки)
+	_commit_coins()
 	## VFX: success ripple на позиції цілі
 	if is_instance_valid(_goal_node):
 		VFXManager.spawn_success_ripple(_goal_node.global_position, GOAL_COLOR)
@@ -1758,6 +1791,8 @@ func _on_puzzle_failed() -> void:
 		_register_error(_robot_node)
 	## Preschool: очистити preview line
 	_clear_preview_line()
+	## Відновити монети (зібрані під час невдалої спроби)
+	_restore_coins()
 	## Повернути робота на старт
 	_robot_pos = Vector2i.ZERO
 	if SettingsManager.reduced_motion:
@@ -1807,6 +1842,8 @@ func _on_exit_pause() -> void:
 	_set_robot_mood(RobotMood.NEUTRAL)
 	_last_move_dir = ""
 	_execution_step = 0
+	## Restore coins on pause (they were hidden during execution)
+	_restore_coins()
 	## Reset f1 editing state on pause (A9)
 	if _f1_editing:
 		_f1_editing = false
@@ -1851,6 +1888,9 @@ func _clear_round() -> void:
 	_optimal_length = 0
 	## Cleanup slot limit state (A9: round hygiene)
 	_slot_limit = SLOT_UNLIMITED
+	for sp: Panel in _slot_panels:
+		if is_instance_valid(sp):
+			sp.queue_free()
 	_slot_panels.clear()
 	_dir_buttons.clear()
 	## Cleanup coin state (A9: round hygiene)

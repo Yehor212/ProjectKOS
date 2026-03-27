@@ -515,26 +515,59 @@ func _handle_wrong(item: Node2D) -> void:
 		_errors += 1  ## A7: preschool рахує помилки
 		_register_error(item)
 	_drag.snap_back(item, _item_origins.get(item, item.position))
-	## Тофі "реагує" на неправильний одяг
-	_animate_tofie_reaction()
+	## Кумедна реакція Тофі на неправильний одяг
+	_animate_tofie_funny_reaction()
 
 
-## Тофі дрожить (холодна погода + неправильний одяг) або виражає незгоду
-func _animate_tofie_reaction() -> void:
+## Кумедна реакція Тофі: хитає головою + погодо-залежна анімація.
+## Холодна погода (snowy/windy): Тофі тремтить. Жарка (sunny/hot): Тофі обмахується.
+## Інша погода: класичне "ні-ні-ні" головою.
+func _animate_tofie_funny_reaction() -> void:
 	if not is_instance_valid(_tofie_node) or SettingsManager.reduced_motion:
 		return
-	var orig_x: float = _tofie_node.position.x
+	var weather_id: String = _current_weather.get("id", "")
+	var is_cold: bool = weather_id in ["snowy", "windy", "stormy"]
+	var is_hot: bool = weather_id in ["sunny", "hot"]
+	var orig_pos: Vector2 = _tofie_node.position
 	var tw: Tween = _create_game_tween()
-	## Тремтіння
-	tw.tween_property(_tofie_node, "position:x", orig_x - 4.0, 0.04)
-	tw.tween_property(_tofie_node, "position:x", orig_x + 4.0, 0.04)
-	tw.tween_property(_tofie_node, "position:x", orig_x - 3.0, 0.04)
-	tw.tween_property(_tofie_node, "position:x", orig_x + 3.0, 0.04)
-	tw.tween_property(_tofie_node, "position:x", orig_x - 2.0, 0.03)
-	tw.tween_property(_tofie_node, "position:x", orig_x, 0.03)
-	## Тимчасовий червонуватий відтінок (gentle)
-	tw.parallel().tween_property(_tofie_node, "modulate", Color(1.15, 0.9, 0.9), 0.1)
-	tw.tween_property(_tofie_node, "modulate", Color.WHITE, 0.3)
+
+	## Фаза 1: хитання головою "ні-ні" (universal)
+	var head_amp: float = 4.0 if _is_toddler else 7.0
+	tw.tween_property(_tofie_node, "rotation_degrees", -head_amp, 0.06)
+	tw.tween_property(_tofie_node, "rotation_degrees", head_amp, 0.06)
+	tw.tween_property(_tofie_node, "rotation_degrees", -head_amp * 0.5, 0.05)
+	tw.tween_property(_tofie_node, "rotation_degrees", 0.0, 0.05)
+
+	## Фаза 2: погодо-залежна реакція
+	if is_cold:
+		## Тофі тремтить від холоду — швидке хитання по X
+		var shiver_amp: float = 3.0 if _is_toddler else 5.0
+		tw.tween_property(_tofie_node, "position:x", orig_pos.x - shiver_amp, 0.03)
+		tw.tween_property(_tofie_node, "position:x", orig_pos.x + shiver_amp, 0.03)
+		tw.tween_property(_tofie_node, "position:x", orig_pos.x - shiver_amp, 0.03)
+		tw.tween_property(_tofie_node, "position:x", orig_pos.x + shiver_amp, 0.03)
+		tw.tween_property(_tofie_node, "position:x", orig_pos.x - shiver_amp * 0.5, 0.02)
+		tw.tween_property(_tofie_node, "position:x", orig_pos.x, 0.02)
+		## Синюватий відтінок (холодно!)
+		tw.parallel().tween_property(_tofie_node, "modulate", Color(0.85, 0.9, 1.15), 0.1)
+		tw.tween_property(_tofie_node, "modulate", Color.WHITE, 0.3)
+	elif is_hot:
+		## Тофі "обмахується" — scale пульсація (важко дихати від спеки)
+		tw.tween_property(_tofie_node, "scale", Vector2(1.06, 0.94), 0.08)
+		tw.tween_property(_tofie_node, "scale", Vector2(0.96, 1.04), 0.08)
+		tw.tween_property(_tofie_node, "scale", Vector2.ONE, 0.12)\
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		## Червонуватий відтінок (жарко!)
+		tw.parallel().tween_property(_tofie_node, "modulate", Color(1.2, 0.85, 0.85), 0.1)
+		tw.tween_property(_tofie_node, "modulate", Color.WHITE, 0.3)
+	else:
+		## Класичне тремтіння + м'який відтінок
+		tw.tween_property(_tofie_node, "position:x", orig_pos.x - 4.0, 0.04)
+		tw.tween_property(_tofie_node, "position:x", orig_pos.x + 4.0, 0.04)
+		tw.tween_property(_tofie_node, "position:x", orig_pos.x, 0.03)
+		tw.parallel().tween_property(_tofie_node, "modulate", Color(1.15, 0.9, 0.9), 0.1)
+		tw.tween_property(_tofie_node, "modulate", Color.WHITE, 0.3)
+	AudioManager.play_sfx("bounce", 0.9)
 
 
 ## Зона блимає щоб показати де правильна зона (при drop на неправильну зону)

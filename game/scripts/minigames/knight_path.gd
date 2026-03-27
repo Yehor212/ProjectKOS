@@ -389,23 +389,28 @@ func _place_bonus_treasures() -> void:
 				off_path_candidates.append(pos)
 	path_candidates.shuffle()
 	off_path_candidates.shuffle()
-	## Розмістити: 2 на шляху, 1 off-path
+	## Розмістити: до 2 на шляху, решта off-path
 	var placed: int = 0
+	var used_positions: Dictionary = {}
 	for pos: Vector2i in path_candidates:
 		if placed >= 2:
 			break
 		_bonus_treasures.append(pos)
+		used_positions[pos] = true
 		placed += 1
 	for pos: Vector2i in off_path_candidates:
 		if placed >= BONUS_TREASURE_COUNT:
 			break
 		_bonus_treasures.append(pos)
+		used_positions[pos] = true
 		placed += 1
-	## Fallback: якщо не вистачило off-path, додати з path_candidates
-	if placed < BONUS_TREASURE_COUNT and path_candidates.size() > placed:
-		for idx: int in range(placed, mini(BONUS_TREASURE_COUNT, path_candidates.size())):
-			if idx < path_candidates.size():
-				_bonus_treasures.append(path_candidates[idx])
+	## Fallback: якщо не вистачило off-path, додати з невикористаних path_candidates
+	if placed < BONUS_TREASURE_COUNT:
+		for pos: Vector2i in path_candidates:
+			if placed >= BONUS_TREASURE_COUNT:
+				break
+			if not used_positions.has(pos):
+				_bonus_treasures.append(pos)
 				placed += 1
 
 
