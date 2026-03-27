@@ -73,6 +73,7 @@ var _narrative_label: Label = null
 
 func _ready() -> void:
 	game_id = "color_conveyor"
+	_skill_id = "color_sorting"
 	bg_theme = "candy"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

@@ -331,6 +331,28 @@ const GAMES: Array[Dictionary] = [
 		"unlocked": true,
 		"age": AgeCategory.ALL,
 	},
+	{
+		"id": "emotion_mirror",
+		"name_key": "GAME_EMOTION_MIRROR",
+		"desc_key": "DESC_EMOTION_MIRROR",
+		"skill_key": "SKILL_EMOTION_MIRROR",
+		"icon": "heart",
+		"color": Color("f5a0c0"),
+		"scene_path": "res://scenes/main/emotion_mirror.tscn",
+		"unlocked": true,
+		"age": AgeCategory.ALL,
+	},
+	{
+		"id": "letter_match",
+		"name_key": "GAME_LETTER_MATCH",
+		"desc_key": "DESC_LETTER_MATCH",
+		"skill_key": "SKILL_LETTER_MATCH",
+		"icon": "letters",
+		"color": Color("42a5f5"),
+		"scene_path": "res://scenes/main/letter_match.tscn",
+		"unlocked": true,
+		"age": AgeCategory.ALL,
+	},
 ]
 
 

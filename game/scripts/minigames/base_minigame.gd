@@ -23,6 +23,7 @@ const ROUND_DELAY: float = 0.8
 const CELEBRATION_DELAY: float = 1.2
 
 var game_id: String = ""
+var _skill_id: String = ""  ## MasteryManager: навичка, що тренується (встановлюється дочірнім класом)
 var difficulty_level: int = 1
 var bg_theme: String = "default"
 var _game_finished: bool = false
@@ -1300,6 +1301,9 @@ func _register_correct(node: Node2D = null) -> void:
 	_idle_hint_level = 0
 	_remove_glow_hint()
 	_streak_count += 1
+	## MasteryManager: трекінг правильної відповіді
+	if not _skill_id.is_empty():
+		MasteryManager.record_attempt(game_id, _skill_id, true)
 	## Hit-stop: 30ms мікро-пауза для "ваги" моменту (ігровий juice)
 	if not SettingsManager.reduced_motion:
 		Engine.time_scale = 0.05
@@ -1318,6 +1322,9 @@ func _register_correct(node: Node2D = null) -> void:
 func _register_error(node: Node2D = null) -> void:
 	_consecutive_errors += 1
 	_streak_count = 0
+	## MasteryManager: трекінг помилки
+	if not _skill_id.is_empty():
+		MasteryManager.record_attempt(game_id, _skill_id, false)
 	var threshold: int = 2 if SettingsManager.age_group == 1 else 3
 	if _consecutive_errors >= threshold:
 		_consecutive_errors = 0

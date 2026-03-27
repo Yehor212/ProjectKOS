@@ -128,6 +128,7 @@ var _current_round_animal: String = ""
 
 func _ready() -> void:
 	game_id = "size_sort"
+	_skill_id = "seriation"
 	bg_theme = "candy"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

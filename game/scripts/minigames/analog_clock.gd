@@ -120,6 +120,7 @@ var _idle_timer: SceneTreeTimer = null
 
 func _ready() -> void:
 	game_id = "analog_clock"
+	_skill_id = "time_telling"
 	bg_theme = "city"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

@@ -59,6 +59,7 @@ var _round_errors_count: int = 0  ## Помилки в поточному рау
 
 func _ready() -> void:
 	game_id = "pattern"
+	_skill_id = "pattern_recognition"
 	bg_theme = "candy"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

@@ -80,6 +80,7 @@ var _length_pools: Dictionary = {}
 
 func _ready() -> void:
 	game_id = "spelling_blocks"
+	_skill_id = "literacy"
 	bg_theme = "puzzle"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

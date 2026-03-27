@@ -56,6 +56,7 @@ var _all_matched_sprites: Array[Dictionary] = []  ## {name, position}
 
 func _ready() -> void:
 	game_id = "shadow_match"
+	_skill_id = "shape_recognition"
 	bg_theme = "music"  ## Теплий театральний фон
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
@@ -418,6 +419,7 @@ func _on_item_dropped_on_empty(item: Node2D) -> void:
 func _handle_correct_match(item: Node2D, target: Node2D) -> void:
 	_register_correct(item)
 	var aname: String = str(item.name)
+	MasteryManager.record_animal_interaction(aname, "played")
 	_matched_names.append(aname)
 	_matched_count += 1
 	## Зберегти для фіналу
@@ -533,18 +535,13 @@ func _handle_wrong_match(item: Node2D, target: Node2D) -> void:
 	tw.tween_property(target, "rotation_degrees", orig_rot + wag_amp * 0.7, 0.07)
 	tw.tween_property(target, "rotation_degrees", orig_rot - wag_amp * 0.3, 0.06)
 	tw.tween_property(target, "rotation_degrees", orig_rot, 0.05)
-	## Тварина смущено відвертається — невеликий поворот + зменшення (shrink від сорому)
+	## Тварина смущено зменшується (shrink від сорому) — лише scale, бо snap_back рухає rotation
 	if is_instance_valid(item):
-		var shy_deg: float = -15.0 if _is_toddler else -25.0
 		var shy_tw: Tween = _create_game_tween()
-		shy_tw.tween_property(item, "rotation_degrees", shy_deg, 0.15)\
+		var shy_scale: Vector2 = item.scale * 0.88
+		shy_tw.tween_property(item, "scale", shy_scale, 0.15)\
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
-		shy_tw.parallel().tween_property(item, "scale",
-			item.scale * 0.9, 0.15)
-		shy_tw.tween_property(item, "rotation_degrees", 0.0, 0.2)\
-			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
-		shy_tw.parallel().tween_property(item, "scale",
-			item.scale, 0.2)\
+		shy_tw.tween_property(item, "scale", item.scale, 0.25)\
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	AudioManager.play_sfx("bounce", 0.7)
 	tw.finished.connect(func() -> void:

@@ -445,3 +445,30 @@ ANIMAL_GOAT,Goat,Козочка,Chèvre,Cabrita
 ANIMAL_MOUSE,Mouse,Мишка,Souris,Ratoncito
 ANIMAL_SQUIRREL,Squirrel,Білочка,Écureuil,Ardillita
 ANIMAL_HEDGEHOG,Hedgehog,Їжачок,Hérisson,Erizito
+GAME_EMOTION_MIRROR,Emotion Mirror,Дзеркало емоцій,Miroir des émotions,Espejo de emociones
+DESC_EMOTION_MIRROR,Recognize feelings and help friends!,Розпізнай почуття та допоможи друзям!,Reconnais les émotions et aide tes amis !,¡Reconoce sentimientos y ayuda a tus amigos!
+SKILL_EMOTION_MIRROR,Emotional intelligence,Емоційний інтелект,Intelligence émotionnelle,Inteligencia emocional
+EMOTION_TUTORIAL_TODDLER,How does the animal feel? Drag the face!,Що відчуває тваринка? Перетягни обличчя!,Comment se sent l'animal ? Glisse le visage !,¿Cómo se siente el animal? ¡Arrastra la cara!
+EMOTION_TUTORIAL_PRESCHOOL,How does the animal feel? Drag and help!,Що відчуває тваринка? Перетягни та допоможи!,Comment se sent l'animal ? Glisse et aide !,¿Cómo se siente el animal? ¡Arrastra y ayuda!
+EMOTION_PICK_FEELING,How does the animal feel?,Що відчуває тваринка?,Comment se sent l'animal ?,¿Cómo se siente el animal?
+EMOTION_PICK_ACTION,How can you help?,Як ти можеш допомогти?,Comment peux-tu aider ?,¿Cómo puedes ayudar?
+EMOTION_HAPPY,Happy,Радість,Content,Feliz
+EMOTION_SAD,Sad,Сум,Triste,Triste
+EMOTION_ANGRY,Angry,Злість,En colère,Enojado
+EMOTION_SCARED,Scared,Страх,Effrayé,Asustado
+EMOTION_ACTION_HUG,Hug,Обійняти,Câlin,Abrazar
+EMOTION_ACTION_TALK,Talk,Поговорити,Parler,Hablar
+EMOTION_ACTION_SPACE,Space,Дати спокій,Espace,Espacio
+EMOTION_SIT_ICE_CREAM,Oh no! The ice cream fell!,Ой! Морозиво впало!,Oh non ! La glace est tombée !,¡Oh no! ¡Se cayó el helado!
+EMOTION_SIT_GIFT,Wow! A surprise gift!,Ого! Подарунок-сюрприз!,Wow ! Un cadeau surprise !,¡Guau! ¡Un regalo sorpresa!
+EMOTION_SIT_LOST_TOY,The toy is lost...,Іграшка загубилася...,Le jouet est perdu...,El juguete se perdió...
+EMOTION_SIT_FRIEND,A friend came to visit!,Прийшов друг у гості!,Un ami est venu en visite !,¡Un amigo vino de visita!
+EMOTION_SIT_SCARY_NOISE,What was that noise?,Що це був за звук?,C'était quoi ce bruit ?,¿Qué fue ese ruido?
+EMOTION_SIT_TOY_BROKEN,Someone broke the toy!,Хтось зламав іграшку!,Quelqu'un a cassé le jouet !,¡Alguien rompió el juguete!
+EMOTION_SIT_DARK_ROOM,It is dark in the room!,У кімнаті темно!,Il fait sombre dans la chambre !,¡Está oscuro en la habitación!
+EMOTION_SIT_NEW_FRIEND,A new friend appeared!,З'явився новий друг!,Un nouvel ami est apparu !,¡Apareció un nuevo amigo!
+GAME_LETTER_MATCH,Living Letters,Живі букви,Lettres vivantes,Letras vivas
+DESC_LETTER_MATCH,Match letters to their shadows!,Знайди пару для кожної букви!,Associe les lettres à leurs ombres !,¡Empareja las letras con sus sombras!
+SKILL_LETTER_MATCH,Letter Recognition,Розпізнавання букв,Reconnaissance des lettres,Reconocimiento de letras
+LETTER_TUTORIAL_TODDLER,Drag the letter to its twin!,Перетягни букву до двійника!,Glisse la lettre vers son jumeau !,¡Arrastra la letra a su gemelo!
+LETTER_TUTORIAL_PRESCHOOL,Match uppercase to lowercase!,З'єднай велику з малою!,Associe majuscule et minuscule !,¡Empareja mayúsculas con minúsculas!

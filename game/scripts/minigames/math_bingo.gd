@@ -76,6 +76,7 @@ var _toddler_cells: Array[Node2D] = []
 
 func _ready() -> void:
 	game_id = "math_bingo"
+	_skill_id = "arithmetic"
 	bg_theme = "ocean"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

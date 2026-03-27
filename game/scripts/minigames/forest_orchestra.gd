@@ -61,6 +61,7 @@ var _note_label: Label = null
 
 func _ready() -> void:
 	game_id = "music"
+	_skill_id = "auditory_memory"
 	bg_theme = "meadow"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

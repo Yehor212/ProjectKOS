@@ -119,6 +119,7 @@ var _teaching_done_ever: bool = false  ## Не повторювати teaching �
 
 func _ready() -> void:
 	game_id = "knight_path"
+	_skill_id = "strategic_thinking"
 	bg_theme = "puzzle"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

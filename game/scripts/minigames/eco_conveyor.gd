@@ -122,6 +122,7 @@ var _flower_nodes: Array[Node2D] = []  ## Квіти що виростають �
 
 func _ready() -> void:
 	game_id = "eco_conveyor"
+	_skill_id = "classification"
 	bg_theme = "meadow"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
@@ -327,24 +328,20 @@ func _earth_cough() -> void:
 	tw.tween_property(_earth_node, "position:x", orig_pos.x, 0.03)
 
 
-## Кумедна реакція: предмет "виплюнутий" вгору при неправильному біні.
+## Кумедна реакція: предмет "виплюнутий" при неправильному біні.
+## Лише scale squish — position і rotation анімує _snap_back_to_conveyor.
 func _play_funny_bin_spit(item: Node2D) -> void:
 	if not is_instance_valid(item) or SettingsManager.reduced_motion:
 		return
-	var spit_height: float = 30.0 if _is_toddler else 50.0
-	var orig_y: float = item.position.y
 	var spit_tw: Tween = _create_game_tween()
-	## Предмет вилітає вгору з обертанням
-	spit_tw.set_parallel(true)
-	spit_tw.tween_property(item, "position:y", orig_y - spit_height, 0.12)\
-		.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	var spin: float = 20.0 if _is_toddler else 40.0
-	spit_tw.tween_property(item, "rotation_degrees", spin, 0.12)
-	## Стиснення при вильоті
-	spit_tw.chain().set_parallel(false)
-	spit_tw.tween_property(item, "scale", Vector2(1.15, 0.85), 0.06)
-	spit_tw.tween_property(item, "scale", Vector2.ONE, 0.1)\
+	## Scale squish: предмет "стискується" як від удару об бін і пружинить назад
+	spit_tw.tween_property(item, "scale", Vector2(1.25, 0.75), 0.06)
+	spit_tw.tween_property(item, "scale", Vector2(0.85, 1.15), 0.06)
+	spit_tw.tween_property(item, "scale", Vector2.ONE, 0.12)\
 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	## Кольоровий тінт — "не те місце!"
+	spit_tw.parallel().tween_property(item, "modulate", Color(1.2, 0.85, 0.85), 0.08)
+	spit_tw.tween_property(item, "modulate", Color.WHITE, 0.2)
 	AudioManager.play_sfx("whoosh", 1.2)
 
 

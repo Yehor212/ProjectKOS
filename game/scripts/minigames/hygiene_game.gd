@@ -89,6 +89,7 @@ var _giggle_cooldown: float = 0.0
 
 func _ready() -> void:
 	game_id = "hygiene"
+	_skill_id = "life_skills"
 	bg_theme = "ocean"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

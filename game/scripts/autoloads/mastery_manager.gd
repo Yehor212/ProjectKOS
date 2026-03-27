@@ -184,7 +184,7 @@ func record_animal_interaction(animal_name: String, interaction: String) -> void
 	var new_tier: int = current_tier
 
 	match interaction:
-		"meet":
+		"meet", "played":
 			if current_tier < TIER_MET:
 				new_tier = TIER_MET
 		"feed":

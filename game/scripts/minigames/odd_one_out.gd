@@ -44,6 +44,7 @@ var _flash_rect: ColorRect = null
 
 func _ready() -> void:
 	game_id = "odd_one_out"
+	_skill_id = "classification"
 	bg_theme = "meadow"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

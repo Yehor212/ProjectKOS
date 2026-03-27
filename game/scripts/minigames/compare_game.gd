@@ -62,6 +62,7 @@ var _round_plan: Array[CompareType] = []
 
 func _ready() -> void:
 	game_id = "compare"
+	_skill_id = "comparison"
 	bg_theme = "meadow"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

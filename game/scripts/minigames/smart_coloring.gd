@@ -83,6 +83,7 @@ var _idle_timer: SceneTreeTimer = null
 
 func _ready() -> void:
 	game_id = "smart_coloring"
+	_skill_id = "creativity"
 	bg_theme = "sky"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
@@ -745,6 +746,8 @@ func _clear_round() -> void:
 func _finish() -> void:
 	_game_over = true
 	_input_locked = true
+	## MasteryManager: креативна гра — завершення = правильна спроба
+	MasteryManager.record_attempt(game_id, _skill_id, true)
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
 	## Креативна гра — завжди 5 зірок (аксіома A5)
 	var earned: int = _calculate_stars(0)

@@ -127,6 +127,7 @@ var _idle_timer: SceneTreeTimer = null
 
 func _ready() -> void:
 	game_id = "weather_dress"
+	_skill_id = "cause_effect"
 	bg_theme = "arctic"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

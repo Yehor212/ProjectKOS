@@ -155,6 +155,7 @@ var _dir_buttons: Array[Button] = []  ## Посилання на кнопки н
 ## ── Coin state ──
 var _coin_positions: Array[Vector2i] = []  ## Позиції монет на сітці
 var _coin_nodes: Dictionary = {}  ## Vector2i -> Node2D (монета на сітці)
+var _coin_tweens: Dictionary = {}  ## Vector2i -> Tween (анімації збору для kill on restore)
 var _collected_coins: int = 0  ## Зібрані монети в цьому раунді
 var _total_coins_collected: int = 0  ## Всього зібраних за всі раунди
 
@@ -171,6 +172,7 @@ var _f1_available: bool = false  ## Чи доступний f1 у цьому р�
 
 func _ready() -> void:
 	game_id = "algo_robot"
+	_skill_id = "algorithmic_thinking"
 	bg_theme = "science"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
@@ -464,6 +466,7 @@ func _try_collect_coin(pos: Vector2i) -> void:
 		return
 	## Анімація збору: scale up + fade out (не queue_free!)
 	var tw: Tween = _create_game_tween()
+	_coin_tweens[pos] = tw  ## Трекінг для kill on restore
 	tw.set_parallel(true)
 	tw.tween_property(coin_node, "scale",
 		Vector2(1.5, 1.5), COIN_COLLECT_DURATION)\
@@ -474,7 +477,14 @@ func _try_collect_coin(pos: Vector2i) -> void:
 
 
 ## Відновити всі монети після невдалої спроби (робот не дійшов до цілі).
+## Kill collect tweens щоб вони не перезаписали видимість.
 func _restore_coins() -> void:
+	## Kill active collect tweens
+	for coin_pos: Vector2i in _coin_tweens:
+		var tw: Tween = _coin_tweens.get(coin_pos, null)
+		if tw != null and tw.is_valid():
+			tw.kill()
+	_coin_tweens.clear()
 	_collected_coins = 0
 	for coin_pos: Vector2i in _coin_nodes:
 		var coin_node: Node2D = _coin_nodes.get(coin_pos, null)
@@ -488,15 +498,22 @@ func _restore_coins() -> void:
 ## Остаточно зібрати монети після успішного розв'язку.
 func _commit_coins() -> void:
 	_total_coins_collected += _collected_coins
-	for coin_pos: Vector2i in _coin_nodes:
-		var coin_node: Node2D = _coin_nodes.get(coin_pos, null)
-		if is_instance_valid(coin_node) and not coin_node.visible:
-			coin_node.queue_free()
-	## Очистити зібрані з dict
+	## Kill coin tweens (вони вже не потрібні)
+	for coin_pos: Vector2i in _coin_tweens:
+		var tw: Tween = _coin_tweens.get(coin_pos, null)
+		if tw != null and tw.is_valid():
+			tw.kill()
+	_coin_tweens.clear()
+	## Free зібрані монети (invisible або faded)
 	var to_remove: Array[Vector2i] = []
 	for coin_pos: Vector2i in _coin_nodes:
 		var coin_node: Node2D = _coin_nodes.get(coin_pos, null)
-		if not is_instance_valid(coin_node) or not coin_node.visible:
+		if not is_instance_valid(coin_node):
+			to_remove.append(coin_pos)
+			continue
+		var is_collected: bool = not coin_node.visible or coin_node.modulate.a < 0.1
+		if is_collected:
+			coin_node.queue_free()
 			to_remove.append(coin_pos)
 	for pos: Vector2i in to_remove:
 		_coin_nodes.erase(pos)
@@ -1896,6 +1913,7 @@ func _clear_round() -> void:
 	## Cleanup coin state (A9: round hygiene)
 	_coin_positions.clear()
 	_coin_nodes.clear()  ## Ноди вже freed через _all_round_nodes
+	_coin_tweens.clear()
 	_collected_coins = 0
 	## Cleanup f1 state (A9: round hygiene)
 	_f1_defined = false

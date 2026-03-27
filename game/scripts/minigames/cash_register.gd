@@ -92,6 +92,7 @@ var _used_customers: Array[int] = []
 
 func _ready() -> void:
 	game_id = "cash_register"
+	_skill_id = "money_counting"
 	bg_theme = "city"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

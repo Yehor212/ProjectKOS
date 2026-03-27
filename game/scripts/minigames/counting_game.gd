@@ -89,6 +89,7 @@ var _round_errors_local: int = 0
 
 func _ready() -> void:
 	game_id = "counting"
+	_skill_id = "counting"
 	bg_theme = "meadow"
 	super()
 	_is_toddler_mode = (SettingsManager.age_group == 1)

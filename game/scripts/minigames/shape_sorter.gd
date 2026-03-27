@@ -222,6 +222,7 @@ var _current_constructor_id: String = ""
 
 func _ready() -> void:
 	game_id = "shape_sorter"
+	_skill_id = "spatial_reasoning"
 	bg_theme = "candy"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
@@ -532,26 +533,22 @@ func _on_dropped_on_empty(item: Node2D) -> void:
 	_reset_idle_timer()
 
 
-## Кумедна реакція: фігура "пробує влізти" у слот -> wobble -> pop out.
+## Кумедна реакція: фігура "пробує влізти" у слот -> scale wobble -> pop out.
 ## Слот тимчасово "закривається" (scale 0.9 по Y) показуючи що не підходить.
+## Лише scale на item — position/rotation анімує snap_back.
 func _play_funny_shape_reject(item: Node2D, slot: Node2D) -> void:
 	if SettingsManager.reduced_motion:
 		return
-	## Фігура: wobble wobble — намагається влізти
+	## Фігура: scale wobble — наче намагається влізти
 	if is_instance_valid(item):
-		var wobble_amp: float = 6.0 if _is_toddler else 10.0
 		var item_tw: Tween = _create_game_tween()
-		## Рух до слота + обертання "пробую влізти"
-		item_tw.tween_property(item, "rotation_degrees", wobble_amp, 0.06)
-		item_tw.tween_property(item, "rotation_degrees", -wobble_amp, 0.06)
-		item_tw.tween_property(item, "rotation_degrees", wobble_amp * 0.5, 0.05)
-		item_tw.tween_property(item, "rotation_degrees", 0.0, 0.05)
-		## Pop out — фігура "вистрілює" вгору
-		var pop_h: float = 15.0 if _is_toddler else 25.0
-		item_tw.tween_property(item, "position:y", item.position.y - pop_h, 0.08)\
-			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-		item_tw.tween_property(item, "position:y", item.position.y, 0.1)\
-			.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+		## "Пробує влізти" — стискується по X (щільніше!) та розтягується по Y
+		item_tw.tween_property(item, "scale", Vector2(0.8, 1.2), 0.07)
+		item_tw.tween_property(item, "scale", Vector2(1.2, 0.8), 0.07)
+		item_tw.tween_property(item, "scale", Vector2(0.9, 1.1), 0.06)
+		## "Pop out!" — пружинне повернення
+		item_tw.tween_property(item, "scale", Vector2.ONE, 0.12)\
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 		AudioManager.play_sfx("bounce", 1.2)
 	## Слот: тимчасово "закривається" — стискування по Y
 	if is_instance_valid(slot):

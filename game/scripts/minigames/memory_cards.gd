@@ -65,6 +65,7 @@ var _celebration_nodes: Array[Node2D] = []  ## Тимчасові ноди св�
 
 func _ready() -> void:
 	game_id = "memory"
+	_skill_id = "memory"
 	bg_theme = "forest"
 	super()
 	_is_toddler_mode = (SettingsManager.age_group == 1)

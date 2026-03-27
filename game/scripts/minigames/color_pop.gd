@@ -81,6 +81,7 @@ var _warned_low_time: bool = false
 
 func _ready() -> void:
 	game_id = "color_pop"
+	_skill_id = "color_recognition"
 	bg_theme = "ocean"
 	super()
 	var group: int = SettingsManager.age_group

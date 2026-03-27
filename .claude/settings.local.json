@@ -31,7 +31,22 @@
       "WebFetch(domain:www.gamedeveloper.com)",
       "Bash(/c/Godot/Godot_v4.6.1-stable_win64_console.exe --headless --path game/ -s tests/run_all_tests.gd --quit-after 60 2>&1)",
       "mcp__Snyk__snyk_code_scan",
-      "mcp__Snyk__snyk_auth"
+      "mcp__Snyk__snyk_auth",
+      "Bash(/c/Godot/Godot_v4.6.1-stable_win64_console.exe --headless --path game/ -s tests/run_all_tests.gd --quit-after 60)",
+      "Bash(tee /tmp/test_output.txt)",
+      "Bash(cd:*)",
+      "Bash(rm -f game/assets/sprites/animals/Bear_BACKUP.png game/assets/sprites/animals/Bear_HQ.png game/assets/sprites/animals/Bear_Kawaii.svg game/assets/sprites/animals/Bear_NoEyes.png game/assets/sprites/animals/Bear_Premium.png game/assets/sprites/animals/Bear_Premium.svg game/assets/sprites/animals/Bear_Traced.png game/assets/sprites/animals/Bear_Traced.svg game/assets/sprites/animals/Bear_Traced_512.png game/assets/sprites/animals/Bear_V3.png game/assets/sprites/animals/Bear_V3.svg)",
+      "Bash(rm -f game/scenes/components/bear_anim_demo.tscn game/scenes/components/vector_bear_demo.tscn)",
+      "Bash(rm -f game/scripts/components/bear_anim_demo.gd game/scripts/components/puppet_bear.gd game/scripts/components/vector_bear.gd)",
+      "Bash(rm -f \"projectProjectKOSgameassetsspritesanimalsBear_Kawaii.svg\")",
+      "Bash(git rm:*)",
+      "Bash(pip3 install:*)",
+      "Bash(gdformat --version)",
+      "Bash(gdlint --version)",
+      "Bash(git merge:*)",
+      "Bash(git branch:*)",
+      "Bash(pip3 show:*)",
+      "Bash(/c/Godot/Godot_v4.6.1-stable_win64_console.exe --headless --path game/ --import --quit)"
     ]
   }
 }

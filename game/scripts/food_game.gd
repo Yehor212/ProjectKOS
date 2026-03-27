@@ -76,6 +76,7 @@ var _ps_drop_zone: Vector2 = Vector2.ZERO  ## Центр зони прийому
 
 func _ready() -> void:
 	game_id = GAME_ID
+	_skill_id = "animal_food_association"
 	bg_theme = "meadow"
 	super()
 	_rng.randomize()
@@ -198,6 +199,7 @@ func _on_food_dropped_on_animal(food: Node2D, animal: Node2D) -> void:
 	if is_correct:
 		ProgressManager.unlock_animal(animal.name)
 		ProgressManager.increment_animals_fed()
+		MasteryManager.record_animal_interaction(animal.name, "played")
 		_total_fed += 1
 		## A6: Toddler — click+wobble через _register_correct (не error sfx)
 		AudioManager.play_sfx("success", 1.0 + mini(_round_manager.current_combo, 10) * 0.05)
@@ -635,6 +637,7 @@ func _ps_on_correct(card: Node2D) -> void:
 
 	if is_instance_valid(_ps_animal_node):
 		ProgressManager.unlock_animal(_ps_animal_node.name)
+		MasteryManager.record_animal_interaction(_ps_animal_node.name, "played")
 	ProgressManager.increment_animals_fed()
 
 	## Реєстрація правильної — без node (feedback кастомний нижче)

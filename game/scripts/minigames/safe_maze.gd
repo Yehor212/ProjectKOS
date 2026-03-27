@@ -92,6 +92,7 @@ var _idle_timer: SceneTreeTimer = null
 
 func _ready() -> void:
 	game_id = "safe_maze"
+	_skill_id = "fine_motor"
 	bg_theme = "forest"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

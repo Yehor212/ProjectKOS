@@ -101,6 +101,7 @@ var _bubble_nodes: Array[Node2D] = []
 
 func _ready() -> void:
 	game_id = "color_lab"
+	_skill_id = "color_mixing"
 	bg_theme = "science"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
