@@ -432,7 +432,7 @@ func _trigger_whale_bonus() -> void:
 	)
 	## Лопати пузирі по шляху кита
 	get_tree().create_timer(0.3).timeout.connect(func() -> void:
-		if _game_over:
+		if not is_instance_valid(self) or _game_over:
 			return
 		_whale_pop_bubbles(3)
 	)
@@ -469,6 +469,8 @@ func _trigger_treasure_chest() -> void:
 	AudioManager.play_sfx("coin", 0.9)
 	## Автозникнення через 3с якщо не тапнули
 	get_tree().create_timer(3.0).timeout.connect(func() -> void:
+		if not is_instance_valid(self):
+			return
 		if is_instance_valid(chest):
 			_treasure_active = false
 			var tw: Tween = create_tween()
@@ -505,6 +507,8 @@ func _trigger_giant_bubble() -> void:
 	AudioManager.play_sfx("coin", 0.7)
 	## Автозникнення через 5с якщо не лопнули
 	get_tree().create_timer(5.0).timeout.connect(func() -> void:
+		if not is_instance_valid(self):
+			return
 		if _giant_bubble_active and is_instance_valid(_giant_bubble_node):
 			_giant_bubble_active = false
 			_giant_bubble_node.queue_free()

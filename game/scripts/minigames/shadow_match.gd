@@ -156,7 +156,7 @@ func _generate_round() -> void:
 				_round_pairs.append(GameData.ANIMALS_AND_FOOD[idx])
 	if _round_pairs.is_empty():
 		push_warning("ShadowMatch: No pairs available, finishing game")
-		finish_game(_calculate_stars(_errors))
+		finish_game(_calculate_stars(_errors), {"time_sec": 0.0, "errors": _errors, "rounds_played": 0, "earned_stars": _calculate_stars(_errors)})
 		return
 	_round_target_count = _round_pairs.size()
 	_matched_count = 0
@@ -263,7 +263,7 @@ func _generate_round() -> void:
 	var valid_animal_count: int = _animal_nodes.size()
 	if valid_shadow_count == 0 or valid_animal_count == 0:
 		push_warning("ShadowMatch: No valid pairs created, finishing")
-		finish_game(_calculate_stars(_errors))
+		finish_game(_calculate_stars(_errors), {"time_sec": 0.0, "errors": _errors, "rounds_played": 0, "earned_stars": _calculate_stars(_errors)})
 		return
 	_round_target_count = mini(valid_shadow_count, valid_animal_count)
 	## Каскадна поява (LAW 29)
@@ -302,7 +302,7 @@ func _generate_round() -> void:
 		_input_locked = false
 		_reset_idle_timer())
 	## Оновити HUD
-	_update_round_label(tr("ROUND") + " %d/%d" % [_current_round + 1, MAX_ROUNDS])
+	_update_round_label(tr("COUNTING_ROUND") % [_current_round + 1, MAX_ROUNDS])
 	_reset_idle_timer()
 
 

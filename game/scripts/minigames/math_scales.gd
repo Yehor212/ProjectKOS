@@ -615,7 +615,7 @@ func _play_eating_sequence() -> void:
 			func() -> void:
 				if not is_instance_valid(self):
 					return
-				AudioManager.play_sfx_varied("click", crunch_pitch - 1.0))
+				AudioManager.play_sfx("click", crunch_pitch))
 
 
 ## ---- Помилка: нерівний розподіл ----

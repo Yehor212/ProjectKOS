@@ -1,10 +1,10 @@
-# Privacy Policy — Feed the Animals
+# Privacy Policy — Tofie Play & Learn Adventures
 
 **Last updated:** 2026-02-22
 
 ## Overview
 
-"Feed the Animals" is a children's educational game designed for kids ages 4+. We take your child's privacy very seriously.
+"Tofie Play & Learn Adventures" is a children's educational game designed for kids ages 2-7. We take your child's privacy very seriously.
 
 ## Data Collection
 
@@ -52,7 +52,7 @@ We do not knowingly collect personal information from children under 13 (or appl
 
 ## Parental Controls
 
-The app includes a parental gate (math verification) for features that access the device clipboard (save export/import).
+The app includes a parental gate (3-finger 2-second hold) for features that access settings, the device clipboard (save export/import), and the parent zone.
 
 ## Changes to This Policy
 
