@@ -385,7 +385,7 @@ func _build_bins_for_round() -> void:
 		## Підпис контейнера (A12: i18n через tr())
 		var name_lbl: Label = Label.new()
 		name_lbl.text = tr(b.get("label", ""))
-		name_lbl.add_theme_font_size_override("font_size", 20)
+		name_lbl.add_theme_font_size_override("font_size", 24)
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.9))
 		name_lbl.position = Vector2(x, bin_y + BIN_H * 0.5 - 36)

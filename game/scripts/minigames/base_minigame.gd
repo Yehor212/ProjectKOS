@@ -156,7 +156,7 @@ var _instruction_pill: PanelContainer = null
 
 ## Централізована pill для інструкції + раунду — замінює дубльований код у 25 іграх.
 ## Дочірні класи викликають у _build_hud() замість 10-15 рядків ручного UI.
-func _build_instruction_pill(text: String = "", font_size: int = 22) -> void:
+func _build_instruction_pill(text: String = "", font_size: int = 24) -> void:
 	var s: float = _ui_scale()
 	_instruction_pill = PanelContainer.new()
 	_instruction_pill.add_theme_stylebox_override("panel", GameData.instruction_pill())

@@ -391,7 +391,7 @@ func _spawn_clothing(correct: Array, wrong: Array) -> void:
 		var zone_id: int = CLOTHING_ZONE.get(clothing_id, BodyZone.BODY)
 		var zone_label: Label = Label.new()
 		zone_label.text = _zone_name(zone_id)
-		zone_label.add_theme_font_size_override("font_size", 14)
+		zone_label.add_theme_font_size_override("font_size", 24)
 		zone_label.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4, 0.8))
 		zone_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		zone_label.position = Vector2(-SLOT_SIZE.x * 0.5, SLOT_SIZE.y * 0.3)

@@ -266,7 +266,7 @@ func _spawn_zones(cats: Array[Dictionary]) -> void:
 		## Назва категорії
 		var name_lbl: Label = Label.new()
 		name_lbl.text = tr("SORTING_CAT_%s" % cat_id.to_upper())
-		name_lbl.add_theme_font_size_override("font_size", 22)
+		name_lbl.add_theme_font_size_override("font_size", 24)
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.9))
 		name_lbl.position = Vector2(0, 74)

@@ -69,7 +69,7 @@ func _ready() -> void:
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
 	_build_theater_stage()
-	_build_instruction_pill(tr("SHADOW_TUTORIAL"), 22)
+	_build_instruction_pill(tr("SHADOW_TUTORIAL"), 24)
 	_generate_round()
 	_start_safety_timeout(SAFETY_TIMEOUT_SEC)
 
