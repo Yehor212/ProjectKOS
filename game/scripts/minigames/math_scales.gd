@@ -655,6 +655,60 @@ func _on_unfair_share() -> void:
 			_start_round())
 
 
+## Кумедна реакція тварин на нерівний розподіл.
+## Тварина з меншим: сумно зменшується (scale 0.9). Тварина з більшим: embarrassed wobble.
+func _play_funny_unfair_reaction() -> void:
+	if SettingsManager.reduced_motion:
+		return
+	if _animal_nodes.size() < 2 or _plate_counts.size() < 2:
+		return
+	## Знайти хто має менше і хто більше
+	var min_count: int = _plate_counts[0]
+	var max_count: int = _plate_counts[0]
+	var min_idx: int = 0
+	var max_idx: int = 0
+	for i: int in range(1, _plate_counts.size()):
+		if i >= _plate_counts.size():
+			break
+		if _plate_counts[i] < min_count:
+			min_count = _plate_counts[i]
+			min_idx = i
+		if _plate_counts[i] > max_count:
+			max_count = _plate_counts[i]
+			max_idx = i
+	## Тварина з меншим: сумно зменшується і опускає "голову"
+	if min_idx < _animal_nodes.size():
+		var sad_animal: Node2D = _animal_nodes[min_idx]
+		if is_instance_valid(sad_animal):
+			var sad_tw: Tween = _create_game_tween()
+			var shrink: float = 0.92 if _is_toddler else 0.85
+			sad_tw.tween_property(sad_animal, "scale",
+				sad_animal.scale * shrink, 0.15)
+			sad_tw.tween_property(sad_animal, "rotation_degrees", 5.0, 0.1)
+			sad_tw.tween_property(sad_animal, "rotation_degrees", 0.0, 0.15)\
+				.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+			sad_tw.tween_property(sad_animal, "scale",
+				sad_animal.scale, 0.2)\
+				.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	## Тварина з більшим: embarrassed rotation wobble
+	if max_idx != min_idx and max_idx < _animal_nodes.size():
+		var emb_animal: Node2D = _animal_nodes[max_idx]
+		if is_instance_valid(emb_animal):
+			var emb_tw: Tween = _create_game_tween()
+			var amp: float = 5.0 if _is_toddler else 10.0
+			emb_tw.tween_property(emb_animal, "rotation_degrees", -amp, 0.08)
+			emb_tw.tween_property(emb_animal, "rotation_degrees", amp, 0.08)
+			emb_tw.tween_property(emb_animal, "rotation_degrees", -amp * 0.5, 0.06)
+			emb_tw.tween_property(emb_animal, "rotation_degrees", 0.0, 0.06)
+			## Легкий "зажмурювання" — стиснення по X
+			emb_tw.parallel().tween_property(emb_animal, "scale:x",
+				emb_animal.scale.x * 0.9, 0.12)
+			emb_tw.tween_property(emb_animal, "scale:x",
+				emb_animal.scale.x, 0.15)\
+				.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	AudioManager.play_sfx("bounce", 0.8)
+
+
 ## Повертає ВСЮ їжу в купку (Toddler reset).
 func _return_all_food_to_pile() -> void:
 	for food: Node2D in _food_items:

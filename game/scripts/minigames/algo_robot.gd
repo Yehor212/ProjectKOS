@@ -1402,6 +1402,12 @@ func _check_toddler_replay_complete() -> void:
 func _on_clear_pressed() -> void:
 	if _input_locked or _game_over or _executing:
 		return
+	## F1 editing: clear clears f1 commands instead
+	if _f1_editing:
+		_f1_commands.clear()
+		_update_f1_editor_display()
+		AudioManager.play_sfx("click")
+		return
 	_commands.clear()
 	_update_cmd_display()
 	## Preschool: очистити preview line
@@ -1801,6 +1807,15 @@ func _on_exit_pause() -> void:
 	_set_robot_mood(RobotMood.NEUTRAL)
 	_last_move_dir = ""
 	_execution_step = 0
+	## Reset f1 editing state on pause (A9)
+	if _f1_editing:
+		_f1_editing = false
+		_f1_commands.clear()
+		if is_instance_valid(_f1_editor_panel):
+			_f1_editor_panel.queue_free()
+		_f1_editor_panel = null
+		_f1_confirm_btn = null
+		_f1_slot_displays.clear()
 
 
 ## ---- Round management ----
@@ -1834,6 +1849,23 @@ func _clear_round() -> void:
 	_last_move_dir = ""
 	_execution_step = 0
 	_optimal_length = 0
+	## Cleanup slot limit state (A9: round hygiene)
+	_slot_limit = SLOT_UNLIMITED
+	_slot_panels.clear()
+	_dir_buttons.clear()
+	## Cleanup coin state (A9: round hygiene)
+	_coin_positions.clear()
+	_coin_nodes.clear()  ## Ноди вже freed через _all_round_nodes
+	_collected_coins = 0
+	## Cleanup f1 state (A9: round hygiene)
+	_f1_defined = false
+	_f1_commands.clear()
+	_f1_editing = false
+	_f1_btn = null
+	_f1_editor_panel = null
+	_f1_slot_displays.clear()
+	_f1_confirm_btn = null
+	_f1_available = false
 
 
 func _finish() -> void:
@@ -1842,7 +1874,8 @@ func _finish() -> void:
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
 	var earned: int = _calculate_stars(_errors)
 	finish_game(earned, {"time_sec": elapsed, "errors": _errors,
-		"rounds_played": _total_rounds, "earned_stars": earned})
+		"rounds_played": _total_rounds, "earned_stars": earned,
+		"coins_collected": _total_coins_collected})
 
 
 ## ---- Idle hint ----

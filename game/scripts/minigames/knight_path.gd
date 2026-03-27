@@ -779,14 +779,20 @@ func _move_knight_to(target_pos: Vector2i) -> void:
 	_input_locked = true
 	var old_pos: Vector2i = _knight_pos
 	## Використовуємо threat-aware BFS для оцінки оптимальності ходу
-	var old_dist: int = _bfs_distance_avoiding(_knight_pos, _goal_pos, _threatened_cells) \
-		if _threatened_cells.size() > 0 else _bfs_distance(_knight_pos, _goal_pos)
+	var old_dist: int = 0
+	if _threatened_cells.size() > 0:
+		old_dist = _bfs_distance_avoiding(_knight_pos, _goal_pos, _threatened_cells)
+	else:
+		old_dist = _bfs_distance(_knight_pos, _goal_pos)
 	_knight_pos = target_pos
 	_moves += 1
 	_update_moves_label()
 	AudioManager.play_sfx("whoosh")  ## Свист при кожному ході лицаря
-	var new_dist: int = _bfs_distance_avoiding(_knight_pos, _goal_pos, _threatened_cells) \
-		if _threatened_cells.size() > 0 else _bfs_distance(_knight_pos, _goal_pos)
+	var new_dist: int = 0
+	if _threatened_cells.size() > 0:
+		new_dist = _bfs_distance_avoiding(_knight_pos, _goal_pos, _threatened_cells)
+	else:
+		new_dist = _bfs_distance(_knight_pos, _goal_pos)
 	## Субоптимальний хід: не наблизився до цілі → A7 + A11 scaffolding
 	if new_dist > 0 and new_dist >= old_dist:
 		if not _is_toddler:
@@ -1415,6 +1421,7 @@ func _on_teaching_input(event: InputEvent, target_pos: Vector2i) -> void:
 	if _input_locked or _game_over:
 		return
 	if not _teaching_active:
+		push_warning("knight_path: teaching input received but teaching not active")
 		return
 	if (event is InputEventMouseButton and event.pressed and \
 		event.button_index == MOUSE_BUTTON_LEFT) or \
@@ -1575,6 +1582,12 @@ func _spawn_map_decorations() -> void:
 		var mv: Vector2i = _knight_pos + offset
 		if mv.x >= 0 and mv.x < GRID_SIZE and mv.y >= 0 and mv.y < GRID_SIZE:
 			occupied[mv] = true
+	## Уникати клітинок з ворогами та bonus treasures
+	for epos: Vector2i in _enemy_positions:
+		occupied[epos] = true
+	for tpos: Vector2i in _bonus_treasures:
+		if tpos.x >= 0:  ## Пропустити зібрані (-99, -99)
+			occupied[tpos] = true
 	var free_cells: Array[Vector2i] = []
 	for row: int in GRID_SIZE:
 		for col: int in GRID_SIZE:
