@@ -480,6 +480,19 @@ func _spawn_threat_overlays() -> void:
 		overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		overlay.z_index = 1
 		add_child(overlay)
+		## LAW 25: shape marker on threat cells (not color alone)
+		var marker: Label = Label.new()
+		marker.text = "X"
+		marker.add_theme_font_size_override("font_size", int(sz * 0.4))
+		marker.add_theme_color_override("font_color", Color("ef4444", 0.6))
+		marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		marker.size = Vector2(sz, sz)
+		marker.position = overlay.position
+		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		marker.z_index = 2
+		add_child(marker)
+		_threat_overlay_nodes.append(marker)
 		_threat_overlay_nodes.append(overlay)
 		_all_round_nodes.append(overlay)
 

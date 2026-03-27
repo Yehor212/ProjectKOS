@@ -102,7 +102,7 @@ func _add_pill(parent: HBoxContainer, text: String, color: Color, count: int) ->
 
 	var label: Label = Label.new()
 	label.text = text
-	label.add_theme_font_size_override("font_size", 18)
+	label.add_theme_font_size_override("font_size", 24)
 	label.add_theme_color_override("font_color", Color.WHITE)
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pill.add_child(label)
@@ -201,7 +201,7 @@ func _build_animal_card(animal_name: String, tier: int) -> PanelContainer:
 	## Ім'я тварини (або "???" для невідомих)
 	var name_label: Label = Label.new()
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_font_size_override("font_size", 24)
 	name_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if tier > 0:
 		var tr_key: String = ANIMAL_TR_KEYS.get(animal_name, "")
@@ -220,7 +220,7 @@ func _build_animal_card(animal_name: String, tier: int) -> PanelContainer:
 	if tier > 0:
 		var badge: Label = Label.new()
 		badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		badge.add_theme_font_size_override("font_size", 14)
+		badge.add_theme_font_size_override("font_size", 24)
 		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		var tier_key: String = TIER_TR_KEYS.get(tier, "VILLAGE_TIER_UNKNOWN")
 		badge.text = tr(tier_key)

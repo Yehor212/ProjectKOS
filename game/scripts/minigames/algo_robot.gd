@@ -258,7 +258,8 @@ func _start_round() -> void:
 	_f1_commands.clear()
 	_f1_editing = false
 	_f1_slot_displays.clear()
-	_f1_available = not _is_toddler and _round >= 2
+	## f1 only for age 6+ (logic-auditor: procedure abstraction requires Concrete Operational stage)
+	_f1_available = not _is_toddler and _round >= 2 and SettingsManager.age_group >= 2
 	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
 	_select_grid_theme()
