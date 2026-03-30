@@ -476,13 +476,49 @@ func _play_animal_sound(animal_name: String) -> void:
 	## Спробувати завантажити з кешу або з диску
 	var stream: AudioStream = _get_animal_stream(sfx_id)
 	if not stream:
-		push_warning("SoundMatch: SFX '%s' не знайдено, fallback to click" % sfx_id)
-		AudioManager.play_sfx("click")
+		## Fallback: pitch-shifted існуючий SFX (кожна тварина = унікальний звук)
+		_play_animal_fallback(animal_name)
 		return
 	_animal_player.stream = stream
 	_animal_player.volume_db = _current_volume_db
 	_animal_player.pitch_scale = 1.0
 	_animal_player.play()
+
+
+## Fallback: кожна тварина = унікальний pitch існуючого SFX (до появи реальних записів)
+const _ANIMAL_VOICE_MAP: Dictionary = {
+	## Маленькі милі — pop (високий)
+	"Bunny": {"sfx": "pop", "pitch": 1.8},
+	"Mouse": {"sfx": "pop", "pitch": 1.5},
+	"Squirrel": {"sfx": "pop", "pitch": 1.6},
+	"Hedgehog": {"sfx": "pop", "pitch": 1.3},
+	## Домашні — bounce
+	"Dog": {"sfx": "bounce", "pitch": 0.7},
+	"Cat": {"sfx": "bounce", "pitch": 1.0},
+	## Ферма — chomp
+	"Chicken": {"sfx": "chomp", "pitch": 1.2},
+	"Cow": {"sfx": "chomp", "pitch": 0.5},
+	"Goat": {"sfx": "chomp", "pitch": 0.8},
+	"Horse": {"sfx": "chomp", "pitch": 0.6},
+	## Великі дикі — whoosh (низький)
+	"Bear": {"sfx": "whoosh", "pitch": 0.4},
+	"Lion": {"sfx": "whoosh", "pitch": 0.5},
+	"Crocodile": {"sfx": "whoosh", "pitch": 0.45},
+	"Elephant": {"sfx": "whoosh", "pitch": 0.35},
+	## Грайливі — giggle
+	"Monkey": {"sfx": "giggle", "pitch": 1.2},
+	"Frog": {"sfx": "giggle", "pitch": 1.4},
+	"Penguin": {"sfx": "giggle", "pitch": 0.9},
+	"Panda": {"sfx": "giggle", "pitch": 0.7},
+	"Deer": {"sfx": "giggle", "pitch": 0.8},
+}
+
+
+func _play_animal_fallback(animal_name: String) -> void:
+	var voice: Dictionary = _ANIMAL_VOICE_MAP.get(animal_name, {"sfx": "click", "pitch": 1.0})
+	var sfx_name: String = voice.get("sfx", "click") as String
+	var pitch: float = voice.get("pitch", 1.0) as float
+	AudioManager.play_sfx(sfx_name, pitch)
 
 
 ## Lazy load тваринного SFX з кешуванням

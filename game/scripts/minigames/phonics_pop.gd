@@ -528,8 +528,49 @@ func _play_phoneme(letter: String) -> void:
 		_phoneme_player.stream = stream
 		_phoneme_player.play()
 	else:
-		## Fallback: click + warning (LAW 7: ніколи не мовчати)
-		push_warning("PhonicsPop: phoneme '%s' not found, fallback to click" % sfx_id)
+		## Fallback: музична нота з унікальним pitch per letter (до появи записів)
+		_play_phoneme_fallback(letter)
+
+
+## Fallback: кожна буква = унікальна нота (note_c/e/g/a + pitch)
+const _LETTER_TONE_MAP: Dictionary = {
+	## Голосні — note_a
+	"a": {"note": "note_a", "pitch": 1.0},
+	"e": {"note": "note_a", "pitch": 1.2},
+	"i": {"note": "note_a", "pitch": 1.4},
+	"o": {"note": "note_a", "pitch": 0.8},
+	"u": {"note": "note_a", "pitch": 0.9},
+	## Ранні приголосні — note_c
+	"b": {"note": "note_c", "pitch": 0.7},
+	"d": {"note": "note_c", "pitch": 0.8},
+	"m": {"note": "note_c", "pitch": 1.0},
+	"n": {"note": "note_c", "pitch": 1.1},
+	"p": {"note": "note_c", "pitch": 1.3},
+	## Пізні приголосні — note_e
+	"s": {"note": "note_e", "pitch": 1.0},
+	"t": {"note": "note_e", "pitch": 0.8},
+	"k": {"note": "note_e", "pitch": 0.7},
+	"l": {"note": "note_e", "pitch": 1.1},
+	"r": {"note": "note_e", "pitch": 0.9},
+	## C = окремо
+	"c": {"note": "note_g", "pitch": 1.0},
+}
+
+
+func _play_phoneme_fallback(letter: String) -> void:
+	var key: String = letter.to_lower()
+	var tone: Dictionary = _LETTER_TONE_MAP.get(key, {"note": "note_c", "pitch": 1.0})
+	var note_name: String = tone.get("note", "note_c") as String
+	var pitch: float = tone.get("pitch", 1.0) as float
+	## Завантажити ноту з файлу (note_c.wav існує!)
+	var note_path: String = "res://assets/audio/sfx/%s.wav" % note_name
+	if ResourceLoader.exists(note_path):
+		var stream: AudioStream = load(note_path)
+		_phoneme_player.stream = stream
+		_phoneme_player.pitch_scale = pitch
+		_phoneme_player.play()
+	else:
+		push_warning("PhonicsPop: note '%s' not found, fallback click" % note_name)
 		AudioManager.play_sfx("click")
 
 
