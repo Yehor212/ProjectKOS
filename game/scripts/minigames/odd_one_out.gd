@@ -47,7 +47,7 @@ var _flash_rect: ColorRect = null
 func _ready() -> void:
 	game_id = "odd_one_out"
 	_skill_id = "classification"
-	bg_theme = "meadow"
+	bg_theme = "sky"  ## Фотозона під відкритим небом
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
 	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL

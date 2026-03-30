@@ -81,7 +81,7 @@ var _narrative_label: Label = null
 func _ready() -> void:
 	game_id = "sorting"
 	_skill_id = "classification"
-	bg_theme = "meadow"
+	bg_theme = "forest"  ## Тварини повертаються ДОДОМУ у ліс
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
 	_start_time = Time.get_ticks_msec() / 1000.0

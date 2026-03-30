@@ -84,7 +84,7 @@ var _bubble_phases: Dictionary = {}
 func _ready() -> void:
 	game_id = "phonics_pop"
 	_skill_id = "phonemic_awareness"
-	bg_theme = "meadow"
+	bg_theme = "candy"  ## Яскравий, грайливий стиль для phonics
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
 	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL

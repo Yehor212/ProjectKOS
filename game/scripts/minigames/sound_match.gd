@@ -75,7 +75,7 @@ var _current_volume_db: float = NORMAL_VOLUME_DB
 func _ready() -> void:
 	game_id = "sound_match"
 	_skill_id = "auditory_discrimination"
-	bg_theme = "meadow"
+	bg_theme = "forest"  ## Ліс — звуки тварин у природі
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
 	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL

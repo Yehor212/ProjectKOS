@@ -92,7 +92,7 @@ var _round_errors_local: int = 0
 func _ready() -> void:
 	game_id = "counting"
 	_skill_id = "counting"
-	bg_theme = "meadow"
+	bg_theme = "city"  ## Фруктовий ринок = міська тема
 	super()
 	_is_toddler_mode = (SettingsManager.age_group == 1)
 	_total_rounds = ROUNDS_TODDLER if _is_toddler_mode else ROUNDS_PRESCHOOL

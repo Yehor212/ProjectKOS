@@ -125,7 +125,7 @@ var _flower_nodes: Array[Node2D] = []  ## Квіти що виростають �
 func _ready() -> void:
 	game_id = "eco_conveyor"
 	_skill_id = "classification"
-	bg_theme = "meadow"
+	bg_theme = "garden"  ## Екологічна тема → сад, не луг
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
 	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL
