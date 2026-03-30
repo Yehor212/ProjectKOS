@@ -8,6 +8,11 @@
             "type": "command",
             "command": "node .claude/hooks/commit-gate.cjs",
             "timeout": 120000
+          },
+          {
+            "type": "command",
+            "command": "node .claude/helpers/hook-handler.cjs pre-bash",
+            "timeout": 10000
           }
         ]
       }
@@ -25,6 +30,11 @@
             "type": "command",
             "command": "node .claude/hooks/scene-validator.cjs",
             "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "node .claude/helpers/hook-handler.cjs post-edit",
+            "timeout": 10000
           }
         ]
       },
@@ -39,6 +49,11 @@
           {
             "type": "command",
             "command": "node .claude/hooks/scene-validator.cjs",
+            "timeout": 10000
+          },
+          {
+            "type": "command",
+            "command": "node .claude/helpers/hook-handler.cjs post-edit",
             "timeout": 10000
           }
         ]
@@ -57,6 +72,11 @@
             "command": "node .claude/hooks/preflight-inject.cjs",
             "timeout": 5000,
             "statusMessage": "Pre-flight check..."
+          },
+          {
+            "type": "command",
+            "command": "node .claude/helpers/hook-handler.cjs route",
+            "timeout": 10000
           }
         ]
       }
@@ -68,6 +88,11 @@
             "type": "command",
             "command": "node .claude/hooks/stop-guard.cjs",
             "timeout": 5000
+          },
+          {
+            "type": "command",
+            "command": "node .claude/helpers/hook-handler.cjs session-end",
+            "timeout": 10000
           }
         ]
       }

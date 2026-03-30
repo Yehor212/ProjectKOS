@@ -50,3 +50,15 @@ credentials.json
 # Auto-generated hook tokens (not tracked)
 .preflight-token
 .user-requirements
+
+# RuFlo V3 — tooling infrastructure (not project code)
+.claude-flow/
+.claude/agents/
+.claude/commands/
+.claude/helpers/
+.claude/skills/
+
+# Auto-generated gate tokens
+.postflight-done
+.fullcycle-active
+.fullcycle-laws-read
