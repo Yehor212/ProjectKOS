@@ -81,9 +81,9 @@ const WEATHERS: Array[Dictionary] = [
 	{"id": "stormy", "icon": "storm", "key": "WEATHER_STORMY",
 		"correct": ["raincoat", "boots", "umbrella"],
 		"wrong": ["sunglasses", "hat", "shorts", "scarf"]},
-	{"id": "hot", "icon": "sun", "key": "WEATHER_HOT",
+	{"id": "hot", "icon": "sun_hot", "key": "WEATHER_HOT",
 		"correct": ["sunglasses", "hat", "shorts"],
-		"wrong": ["coat", "scarf", "mittens", "boots"]},
+		"wrong": ["coat", "scarf", "mittens", "boots", "raincoat"]},
 	{"id": "foggy", "icon": "cloud", "key": "WEATHER_FOGGY",
 		"correct": ["jacket", "boots", "scarf"],
 		"wrong": ["shorts", "sunglasses", "hat", "umbrella"]},
@@ -230,8 +230,8 @@ func _start_round() -> void:
 	_update_weather_display(weather)
 	_spawn_weather_particles(weather)
 	## Прогресивна складність (LAW 6, A4)
-	var correct_count: int = _scale_by_round_i(2, 3, _round, _total_rounds)
-	var wrong_count: int = _scale_by_round_i(1, 4, _round, _total_rounds)
+	var correct_count: int = _scale_stepped_i(2, 3, _round, _total_rounds)
+	var wrong_count: int = _scale_stepped_i(1, 4, _round, _total_rounds)
 	## LAW 2: мінімум 3 вибори
 	if correct_count + wrong_count < 3:
 		wrong_count = 3 - correct_count
@@ -695,6 +695,23 @@ func _finish() -> void:
 static func _weather_icon(id: String, size: float) -> Control:
 	match id:
 		"sun": return IconDraw.sun_icon(size)
+		"sun_hot":
+			## Спекотна погода — сонце + хвилі спеки (LAW 25: shape + color, не тільки колір)
+			var hot_container: Control = Control.new()
+			hot_container.custom_minimum_size = Vector2(size, size)
+			var hot_sun: Control = IconDraw.sun_icon(size * 0.8)
+			hot_sun.modulate = Color(1.0, 0.65, 0.25)
+			hot_sun.position = Vector2(size * 0.1, 0.0)
+			hot_container.add_child(hot_sun)
+			## Хвилі спеки — 3 хвилясті лінії (shape differentiator)
+			for wave_i: int in 3:
+				var wave: Label = Label.new()
+				wave.text = "~"
+				wave.add_theme_font_size_override("font_size", int(size * 0.4))
+				wave.add_theme_color_override("font_color", Color(1.0, 0.4, 0.2, 0.7))
+				wave.position = Vector2(size * 0.7, float(wave_i) * size * 0.25 + size * 0.1)
+				hot_container.add_child(wave)
+			return hot_container
 		"rain": return IconDraw.rain_icon(size)
 		"snowflake": return IconDraw.snowflake(size)
 		"wind": return IconDraw.wind_icon(size)

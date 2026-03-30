@@ -202,7 +202,7 @@ func _generate_puzzle() -> void:
 	## Старт — випадкова позиція
 	_knight_pos = Vector2i(randi() % GRID_SIZE, randi() % GRID_SIZE)
 	## Ціль — BFS, прогресивна складність по раундах
-	var target_depth: int = _scale_by_round_i(2, 4, _round, TOTAL_ROUNDS)
+	var target_depth: int = _scale_adaptive_i(2, 4, _round, TOTAL_ROUNDS)
 	_goal_pos = _find_goal_bfs(_knight_pos, target_depth)
 	_min_moves = _bfs_distance(_knight_pos, _goal_pos)
 
@@ -287,7 +287,7 @@ func _place_enemies() -> void:
 	_enemy_positions.clear()
 	_threatened_cells.clear()
 	## Кількість ворогів: раунд 1 = 1, раунди 2-3 = 2
-	var enemy_count: int = 1 if _round <= 1 else _scale_by_round_i(1, 2, _round, TOTAL_ROUNDS)
+	var enemy_count: int = 1 if _round <= 1 else _scale_adaptive_i(1, 2, _round, TOTAL_ROUNDS)
 	## Зайняті клітинки: knight + goal + їх сусіди (щоб не блокувати старт/фініш)
 	var occupied: Dictionary = {}
 	occupied[_knight_pos] = true
@@ -1615,7 +1615,7 @@ func _spawn_map_decorations() -> void:
 				free_cells.append(pos)
 	free_cells.shuffle()
 	## Дерева: 2-4 на вільних клітинках
-	var tree_count: int = mini(free_cells.size(), _scale_by_round_i(2, 4, _round, TOTAL_ROUNDS))
+	var tree_count: int = mini(free_cells.size(), _scale_adaptive_i(2, 4, _round, TOTAL_ROUNDS))
 	for i: int in tree_count:
 		if i >= free_cells.size():
 			break

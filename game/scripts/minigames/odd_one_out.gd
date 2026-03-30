@@ -5,7 +5,8 @@ extends BaseMiniGame
 ## Preschool: категорійний інтрудер (їжа серед тварин, дике серед домашніх).
 ## R1: 4 items, obvious. R2: 5. R3: category. R4: 6, subtle. R5: 2 crashers.
 
-const TOTAL_ROUNDS: int = 5
+const ROUNDS_TODDLER: int = 3
+const ROUNDS_PRESCHOOL: int = 5
 const ITEM_SCALE: Vector2 = Vector2(0.4, 0.4)
 const GRID_GAP: float = 40.0
 const TAP_RADIUS: float = 110.0
@@ -26,6 +27,7 @@ const ENTRY_OFFSETS: Array[Vector2] = [
 ]
 
 var _is_toddler: bool = false
+var _total_rounds: int = 0
 var _round: int = 0
 var _items: Array[Node2D] = []
 var _crashers: Array[Node2D] = []
@@ -48,11 +50,12 @@ func _ready() -> void:
 	bg_theme = "meadow"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
+	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL
 	_rng.randomize()
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
 	_build_instruction_pill(tr("PHOTO_CRASHER_FIND"), 26)
-	_update_round_label("1 / %d" % TOTAL_ROUNDS)
+	_update_round_label("1 / %d" % _total_rounds)
 	_start_round()
 	_start_safety_timeout(SAFETY_TIMEOUT_SEC)
 
@@ -202,17 +205,17 @@ func _advance_round() -> void:
 		return
 	_clear_round()
 	_round += 1
-	if _round >= TOTAL_ROUNDS:
+	if _round >= _total_rounds:
 		_finish()
 	else:
-		_update_round_label("%d / %d" % [_round + 1, TOTAL_ROUNDS])
+		_update_round_label("%d / %d" % [_round + 1, _total_rounds])
 		_start_round()
 
 
 func _start_round() -> void:
 	var crasher_count: int = 1
 	## R5 (round index 4): два crashers!
-	if _round >= TOTAL_ROUNDS - 1:
+	if _round >= _total_rounds - 1:
 		crasher_count = 2
 		if is_instance_valid(_instruction_label):
 			_instruction_label.text = tr("PHOTO_CRASHER_FIND_TWO")
@@ -226,7 +229,7 @@ func _start_round() -> void:
 	if _items.size() == 0:
 		push_warning("OddOneOut: no items created, skipping round")
 		_round += 1
-		if _round >= TOTAL_ROUNDS:
+		if _round >= _total_rounds:
 			_finish()
 		else:
 			_start_round()
@@ -238,7 +241,7 @@ func _start_round() -> void:
 ## Toddler: візуально інша тварина серед однакових
 func _generate_toddler_round(crasher_count: int) -> void:
 	## Кількість majority items зростає з раундами (LAW 6 / A4)
-	var majority_count: int = _scale_by_round_i(3, 5, _round, TOTAL_ROUNDS)
+	var majority_count: int = _scale_stepped_i(3, 5, _round, _total_rounds)
 	var total_unique: int = 1 + crasher_count
 	var indices: Array[int] = _pick_indices(total_unique)
 	## A8: fallback guard
@@ -277,7 +280,7 @@ func _generate_toddler_round(crasher_count: int) -> void:
 
 ## Preschool: категорійний інтрудер (їжа серед тварин, або навпаки)
 func _generate_preschool_round(crasher_count: int) -> void:
-	var majority_count: int = _scale_by_round_i(3, 5, _round, TOTAL_ROUNDS)
+	var majority_count: int = _scale_stepped_i(3, 5, _round, _total_rounds)
 	var total_needed: int = majority_count + crasher_count
 	var indices: Array[int] = _pick_indices(total_needed)
 	## A8: guard
@@ -472,7 +475,7 @@ func _finish() -> void:
 	finish_game(earned, {
 		"time_sec": elapsed,
 		"errors": _errors,
-		"rounds_played": TOTAL_ROUNDS,
+		"rounds_played": _total_rounds,
 		"earned_stars": earned,
 	})
 

@@ -493,7 +493,7 @@ func test_law28_grain_material() -> void:
 	## color_pop._ColorCircle (HUD), gravity_orbits._OrbitZoneDrawer (zone indicator)
 	var exempt_files: Array[String] = [
 		"slot_item.gd", "splash_deco.gd", "splash_track.gd",
-		"icon_draw.gd", "game_card.gd",
+		"icon_draw.gd", "game_card.gd", "mirror_draw.gd",
 	]
 	var script_files: Array[String] = _get_all_script_files_recursive("res://scripts/")
 	var warnings: Array[String] = []
@@ -533,7 +533,7 @@ const PRESCHOOL_ONLY: Array[String] = [
 	"math_bingo.gd", "spelling_blocks.gd",
 ]
 const CREATIVE_GAMES: Array[String] = [
-	"sensory_sandbox.gd", "smart_coloring.gd",
+	"sensory_sandbox.gd", "smart_coloring.gd", "mirror_draw.gd",
 ]
 
 

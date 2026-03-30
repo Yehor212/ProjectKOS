@@ -9,7 +9,8 @@ extends BaseMiniGame
 ## Toddler (2-4): великі повільні зірки, тап = завжди успіх, без астероїдів.
 ## Preschool (4-7): швидші зірки + астероїди, золоті зірки = ×2.
 
-const TOTAL_ROUNDS: int = 5
+const ROUNDS_TODDLER: int = 3
+const ROUNDS_PRESCHOOL: int = 5
 const IDLE_HINT_DELAY: float = 5.0
 const SAFETY_TIMEOUT_SEC: float = 120.0
 
@@ -25,14 +26,22 @@ const MOON_COLOR: Color = Color("e8eaf6")
 const CROWN_COLOR: Color = Color("ffaa00")
 const AURA_COLOR: Color = Color("a78bfa")
 
+## Видима зона ловлі (LAW 25: color-blind safe — не лише колір, а форма кільця)
+const CATCH_ZONE_COLOR: Color = Color("ffd166")
+const CATCH_ZONE_ALPHA: float = 0.15
+const CATCH_ZONE_PULSE_MIN: float = 0.08
+const CATCH_ZONE_PULSE_MAX: float = 0.22
+const CATCH_ZONE_PULSE_SPEED: float = 1.5  ## Повних циклів на секунду
+
 ## ---- Розміри ----
 const PLANET_RADIUS_TODDLER: float = 90.0
 const PLANET_RADIUS_PRESCHOOL: float = 60.0
 const STAR_TOUCH_RADIUS: float = 56.0
 
 ## ---- Швидкості (px/s) ----
-const TODDLER_SPEED_MIN: float = 40.0
-const TODDLER_SPEED_MAX: float = 60.0
+## Research: 2yo не можуть надійно тапати рухомі цілі >20 px/s (Frontiers 2016)
+const TODDLER_SPEED_MIN: float = 10.0
+const TODDLER_SPEED_MAX: float = 25.0
 const PRESCHOOL_SPEED_MIN: float = 70.0
 const PRESCHOOL_SPEED_MAX: float = 110.0
 
@@ -75,6 +84,7 @@ enum StarType { NORMAL, SILVER, GOLD }
 var _round: int = 0
 var _start_time: float = 0.0
 var _is_toddler: bool = false
+var _total_rounds: int = 0
 var _game_time: float = 0.0  ## Загальний час для wobble/rotation
 
 ## Планета
@@ -83,6 +93,10 @@ var _planet_face: Label = null
 var _planet_radius: float = 60.0
 var _planet_center: Vector2 = Vector2.ZERO
 var _breath_tween: Tween = null
+
+## Видима зона ловлі (кільце навколо планети)
+var _catch_zone_ring: Node2D = null
+var _catch_zone_tween: Tween = null
 
 ## Прикраси планети
 var _accessory_ring: Node2D = null
@@ -121,6 +135,7 @@ func _ready() -> void:
 	game_id = "gravity_orbits"
 	bg_theme = "space"
 	_is_toddler = (SettingsManager.age_group == 1)
+	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL
 	_planet_radius = PLANET_RADIUS_TODDLER if _is_toddler else PLANET_RADIUS_PRESCHOOL
 	super()
 	_start_time = Time.get_ticks_msec() / 1000.0
@@ -162,7 +177,7 @@ func _start_round() -> void:
 	_input_locked = true
 	_catches_this_round = 0
 	_feeding_in_progress = false
-	var r: int = clampi(_round, 0, TOTAL_ROUNDS - 1)
+	var r: int = clampi(_round, 0, _total_rounds - 1)
 
 	## Встановити кількість потрібних зловлених
 	if _is_toddler:
@@ -178,7 +193,7 @@ func _start_round() -> void:
 			push_warning("gravity_orbits: PRESCHOOL_CATCHES_NEEDED out of bounds, fallback")
 			_catches_needed = 8
 
-	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, TOTAL_ROUNDS])
+	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
 
 	var vp: Vector2 = get_viewport().get_visible_rect().size
@@ -290,6 +305,10 @@ func _spawn_planet(vp: Vector2) -> void:
 	## Відновити прикраси з попередніх раундів
 	_restore_accessories()
 
+	## Видима зона ловлі — кільце на відстані STAR_TOUCH_RADIUS
+	## Piaget: дитина preoperational stage потребує конкретних візуальних орієнтирів
+	_spawn_catch_zone_ring()
+
 	## Дихальна анімація (масштаб 1.0 ↔ 1.03)
 	_start_breath_animation()
 
@@ -310,6 +329,46 @@ func _start_breath_animation() -> void:
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_breath_tween.tween_property(_planet_node, "scale", Vector2.ONE, 1.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+## Видима зона ловлі — напівпрозоре кільце з пульсацією альфи
+func _spawn_catch_zone_ring() -> void:
+	if not _planet_node or not is_instance_valid(_planet_node):
+		push_warning("gravity_orbits: _spawn_catch_zone_ring — планета недоступна")
+		return
+	## Кільце малюється відносно планети (child _planet_node), z_index -1 (під планетою)
+	_catch_zone_ring = Node2D.new()
+	_catch_zone_ring.z_index = -1
+	## Радіус = максимальний touch radius зірки (відстань від центру планети)
+	var ring_radius: float = _planet_radius + STAR_TOUCH_RADIUS
+	_catch_zone_ring.modulate = Color(CATCH_ZONE_COLOR, CATCH_ZONE_ALPHA)
+	_catch_zone_ring.draw.connect(func() -> void:
+		## Зовнішнє кільце (пунктирний ефект через кілька дуг)
+		var segments: int = 24
+		var gap_ratio: float = 0.3
+		var arc_angle: float = TAU / float(segments) * (1.0 - gap_ratio)
+		for i: int in segments:
+			var start_angle: float = float(i) * TAU / float(segments)
+			_catch_zone_ring.draw_arc(Vector2.ZERO, ring_radius,
+				start_angle, start_angle + arc_angle, 8,
+				Color.WHITE, 2.5, true)
+		## Внутрішнє м'яке кільце — суцільне, тонше
+		_catch_zone_ring.draw_arc(Vector2.ZERO, ring_radius - 4.0,
+			0.0, TAU, 48, Color(1, 1, 1, 0.5), 1.0, true))
+	_planet_node.add_child(_catch_zone_ring)
+	## Пульсація альфи (CATCH_ZONE_PULSE_MIN ↔ CATCH_ZONE_PULSE_MAX)
+	if not SettingsManager.reduced_motion:
+		if _catch_zone_tween and _catch_zone_tween.is_valid():
+			_catch_zone_tween.kill()
+		_catch_zone_tween = create_tween()
+		_catch_zone_tween.set_loops()
+		var pulse_dur: float = 1.0 / maxf(CATCH_ZONE_PULSE_SPEED, 0.1)
+		_catch_zone_tween.tween_property(_catch_zone_ring, "modulate:a",
+			CATCH_ZONE_PULSE_MAX, pulse_dur * 0.5) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_catch_zone_tween.tween_property(_catch_zone_ring, "modulate:a",
+			CATCH_ZONE_PULSE_MIN, pulse_dur * 0.5) \
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 ## Встановити обличчя планети (emoji)
@@ -570,24 +629,36 @@ func _spawn_asteroid(vp: Vector2) -> void:
 	var asteroid_sz: float = 48.0
 	var half_sz: float = asteroid_sz * 0.5
 
-	## Сірий круг через candy_circle
-	var panel: Panel = Panel.new()
-	panel.size = Vector2(asteroid_sz, asteroid_sz)
-	panel.position = Vector2(-half_sz, -half_sz)
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	panel.add_theme_stylebox_override("panel",
-		GameData.candy_circle(ASTEROID_COLOR, half_sz))
-	panel.material = GameData.create_premium_material(
-		0.04, 2.0, 0.0, 0.0, 0.04, 0.03, 0.05, "", 0.0, 0.10, 0.22, 0.18)
-	asteroid_node.add_child(panel)
-
-	## "Кратери" — декоративні темні круги
-	var crater_draw: Node2D = Node2D.new()
-	crater_draw.draw.connect(func() -> void:
-		crater_draw.draw_circle(Vector2(-6, -4), 5.0, ASTEROID_COLOR.darkened(0.2))
-		crater_draw.draw_circle(Vector2(8, 6), 3.5, ASTEROID_COLOR.darkened(0.15))
-		crater_draw.draw_circle(Vector2(2, -10), 2.5, ASTEROID_COLOR.darkened(0.18)))
-	asteroid_node.add_child(crater_draw)
+	## РУБАТИЙ полігон замість гладкого кола (LAW 3: visual distinction)
+	## Дитина preoperational: зірки = гладкі/гарні, астероїди = колючі/страшні
+	var jagged_draw: Node2D = Node2D.new()
+	var asteroid_base_color: Color = ASTEROID_COLOR
+	var asteroid_dark: Color = ASTEROID_COLOR.darkened(0.2)
+	jagged_draw.draw.connect(func() -> void:
+		## Генеруємо рубатий полігон (8-10 вершин з випадковим радіусом)
+		var points: PackedVector2Array = PackedVector2Array()
+		var spikes: int = 9
+		for i: int in spikes:
+			var angle: float = float(i) * TAU / float(spikes)
+			## Чергуємо великий/малий радіус для ефекту "шипів"
+			var r: float
+			if i % 2 == 0:
+				r = half_sz * 0.95
+			else:
+				r = half_sz * 0.6
+			points.append(Vector2(cos(angle) * r, sin(angle) * r))
+		## Основний колір — рубатий полігон
+		jagged_draw.draw_colored_polygon(points, asteroid_base_color)
+		## Обведення для чіткості форми
+		for i: int in points.size():
+			var from_pt: Vector2 = points[i]
+			var to_pt: Vector2 = points[(i + 1) % points.size()]
+			jagged_draw.draw_line(from_pt, to_pt, asteroid_dark, 2.0, true)
+		## "Кратери" — темні кола на поверхні
+		jagged_draw.draw_circle(Vector2(-5, -3), 4.0, asteroid_dark)
+		jagged_draw.draw_circle(Vector2(7, 5), 3.0, ASTEROID_COLOR.darkened(0.15))
+		jagged_draw.draw_circle(Vector2(1, -8), 2.5, ASTEROID_COLOR.darkened(0.18)))
+	asteroid_node.add_child(jagged_draw)
 
 	## Позиція + швидкість
 	var pos_vel: Dictionary = _random_entry_position_and_velocity(vp, asteroid_sz, 1.15)
@@ -615,7 +686,8 @@ func _random_entry_position_and_velocity(vp: Vector2, item_size: float,
 	var speed_min: float = TODDLER_SPEED_MIN if _is_toddler else PRESCHOOL_SPEED_MIN
 	var speed_max: float = TODDLER_SPEED_MAX if _is_toddler else PRESCHOOL_SPEED_MAX
 	## Прогресивна складність: швидкість зростає з раундом (LAW 6)
-	var round_factor: float = _scale_by_round(0.0, 1.0, _round, TOTAL_ROUNDS)
+	## ZPD adaptive: 70% stepped + 30% performance-based (якщо дитина бореться — сповільнити)
+	var round_factor: float = _scale_adaptive(0.0, 1.0, _round, _total_rounds)
 	var speed: float = lerpf(speed_min, speed_max, round_factor) * speed_mult
 
 	## Випадковий край: 0=left, 1=right, 2=top, 3=bottom
@@ -1016,7 +1088,7 @@ func _on_round_complete() -> void:
 			return
 		_clear_round()
 		_round += 1
-		if _round >= TOTAL_ROUNDS:
+		if _round >= _total_rounds:
 			_finish()
 		else:
 			_start_round())
@@ -1029,6 +1101,11 @@ func _clear_round() -> void:
 	if _breath_tween and _breath_tween.is_valid():
 		_breath_tween.kill()
 	_breath_tween = null
+	## Зупинити пульсацію зони ловлі
+	if _catch_zone_tween and _catch_zone_tween.is_valid():
+		_catch_zone_tween.kill()
+	_catch_zone_tween = null
+	_catch_zone_ring = null
 
 	for node: Node in _all_round_nodes:
 		if is_instance_valid(node):
@@ -1076,7 +1153,7 @@ func _finish() -> void:
 	finish_game(earned, {
 		"time_sec": elapsed,
 		"errors": _errors,
-		"rounds_played": TOTAL_ROUNDS,
+		"rounds_played": _total_rounds,
 		"earned_stars": earned,
 	})
 

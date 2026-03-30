@@ -5,7 +5,8 @@ extends BaseMiniGame
 ## Drag правильну бусину з лотка -> бусина встає на місце з click + sparkle.
 ## Коли ожерелье готове -> тварина надіває його і крутиться від радості.
 
-const TOTAL_ROUNDS: int = 5
+const ROUNDS_TODDLER: int = 3
+const ROUNDS_PRESCHOOL: int = 5
 const SAFETY_TIMEOUT_SEC: float = 120.0
 const BEAD_RADIUS: float = 34.0
 const TRAY_BEAD_RADIUS: float = 40.0
@@ -38,6 +39,7 @@ const PATTERN_TYPES: Array[Array] = [
 ]
 
 var _is_toddler: bool = false
+var _total_rounds: int = 5
 var _round: int = 0
 var _start_time: float = 0.0
 var _drag: UniversalDrag = null
@@ -63,6 +65,7 @@ func _ready() -> void:
 	bg_theme = "candy"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
+	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
 	_build_hud()
@@ -124,7 +127,7 @@ func _physics_process(delta: float) -> void:
 func _start_round() -> void:
 	_input_locked = true
 	_round_errors_count = 0
-	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, TOTAL_ROUNDS])
+	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 
 	## Генерація паттерну для поточного раунду
 	var pattern_data: Dictionary = _generate_round_data()
@@ -180,9 +183,9 @@ func _generate_round_data() -> Dictionary:
 	## LAW 6: кількість бусин зростає з раундами
 	var bead_count: int
 	if _is_toddler:
-		bead_count = _scale_by_round_i(4, 6, _round, TOTAL_ROUNDS)
+		bead_count = _scale_stepped_i(4, 6, _round, _total_rounds)
 	else:
-		bead_count = _scale_by_round_i(4, 7, _round, TOTAL_ROUNDS)
+		bead_count = _scale_stepped_i(4, 7, _round, _total_rounds)
 
 	## Побудувати послідовність бусин
 	var sequence: Array[Dictionary] = []
@@ -200,10 +203,10 @@ func _generate_round_data() -> Dictionary:
 		missing_idx = maxi(sequence.size() - 1, 0)
 	else:
 		## Пропуск у другій половині для кращої читабельності паттерну
-		missing_idx = _scale_by_round_i(
+		missing_idx = _scale_stepped_i(
 			maxi(sequence.size() / 2, 1),
 			maxi(sequence.size() - 2, 1),
-			_round, TOTAL_ROUNDS)
+			_round, _total_rounds)
 		missing_idx = clampi(missing_idx, 1, maxi(sequence.size() - 1, 1))
 
 	var answer: Dictionary = {}
@@ -217,9 +220,9 @@ func _generate_round_data() -> Dictionary:
 	## LAW 2: мінімум 3 вибори у лотку
 	var distractor_count: int
 	if _is_toddler:
-		distractor_count = _scale_by_round_i(1, 2, _round, TOTAL_ROUNDS)
+		distractor_count = _scale_stepped_i(1, 2, _round, _total_rounds)
 	else:
-		distractor_count = _scale_by_round_i(2, 4, _round, TOTAL_ROUNDS)
+		distractor_count = _scale_stepped_i(2, 4, _round, _total_rounds)
 	distractor_count = maxi(distractor_count, 2)  ## LAW 2: мінімум 3 вибори (1 correct + 2 wrong)
 
 	## Зібрати дистрактори — інші бусини, що НЕ є правильною відповіддю
@@ -815,7 +818,7 @@ func _advance_round() -> void:
 	_record_round_errors(_round_errors_count)
 	_clear_round()
 	_round += 1
-	if _round >= TOTAL_ROUNDS:
+	if _round >= _total_rounds:
 		_finish()
 	else:
 		_start_round()
@@ -870,7 +873,7 @@ func _finish() -> void:
 	finish_game(earned, {
 		"time_sec": elapsed,
 		"errors": _errors,
-		"rounds_played": TOTAL_ROUNDS,
+		"rounds_played": _total_rounds,
 		"earned_stars": earned,
 	})
 

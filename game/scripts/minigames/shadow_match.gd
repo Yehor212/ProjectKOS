@@ -7,7 +7,8 @@ extends BaseMiniGame
 ## Неправильний: тінь хитає пальцем (wag animation).
 ## R5 фінал: всі matched тварини виходять і танцюють синхронно.
 
-const MAX_ROUNDS: int = 5
+const ROUNDS_TODDLER: int = 3
+const ROUNDS_PRESCHOOL: int = 5
 const SAFETY_TIMEOUT_SEC: float = 120.0
 const SHADOW_Y_CENTER: float = 0.32
 const ANIMAL_Y_CENTER: float = 0.78
@@ -28,6 +29,7 @@ const SPOTLIGHT_COLOR: Color = Color(1.0, 1.0, 0.85, 0.06)
 
 ## Стан гри
 var _is_toddler: bool = false
+var _max_rounds: int = 5
 var _drag: UniversalDrag = null
 var _current_round: int = 0
 var _silhouette_shader: Shader = null
@@ -60,6 +62,7 @@ func _ready() -> void:
 	bg_theme = "music"  ## Теплий театральний фон
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
+	_max_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL
 	_silhouette_shader = load("res://assets/shaders/silhouette.gdshader")
 	_drag = UniversalDrag.new(self, $DragTrail if has_node("DragTrail") else null)
 	if _is_toddler:
@@ -303,7 +306,7 @@ func _generate_round() -> void:
 		_input_locked = false
 		_reset_idle_timer())
 	## Оновити HUD
-	_update_round_label(tr("COUNTING_ROUND") % [_current_round + 1, MAX_ROUNDS])
+	_update_round_label(tr("COUNTING_ROUND") % [_current_round + 1, _max_rounds])
 	_reset_idle_timer()
 
 
@@ -480,7 +483,7 @@ func _after_correct_anim(_aname: String) -> void:
 	if _matched_count >= _round_target_count:
 		_record_round_errors(_round_errors_count)
 		_current_round += 1
-		if _current_round >= MAX_ROUNDS:
+		if _current_round >= _max_rounds:
 			_finish_game_sequence()
 		else:
 			## Затримка перед наступним раундом

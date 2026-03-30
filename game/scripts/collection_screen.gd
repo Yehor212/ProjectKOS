@@ -77,6 +77,12 @@ func _build_progress_pills() -> void:
 	var fed_count: int = MasteryManager.get_animals_at_tier(MasteryManager.TIER_FED)
 	var best_count: int = MasteryManager.get_animals_at_tier(MasteryManager.TIER_BEST_FRIEND)
 
+	## Стікери — кількість зібраних тварин
+	var sticker_count: int = ProgressManager.get_sticker_count()
+	var total_animals: int = maxi(GameData.ANIMALS_AND_FOOD.size(), 1)
+	_add_pill(bar, tr("STICKER_COUNT") % [sticker_count, total_animals],
+		Color(1.0, 0.72, 0.0, 1.0), sticker_count)
+
 	_add_pill(bar, tr("VILLAGE_MET") % met_count, ThemeManager.COLOR_PRIMARY, met_count)
 	_add_pill(bar, tr("VILLAGE_FED") % fed_count, BRONZE_COLOR, fed_count)
 	_add_pill(bar, tr("VILLAGE_BEST_FRIEND") % best_count, GOLD_COLOR, best_count)
@@ -231,6 +237,20 @@ func _build_animal_card(animal_name: String, tier: int) -> PanelContainer:
 			badge_color = GOLD_COLOR
 		badge.add_theme_color_override("font_color", badge_color)
 		vbox.add_child(badge)
+
+	## Стікер-зірка: якщо тварина має стікер, малюємо золоту зірку у верхньому правому куті
+	## LAW 25: зірка + текст "стікер" в badge — не тільки колір
+	if ProgressManager.has_sticker(animal_name):
+		var star_label: Label = Label.new()
+		star_label.text = "★"
+		star_label.add_theme_font_size_override("font_size", 28)
+		star_label.add_theme_color_override("font_color", GOLD_COLOR)
+		star_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		## Позиціонування: overlay поверх картки (PanelContainer підтримує anchors)
+		card.add_child(star_label)
+		star_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+		star_label.offset_right = -4.0
+		star_label.offset_top = 2.0
 
 	## Анімації по тіру (лише якщо reduced_motion вимкнено)
 	if not SettingsManager.reduced_motion:

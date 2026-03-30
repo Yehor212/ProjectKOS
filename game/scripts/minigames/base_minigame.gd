@@ -24,6 +24,7 @@ const CELEBRATION_DELAY: float = 1.2
 
 var game_id: String = ""
 var _skill_id: String = ""  ## MasteryManager: навичка, що тренується (встановлюється дочірнім класом)
+var _current_animal_name: String = ""  ## Ім'я тварини для стікерів (встановлюється дочірнім класом)
 var difficulty_level: int = 1
 var bg_theme: String = "default"
 var _game_finished: bool = false
@@ -268,6 +269,13 @@ func finish_game(earned_stars: int, stats: Dictionary = {}) -> void:
 	var time_sec: int = int(stats.get("time_sec", 9999))
 	var errors: int = int(stats.get("errors", 9999))
 	ProgressManager.check_new_record(time_sec, errors)
+
+	## Стікер-нагорода: 3+ зірки + тварина задана -> earn_sticker
+	if earned_stars >= 3 and not _current_animal_name.is_empty():
+		var is_new_sticker: bool = ProgressManager.earn_sticker(
+			_current_animal_name, game_id, earned_stars)
+		if is_new_sticker:
+			_show_achievement_toast(tr("MSG_NEW_STICKER"))
 
 	## Святковий вібровідгук (research: celebration pattern 400+200+400мс)
 	HapticsManager.vibrate_celebration()
@@ -1701,6 +1709,21 @@ func _round_progress(current: int, total: int) -> float:
 ## easy_val для раунду 0, hard_val для останнього раунду.
 func _scale_by_round(easy_val: float, hard_val: float, current: int, total: int) -> float:
 	return lerpf(easy_val, hard_val, _round_progress(current, total))
+
+
+## Ступінчаста інтерполяція — повільний старт (comfort zone R1-2),
+## крутий фініш (challenge R3-5). Research: діти потребують 80-90% success rate
+## на початку для побудови впевненості, потім поступове ускладнення (Springer 2022).
+## Використовувати замість _scale_by_round() для покращеної difficulty curve.
+func _scale_stepped(easy_val: float, hard_val: float, current: int, total: int) -> float:
+	var t: float = _round_progress(current, total)
+	var curved_t: float = t * t  ## Quadratic ease-in: R1=0%, R2=6%, R3=25%, R4=56%, R5=100%
+	return lerpf(easy_val, hard_val, curved_t)
+
+
+## Ступінчаста інтерполяція int — аналог _scale_by_round_i з ease-in.
+func _scale_stepped_i(easy_val: int, hard_val: int, current: int, total: int) -> int:
+	return int(roundf(_scale_stepped(float(easy_val), float(hard_val), current, total)))
 
 
 ## Лінійна інтерполяція int параметра за прогресом раунду.

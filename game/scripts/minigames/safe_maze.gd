@@ -4,13 +4,13 @@ extends BaseMiniGame
 ## 15+ шаблонів шляхів з Bezier-інтерполяцією, scenic spots (водопад, квіти, міст),
 ## off-trail feedback, perfect run = рідкісний птах.
 ## Toddler: 3 раунди, широка стежка (80px), без штрафу.
-## Preschool: 5 раундів, вужча стежка (36px → 28px), штраф за виходи за межі.
+## Preschool: 5 раундів, вужча стежка (50px → 44px), штраф за виходи за межі.
 
 const ROUNDS_TODDLER: int = 3
 const ROUNDS_PRESCHOOL: int = 5
-const PATH_WIDTH_TODDLER: float = 80.0
+const PATH_WIDTH_TODDLER: float = 100.0  ## Research: 3yo need 15-30mm, 100px=16mm at 160dpi
 const PATH_WIDTH_PRESCHOOL_EASY: float = 50.0
-const PATH_WIDTH_PRESCHOOL_HARD: float = 28.0
+const PATH_WIDTH_PRESCHOOL_HARD: float = 44.0
 const TRAIL_WIDTH: float = 10.0
 const MARKER_SIZE: float = 40.0
 const IDLE_HINT_DELAY: float = 5.0
@@ -181,14 +181,14 @@ func _start_round() -> void:
 	_off_trail_active = false
 	## A4: Прогресивна складність — стежка звужується в пізніших раундах
 	if not _is_toddler:
-		_path_width = _scale_by_round(
+		_path_width = _scale_stepped(
 			PATH_WIDTH_PRESCHOOL_EASY, PATH_WIDTH_PRESCHOOL_HARD, _round, _total_rounds)
 	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var template: Array = _pick_path()
 	## A4: Складніші шляхи в пізніших раундах — більше точок
-	var pts_to_use: int = _scale_by_round_i(
+	var pts_to_use: int = _scale_stepped_i(
 		maxi(4, template.size() - 2), template.size(), _round, _total_rounds)
 	pts_to_use = clampi(pts_to_use, 3, template.size())
 	var control_pts: Array[Vector2] = []
@@ -370,7 +370,7 @@ func _spawn_scenic_spots() -> void:
 			node.queue_free()
 	_scenic_nodes.clear()
 	## 1-2 scenic spots на раунд, на рівновіддалених точках вздовж стежки
-	var num_spots: int = _scale_by_round_i(1, 2, _round, _total_rounds)
+	var num_spots: int = _scale_stepped_i(1, 2, _round, _total_rounds)
 	if _bezier_points.size() < 6:
 		push_warning("SafeMaze: not enough bezier points for scenic spots")
 		return

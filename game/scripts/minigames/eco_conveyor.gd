@@ -6,7 +6,8 @@ extends BaseMiniGame
 ## Earth face в центрі: sad → neutral → happy → ecstatic з кожним правильним сортуванням.
 ## 5 раундів, прогресивна складність (A4): більше предметів, більше бінів, швидше.
 
-const TOTAL_ROUNDS: int = 5
+const ROUNDS_TODDLER: int = 3
+const ROUNDS_PRESCHOOL: int = 5
 const FALL_SPEED_EASY: float = 25.0
 const FALL_SPEED_HARD: float = 50.0
 const ITEM_SIZE: float = 90.0
@@ -85,6 +86,7 @@ const PRESCHOOL_RAMP: Array[Vector2i] = [
 
 ## --- Стан гри ---
 var _is_toddler: bool = false
+var _total_rounds: int = 0
 var _round: int = 0
 var _sorted_count: int = 0
 var _current_items_count: int = 0
@@ -126,6 +128,7 @@ func _ready() -> void:
 	bg_theme = "meadow"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
+	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_preload_chip_textures()
 	_apply_background()
@@ -304,7 +307,7 @@ func _redraw_earth() -> void:
 func _update_earth_mood_on_correct() -> void:
 	## Обчислюємо приріст: кожне correct sort додає пропорційну частку
 	if _current_items_count > 0:
-		var increment: float = 1.0 / float(_current_items_count * TOTAL_ROUNDS)
+		var increment: float = 1.0 / float(_current_items_count * _total_rounds)
 		_earth_mood = clampf(_earth_mood + increment * 3.0, 0.0, 1.0)
 	_redraw_earth()
 	## Bounce анімація Землі
@@ -509,10 +512,14 @@ func _start_round() -> void:
 		_build_bins_for_round()
 
 	## A4: швидкість падіння зростає від easy до hard за 5 раундів
-	_current_fall_speed = _scale_by_round(FALL_SPEED_EASY, FALL_SPEED_HARD,
-		_round, TOTAL_ROUNDS)
+	## Research: toddler items повинні бути СТАТИЧНИМИ (без time pressure, E3 violation)
+	if _is_toddler:
+		_current_fall_speed = 0.0  ## Статичні предмети для тоддлера
+	else:
+		_current_fall_speed = _scale_adaptive(FALL_SPEED_EASY, FALL_SPEED_HARD,
+			_round, _total_rounds)
 
-	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, TOTAL_ROUNDS])
+	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
 
 	## Генеруємо чергу предметів — рівний розподіл по бінах
@@ -921,7 +928,7 @@ func _on_round_complete() -> void:
 			return
 		_clear_round()
 		_round += 1
-		if _round >= TOTAL_ROUNDS:
+		if _round >= _total_rounds:
 			_finish()
 		else:
 			_start_round())
@@ -954,7 +961,7 @@ func _finish() -> void:
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
 	var earned: int = _calculate_stars(_errors)  ## LAW 16: centralized formula
 	finish_game(earned, {"time_sec": elapsed, "errors": _errors,
-		"rounds_played": TOTAL_ROUNDS, "earned_stars": earned})
+		"rounds_played": _total_rounds, "earned_stars": earned})
 
 
 ## Квіти навколо Землі при перемозі — візуальна нагорода

@@ -18,11 +18,11 @@ const MUSICIANS_DATA: Array[Dictionary] = [
 ## Мелодичні послідовності для Preschool (не випадкові! — впізнавані мотиви)
 ## Індекси: 0=C, 1=E, 2=G, 3=A
 const MELODIES: Array[Array] = [
-	[0, 0, 2, 2],            ## Рівень 1: C-C-G-G (Twinkle Twinkle мотив)
-	[0, 1, 2, 1, 0],         ## Рівень 2: C-E-G-E-C (арпеджіо вгору-вниз)
-	[2, 1, 0, 1, 2, 2],      ## Рівень 3: G-E-C-E-G-G (Mary Had a Little Lamb мотив)
-	[0, 0, 2, 2, 3, 3, 2],   ## Рівень 4: C-C-G-G-A-A-G (Twinkle повний)
-	[3, 2, 1, 0, 1, 2, 3, 3],## Рівень 5: A-G-E-C-E-G-A-A (низхідний + висхідний)
+	[0, 2, 0],               ## Рівень 1: C-G-C (warmup: 3 ноти, call-response-resolve)
+	[0, 0, 2, 2],            ## Рівень 2: C-C-G-G (Twinkle Twinkle мотив)
+	[0, 1, 2, 1, 0],         ## Рівень 3: C-E-G-E-C (арпеджіо вгору-вниз)
+	[2, 1, 0, 1, 2, 2],      ## Рівень 4: G-E-C-E-G-G (Mary Had a Little Lamb мотив)
+	[0, 0, 2, 2, 3, 3, 2],   ## Рівень 5: C-C-G-G-A-A-G (Twinkle повний, 7 нот)
 ]
 
 ## Simon Says параметри (preschool)
@@ -278,7 +278,7 @@ func _next_level() -> void:
 	## Fallback: якщо мелодія порожня — випадкова послідовність
 	if _sequence.is_empty():
 		push_warning("ForestOrchestra: мелодія для рівня %d порожня, fallback" % _current_level)
-		var seq_len: int = _scale_by_round_i(2, 6, _current_level, MAX_LEVELS)
+		var seq_len: int = _scale_stepped_i(2, 6, _current_level, MAX_LEVELS)
 		for _i: int in range(seq_len):
 			if _musicians.size() > 0:
 				_sequence.append(randi() % _musicians.size())

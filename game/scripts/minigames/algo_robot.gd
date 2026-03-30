@@ -298,8 +298,8 @@ func _generate_puzzle() -> void:
 	_robot_pos = Vector2i(0, 0)
 	## Ціль — рандомна позиція не на старті
 	## Прогресивна складність: більше кроків у пізніших раундах
-	var steps: int = _scale_by_round_i(2, 3, _round, _total_rounds) if _is_toddler \
-		else _scale_by_round_i(2, 5, _round, _total_rounds)
+	var steps: int = _scale_adaptive_i(2, 3, _round, _total_rounds) if _is_toddler \
+		else _scale_adaptive_i(2, 5, _round, _total_rounds)
 	var pos: Vector2i = Vector2i.ZERO
 	for _i: int in steps:
 		var dirs: Array[String] = ["up", "down", "left", "right"]
@@ -332,7 +332,7 @@ func _select_grid_theme() -> void:
 	else:
 		_current_theme = [THEME_LAVA, THEME_WATER][randi() % 2]
 	## Кількість декоративних клітинок зростає з раундом
-	var count: int = _scale_by_round_i(THEMED_CELLS_MIN, THEMED_CELLS_MAX, _round, _total_rounds)
+	var count: int = _scale_adaptive_i(THEMED_CELLS_MIN, THEMED_CELLS_MAX, _round, _total_rounds)
 	var candidates: Array[Vector2i] = []
 	for row: int in _grid_size:
 		for col: int in _grid_size:

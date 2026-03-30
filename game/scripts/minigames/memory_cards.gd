@@ -6,7 +6,7 @@ extends BaseMiniGame
 ## Кожна знайдена пара: тварини вибігають до центру і "обіймаються".
 
 const CARD_SCENE: PackedScene = preload("res://scenes/components/memory_card.tscn")
-const BACK_TEX_PATH: String = "res://assets/branding/tofie_logo.png"
+const BACK_TEX_PATH: String = "res://assets/textures/kenney/cards/cardBack_green1.png"
 const DEAL_STAGGER: float = 0.1
 const DEAL_DURATION: float = 0.4
 const CARD_GAP: float = 20.0
@@ -74,6 +74,10 @@ func _ready() -> void:
 		_back_tex = load(BACK_TEX_PATH)
 	else:
 		push_warning("MemoryCards: Missing back texture: " + BACK_TEX_PATH)
+		## LAW 7: procedural fallback — зелена картка замість порожнечі
+		var img: Image = Image.create(128, 128, false, Image.FORMAT_RGBA8)
+		img.fill(Color("2d6a4f"))
+		_back_tex = ImageTexture.create_from_image(img)
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
 	_build_hud()
@@ -116,7 +120,7 @@ func _start_round() -> void:
 
 	## Peek duration для Preschool зменшується з раундами (A4)
 	if not _is_toddler_mode:
-		_peek_duration = _scale_by_round(
+		_peek_duration = _scale_stepped(
 			PEEK_DURATION_EASY, PEEK_DURATION_HARD, _round, _total_rounds)
 
 	_update_progress()
@@ -291,7 +295,7 @@ func _add_hiding_overlay(card: Node2D, spot_type: int) -> void:
 	overlay.spot_type = spot_type
 
 	## Прозорість залежить від раунду — стає менш прозорою (A4 difficulty ramp)
-	var alpha: float = _scale_by_round(
+	var alpha: float = _scale_stepped(
 		TODDLER_ALPHA_EASY, TODDLER_ALPHA_HARD, _round, _total_rounds)
 	overlay.modulate.a = alpha
 	overlay.z_index = 1  ## Поверх спрайту тварини

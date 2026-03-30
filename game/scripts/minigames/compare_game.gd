@@ -7,7 +7,8 @@ extends BaseMiniGame
 ## Preschool: R1-R2 more, R3 less, R4 equal, R5 mixed.
 
 const ITEM_SCENE: PackedScene = preload("res://scenes/components/counting_item.tscn")
-const TOTAL_ROUNDS: int = 5
+const ROUNDS_TODDLER: int = 3
+const ROUNDS_PRESCHOOL: int = 5
 const ITEM_RADIUS: float = 36.0
 const DEAL_STAGGER: float = 0.08
 const DEAL_DURATION: float = 0.35
@@ -29,6 +30,7 @@ const FRUITS: Array[Dictionary] = [
 ]
 
 var _is_toddler: bool = false
+var _total_rounds: int = 0
 var _round: int = 0
 var _start_time: float = 0.0
 var _compare_type: CompareType = CompareType.MORE
@@ -66,6 +68,7 @@ func _ready() -> void:
 	bg_theme = "meadow"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
+	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
 	_build_round_plan()
@@ -224,7 +227,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _start_round() -> void:
-	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, TOTAL_ROUNDS])
+	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 	## Скинути наратив на початковий текст (після "They share!" попереднього раунду)
 	if is_instance_valid(_narrative_label):
 		_narrative_label.text = tr("COMPARE_WHO_HAS_MORE")
@@ -241,14 +244,18 @@ func _generate_round() -> void:
 		_compare_type = CompareType.MORE
 
 	## Preschool R5 (останній раунд): випадковий тип — mixed challenge
-	if not _is_toddler and _round == TOTAL_ROUNDS - 1:
+	if not _is_toddler and _round == _total_rounds - 1:
 		var types: Array[CompareType] = [CompareType.MORE, CompareType.LESS, CompareType.EQUAL]
 		_compare_type = types[randi() % types.size()]
+		## A8 guard: якщо EQUAL обрано, але кнопка недоступна — fallback
+		if _compare_type == CompareType.EQUAL and (not _equal_tap or not _equal_tap.visible):
+			push_warning("CompareGame: EQUAL selected but _equal_tap unavailable, fallback MORE")
+			_compare_type = CompareType.MORE
 
 	## Прогресивна складність — числа ростуть з раундами (LAW 6)
-	var lo: int = 1 if _is_toddler else _scale_by_round_i(1, 2, _round, TOTAL_ROUNDS)
-	var hi: int = _scale_by_round_i(3, 5, _round, TOTAL_ROUNDS) if _is_toddler \
-		else _scale_by_round_i(4, 7, _round, TOTAL_ROUNDS)
+	var lo: int = 1 if _is_toddler else _scale_stepped_i(1, 2, _round, _total_rounds)
+	var hi: int = _scale_stepped_i(3, 5, _round, _total_rounds) if _is_toddler \
+		else _scale_stepped_i(4, 7, _round, _total_rounds)
 
 	## Генерація кількостей за типом порівняння
 	match _compare_type:
@@ -649,7 +656,7 @@ func _advance_round() -> void:
 	_input_locked = true
 	_clear_round()
 	_round += 1
-	if _round >= TOTAL_ROUNDS:
+	if _round >= _total_rounds:
 		_finish()
 	else:
 		_start_round()
@@ -754,7 +761,7 @@ func _finish() -> void:
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
 	var earned: int = _calculate_stars(_errors)
 	finish_game(earned, {"time_sec": elapsed, "errors": _errors,
-		"rounds_played": TOTAL_ROUNDS, "earned_stars": earned})
+		"rounds_played": _total_rounds, "earned_stars": earned})
 
 
 func _reset_idle_timer() -> void:

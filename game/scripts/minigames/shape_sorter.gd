@@ -192,9 +192,59 @@ const FLOWER_PARTS: Array[Dictionary] = [
 		"slot_offset": Vector2(25, 15), "slot_rotation": -0.5},
 ]
 
+## 4 додаткових конструктори для розширення replay value (3 sessions → 6+)
+const DINOSAUR_PARTS: Array[Dictionary] = [
+	{"id": "body", "type": 0, "color": Color("22c55e"), "size": 55.0,
+		"slot_offset": Vector2(0, 10)},
+	{"id": "head", "type": 0, "color": Color("4ade80"), "size": 35.0,
+		"slot_offset": Vector2(-50, -40)},
+	{"id": "tail", "type": 2, "color": Color("16a34a"), "size": 30.0,
+		"slot_offset": Vector2(60, 0), "slot_rotation": -0.3},
+	{"id": "leg_l", "type": 3, "color": Color("15803d"), "size": 18.0,
+		"slot_offset": Vector2(-20, 60)},
+	{"id": "leg_r", "type": 3, "color": Color("15803d"), "size": 18.0,
+		"slot_offset": Vector2(20, 60)},
+]
+const TRAIN_PARTS: Array[Dictionary] = [
+	{"id": "engine", "type": 1, "color": Color("3b82f6"), "size": 50.0,
+		"slot_offset": Vector2(-30, 0)},
+	{"id": "chimney", "type": 3, "color": Color("1e293b"), "size": 20.0,
+		"slot_offset": Vector2(-50, -50)},
+	{"id": "cabin", "type": 1, "color": Color("ef4444"), "size": 35.0,
+		"slot_offset": Vector2(30, -10)},
+	{"id": "wheel_l", "type": 0, "color": Color("1e293b"), "size": 20.0,
+		"slot_offset": Vector2(-45, 45)},
+	{"id": "wheel_r", "type": 0, "color": Color("1e293b"), "size": 20.0,
+		"slot_offset": Vector2(15, 45)},
+]
+const TREE_PARTS: Array[Dictionary] = [
+	{"id": "trunk", "type": 3, "color": Color("8b5e3c"), "size": 30.0,
+		"slot_offset": Vector2(0, 40)},
+	{"id": "crown", "type": 0, "color": Color("22c55e"), "size": 55.0,
+		"slot_offset": Vector2(0, -30)},
+	{"id": "apple_l", "type": 0, "color": Color("ef4444"), "size": 15.0,
+		"slot_offset": Vector2(-25, -20)},
+	{"id": "apple_r", "type": 0, "color": Color("ef4444"), "size": 15.0,
+		"slot_offset": Vector2(25, -40)},
+]
+const SUBMARINE_PARTS: Array[Dictionary] = [
+	{"id": "hull", "type": 0, "color": Color("fbbf24"), "size": 60.0,
+		"slot_offset": Vector2(0, 10)},
+	{"id": "tower", "type": 1, "color": Color("f59e0b"), "size": 25.0,
+		"slot_offset": Vector2(0, -40)},
+	{"id": "periscope", "type": 3, "color": Color("92400e"), "size": 15.0,
+		"slot_offset": Vector2(0, -70)},
+	{"id": "propeller", "type": 2, "color": Color("78716c"), "size": 20.0,
+		"slot_offset": Vector2(60, 10), "slot_rotation": 0.785},
+	{"id": "window", "type": 0, "color": Color("93c5fd"), "size": 18.0,
+		"slot_offset": Vector2(-20, 5)},
+	{"id": "fin", "type": 2, "color": Color("d97706"), "size": 20.0,
+		"slot_offset": Vector2(-55, 30), "slot_rotation": 0.5},
+]
+
 ## Preschool пул: 4-part, 5-part, 6-part конструктори (для прогресивної складності)
-const CONSTRUCTORS_4: Array[Array] = [ROCKET_PARTS, BOAT_PARTS, HOUSE_PARTS, CAR_PARTS]
-const CONSTRUCTORS_5: Array[Array] = [AIRPLANE_PARTS, ROBOT_PARTS]
+const CONSTRUCTORS_4: Array[Array] = [ROCKET_PARTS, BOAT_PARTS, HOUSE_PARTS, CAR_PARTS, TREE_PARTS]
+const CONSTRUCTORS_5: Array[Array] = [AIRPLANE_PARTS, ROBOT_PARTS, DINOSAUR_PARTS, TRAIN_PARTS, SUBMARINE_PARTS]
 const CONSTRUCTORS_6: Array[Array] = [CASTLE_PARTS, FLOWER_PARTS]
 
 ## Celebration IDs — маппінг першого part.id конструктора до типу анімації
@@ -256,7 +306,7 @@ func _start_toddler_round() -> void:
 	_matched = 0
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	## A4: прогресивна складність — 3->4->5 деталей істоти
-	var target_count: int = _scale_by_round_i(3, 5, _round, TODDLER_ROUNDS)
+	var target_count: int = _scale_stepped_i(3, 5, _round, TODDLER_ROUNDS)
 	var creature: Dictionary = _pick_creature_for_round(target_count)
 	var parts: Array = creature.get("parts", [])
 	if parts.size() == 0:
@@ -355,7 +405,7 @@ func _start_preschool_round() -> void:
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var center: Vector2 = Vector2(vp.x * 0.5, vp.y * 0.38)
 	## A4: прогресивна складність — 4->5->6 деталей
-	var target_count: int = _scale_by_round_i(4, 6, _round, PRESCHOOL_ROUNDS)
+	var target_count: int = _scale_stepped_i(4, 6, _round, PRESCHOOL_ROUNDS)
 	var parts: Array[Dictionary] = _pick_constructor_for_round(target_count)
 	if parts.size() == 0:
 		push_warning("ShapeSorter: constructor has no parts, skipping round")
@@ -487,7 +537,8 @@ func _update_slot_highlights() -> void:
 		for shape: Node2D in _drag.draggable_items:
 			if not is_instance_valid(shape):
 				continue
-			if shape.global_position.distance_to(slot.global_position) < SNAP_DISTANCE:
+			var snap_dist: float = TODDLER_SNAP_RADIUS if _is_toddler else SNAP_DISTANCE
+			if shape.global_position.distance_to(slot.global_position) < snap_dist:
 				near = true
 				break
 		slot.set_highlighted(near)

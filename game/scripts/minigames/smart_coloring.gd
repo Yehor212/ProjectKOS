@@ -127,8 +127,8 @@ func _start_round() -> void:
 	_peek_cooldown_active = false
 	## A4: прогресивна складність — тонший пензель і більше штрихів у пізніших раундах
 	var base_brush: float = BRUSH_TODDLER if _is_toddler else BRUSH_PRESCHOOL
-	_brush_width = _scale_by_round(base_brush, base_brush * 0.65, _round, _total_rounds)
-	_min_strokes_round = _scale_by_round_i(MIN_STROKES_DONE, MIN_STROKES_DONE + 4, _round, _total_rounds)
+	_brush_width = _scale_stepped(base_brush, base_brush * 0.65, _round, _total_rounds)
+	_min_strokes_round = _scale_stepped_i(MIN_STROKES_DONE, MIN_STROKES_DONE + 4, _round, _total_rounds)
 	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
 	var animal: String = _pick_animal()
@@ -492,7 +492,7 @@ func _process_preschool_zone() -> void:
 		return
 	_zone_strokes[zone_idx] += 1
 	## Потрібно 2+ штрихи в зоні для reveal (LAW 6: не занадто легко)
-	var threshold: int = _scale_by_round_i(2, 4, _round, _total_rounds)
+	var threshold: int = _scale_stepped_i(2, 4, _round, _total_rounds)
 	if _zone_strokes[zone_idx] >= threshold and zone_idx < _zone_revealed.size():
 		if not _zone_revealed[zone_idx]:
 			_reveal_zone(zone_idx)

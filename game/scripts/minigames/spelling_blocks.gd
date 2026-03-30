@@ -20,21 +20,24 @@ const SAFETY_TIMEOUT_SEC: float = 120.0
 ## Дистрактори по раундах (LAW 6 / A4 прогресивна складність)
 const DISTRACTORS_BY_ROUND: Array[int] = [1, 1, 2, 2, 3]
 ## Бажана довжина слова по раундах
-const WORD_LEN_BY_ROUND: Array[int] = [3, 3, 4, 4, 5]
+const WORD_LEN_BY_ROUND: Array[int] = [3, 4, 5, 6, 7]
 
 ## Усі тварини з наявними спрайтами + перекладами
 const WORD_KEYS: Array[String] = [
 	"SPELL_CAT", "SPELL_DOG", "SPELL_COW", "SPELL_HEN",
 	"SPELL_BEAR", "SPELL_FROG", "SPELL_DEER", "SPELL_GOAT",
 	"SPELL_LION", "SPELL_PANDA", "SPELL_HORSE", "SPELL_MOUSE",
-	"SPELL_BUNNY",
+	"SPELL_BUNNY", "SPELL_MONKEY", "SPELL_PENGUIN", "SPELL_ELEPHANT",
+	"SPELL_HEDGEHOG", "SPELL_SQUIRREL", "SPELL_CROCODILE",
 ]
 const WORD_IMAGES: Dictionary = {
 	"SPELL_CAT": "Cat", "SPELL_DOG": "Dog", "SPELL_COW": "Cow",
 	"SPELL_HEN": "Chicken", "SPELL_BEAR": "Bear", "SPELL_FROG": "Frog",
 	"SPELL_DEER": "Deer", "SPELL_GOAT": "Goat", "SPELL_LION": "Lion",
 	"SPELL_PANDA": "Panda", "SPELL_HORSE": "Horse", "SPELL_MOUSE": "Mouse",
-	"SPELL_BUNNY": "Bunny",
+	"SPELL_BUNNY": "Bunny", "SPELL_MONKEY": "Monkey", "SPELL_PENGUIN": "Penguin",
+	"SPELL_ELEPHANT": "Elephant", "SPELL_HEDGEHOG": "Hedgehog",
+	"SPELL_SQUIRREL": "Squirrel", "SPELL_CROCODILE": "Crocodile",
 }
 
 ## Кольори
@@ -643,28 +646,75 @@ func _show_idle_hint() -> void:
 ## ---- Toddler mode: "Хто це?" (A3 age fork) ----
 
 func _start_round_toddler() -> void:
-	_current_word_key = _pick_word_for_round(_round)
-	var animal_name: String = WORD_IMAGES.get(_current_word_key, "Cat")
 	var vp: Vector2 = get_viewport().get_visible_rect().size
-	## Прогресивна складність: R0-1 = 2 картки (LAW 2: мін 2 для тоддлера), R2-4 = 3
+	## REDESIGN: letter-initial recognition (pre-literacy, research: age 3-4)
+	## Показати ВЕЛИКУ БУКВУ зверху, тварин знизу → тапни тварину, чиє ім'я починається
+	## з цієї букви. Це навчає letter-initial sound correspondence (A12: i18n aware).
+
+	## Побудувати карту: перша буква → масив word_keys (за перекладом поточної мови)
+	var letter_map: Dictionary = {}
+	for wk: String in WORD_KEYS:
+		var translated: String = tr(wk).strip_edges()
+		if translated.is_empty():
+			continue
+		var first_letter: String = translated[0].to_upper()
+		if not letter_map.has(first_letter):
+			letter_map[first_letter] = []
+		(letter_map[first_letter] as Array).append(wk)
+
+	## Знайти букви, які мають тварину І є дістрактори з іншою буквою (A8)
+	var usable_letters: Array[String] = []
+	for letter: Variant in letter_map.keys():
+		if letter is String:
+			usable_letters.append(letter)
+	usable_letters.shuffle()
+	if usable_letters.is_empty():
+		push_warning("SpellingBlocks toddler: no usable letters, fallback")
+		_current_word_key = WORD_KEYS[0] if WORD_KEYS.size() > 0 else "SPELL_CAT"
+		return
+
+	var chosen_letter: String = usable_letters[0]
+
+	## Правильна тварина
+	var correct_pool: Array = letter_map.get(chosen_letter, [])
+	if correct_pool.is_empty():
+		push_warning("SpellingBlocks toddler: empty pool for letter '%s'" % chosen_letter)
+		return
+	(correct_pool as Array).shuffle()
+	_current_word_key = correct_pool[0]
+	var animal_name: String = WORD_IMAGES.get(_current_word_key, "Cat")
+
+	## Дістрактори — тварини з ІНШОЮ першою буквою
 	var option_count: int = 2 if _round < 2 else 3
-	var distractors: Array[String] = _pick_distractors(_current_word_key, option_count - 1)
+	var distractor_keys: Array[String] = []
+	for wk: String in WORD_KEYS:
+		if wk == _current_word_key:
+			continue
+		var translated: String = tr(wk).strip_edges()
+		if translated.is_empty():
+			continue
+		if translated[0].to_upper() != chosen_letter:
+			distractor_keys.append(wk)
+	distractor_keys.shuffle()
+
 	var options: Array[Dictionary] = []
 	options.append({"word_key": _current_word_key, "animal": animal_name, "correct": true})
-	for dk: String in distractors:
-		var d_animal: String = WORD_IMAGES.get(dk, "Cat")
-		options.append({"word_key": dk, "animal": d_animal, "correct": false})
+	for i: int in mini(option_count - 1, distractor_keys.size()):
+		var dk: String = distractor_keys[i]
+		options.append({"word_key": dk, "animal": WORD_IMAGES.get(dk, "Cat"), "correct": false})
 	options.shuffle()
 	_toddler_correct_idx = -1
 	for i: int in options.size():
 		if options[i].get("correct", false):
 			_toddler_correct_idx = i
 			break
-	## Показати зображення тварини зверху
-	if _round < 4:
-		_spawn_toddler_image(vp, animal_name)
+
+	## Показати ВЕЛИКУ БУКВУ зверху (замість зображення тварини)
+	_spawn_toddler_letter(vp, chosen_letter)
+
+	## Картки з зображеннями тварин (БЕЗ тексту — тоддлер не читає)
 	_toddler_cards.clear()
-	var total_w: float = float(option_count) * (TODDLER_CARD_W + 16.0) - 16.0
+	var total_w: float = float(options.size()) * (TODDLER_CARD_W + 16.0) - 16.0
 	var start_x: float = (vp.x - total_w) * 0.5 + TODDLER_CARD_W * 0.5
 	var card_y: float = vp.y * 0.75
 	for i: int in options.size():
@@ -687,6 +737,7 @@ func _start_round_toddler() -> void:
 
 
 func _spawn_toddler_image(vp: Vector2, animal_name: String) -> void:
+	## Preschool fallback — показати зображення тварини (використовується лише у preschool)
 	var tex_path: String = "res://assets/sprites/animals/%s.png" % animal_name
 	if not ResourceLoader.exists(tex_path):
 		push_warning("SpellingBlocks: тоддлер спрайт '%s' не знайдено" % tex_path)
@@ -710,6 +761,43 @@ func _spawn_toddler_image(vp: Vector2, animal_name: String) -> void:
 		tw.tween_property(_image_sprite, "modulate:a", 1.0, ANIM_NORMAL)
 		tw.tween_property(_image_sprite, "scale", target_scale, ANIM_NORMAL)\
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+
+
+## Toddler REDESIGN: показати ВЕЛИКУ БУКВУ замість зображення тварини
+func _spawn_toddler_letter(vp: Vector2, letter: String) -> void:
+	var letter_node: Node2D = Node2D.new()
+	letter_node.position = Vector2(vp.x * 0.5, vp.y * 0.30)
+	add_child(letter_node)
+	_all_round_nodes.append(letter_node)
+	## Фоновий круг (premium, LAW 28)
+	var circle_size: float = 160.0
+	var bg: Panel = Panel.new()
+	bg.size = Vector2(circle_size, circle_size)
+	bg.position = Vector2(-circle_size * 0.5, -circle_size * 0.5)
+	bg.add_theme_stylebox_override("panel",
+		GameData.candy_circle(Color("6366f1", 0.9), circle_size * 0.5, false))
+	bg.material = GameData.create_premium_material(
+		0.05, 2.0, 0.03, 0.0, 0.06, 0.04, 0.08, "", 0.0, 0.10, 0.22, 0.18)
+	GameData.add_gloss(bg, 14)
+	letter_node.add_child(bg)
+	## Велика буква (A12: tr() не потрібен — це одна літера)
+	var lbl: Label = Label.new()
+	lbl.text = letter
+	lbl.add_theme_font_size_override("font_size", 96)
+	lbl.add_theme_color_override("font_color", Color.WHITE)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.size = Vector2(circle_size, circle_size)
+	lbl.position = Vector2(-circle_size * 0.5, -circle_size * 0.5)
+	letter_node.add_child(lbl)
+	## Анімація входу (elastic bounce)
+	if not SettingsManager.reduced_motion:
+		letter_node.scale = Vector2.ZERO
+		letter_node.modulate.a = 0.0
+		var tw: Tween = _create_game_tween().set_parallel(true)
+		tw.tween_property(letter_node, "scale", Vector2.ONE, ANIM_NORMAL)\
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(letter_node, "modulate:a", 1.0, ANIM_FAST)
 
 
 func _spawn_toddler_card(pos: Vector2, word_key: String, animal_name: String,
@@ -738,17 +826,19 @@ func _spawn_toddler_card(pos: Vector2, word_key: String, animal_name: String,
 		var tex_size: Vector2 = Vector2(tex.get_width(), tex.get_height())
 		var s: float = 80.0 / maxf(tex_size.x, maxf(tex_size.y, 1.0))
 		sprite.scale = Vector2(s, s)
-		sprite.position = Vector2(0.0, -16.0)
+		sprite.position = Vector2(0.0, 0.0)  ## Центрувати спрайт (без тексту знизу)
 		card.add_child(sprite)
-	var lbl: Label = Label.new()
-	lbl.text = tr(word_key)
-	lbl.add_theme_font_size_override("font_size", 26)
-	lbl.add_theme_color_override("font_color", Color(0.2, 0.15, 0.35))
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	lbl.size = Vector2(TODDLER_CARD_W, 28.0)
-	lbl.position = Vector2(-TODDLER_CARD_W * 0.5, TODDLER_CARD_H * 0.5 - 32.0)
-	card.add_child(lbl)
+	## Toddler: НЕ показуємо текст (діти 2-4 не читають, A1: zero-text)
+	if not _is_toddler:
+		var lbl: Label = Label.new()
+		lbl.text = tr(word_key)
+		lbl.add_theme_font_size_override("font_size", 26)
+		lbl.add_theme_color_override("font_color", Color(0.2, 0.15, 0.35))
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		lbl.size = Vector2(TODDLER_CARD_W, 28.0)
+		lbl.position = Vector2(-TODDLER_CARD_W * 0.5, TODDLER_CARD_H * 0.5 - 32.0)
+		card.add_child(lbl)
 	var btn: Button = Button.new()
 	btn.flat = true
 	btn.size = Vector2(TODDLER_CARD_W, TODDLER_CARD_H)

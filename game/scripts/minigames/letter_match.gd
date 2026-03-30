@@ -6,7 +6,8 @@ extends BaseMiniGame
 ## Букви рисуються кодом (draw_string + googly eyes). При drag буква "говорить" свій звук.
 ## Після всіх букв: буквеферна анімація — букви формують слово, з'являється тварина.
 
-const MAX_ROUNDS: int = 5
+const ROUNDS_TODDLER: int = 3
+const ROUNDS_PRESCHOOL: int = 5
 const SAFETY_TIMEOUT_SEC: float = 120.0
 const SLOT_Y_CENTER: float = 0.32
 const LETTER_Y_CENTER: float = 0.78
@@ -25,6 +26,14 @@ const LETTER_COLORS: Array[Color] = [
 	Color(0.95, 0.45, 0.20),  ## помаранчевий
 	Color(0.85, 0.40, 0.65),  ## рожевий
 ]
+## Візуально схожі групи букв — не ставити разом в одному раунді (LAW 3)
+const SIMILAR_GROUPS: Dictionary = {
+	"uk": [["И", "Й"], ["Ш", "Щ", "Ц"], ["Г", "Ґ"], ["І", "Ї"], ["Н", "П"]],
+	"en": [["M", "W"], ["O", "Q"], ["I", "L"], ["C", "G"], ["P", "R"], ["B", "D"]],
+	"fr": [["M", "W"], ["O", "Q"], ["C", "G"], ["P", "R"], ["B", "D"]],
+	"es": [["M", "W"], ["O", "Q"], ["C", "G"], ["N", "Ñ"], ["B", "D"]],
+}
+
 ## Алфавіти по мовах (fallback: англійський)
 const ALPHABETS: Dictionary = {
 	"en": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
@@ -42,6 +51,7 @@ const FINALE_WORDS: Dictionary = {
 
 ## Стан гри
 var _is_toddler: bool = false
+var _max_rounds: int = 5
 var _drag: UniversalDrag = null
 var _current_round: int = 0
 var _start_time: float = 0.0
@@ -65,6 +75,7 @@ func _ready() -> void:
 	bg_theme = "meadow"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
+	_max_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL
 	_drag = UniversalDrag.new(self, $DragTrail if has_node("DragTrail") else null)
 	if _is_toddler:
 		_drag.snap_radius_override = TODDLER_SNAP_RADIUS
@@ -229,7 +240,7 @@ func _generate_round() -> void:
 		_reset_idle_timer())
 
 	## Оновити HUD
-	_update_round_label(tr("COUNTING_ROUND") % [_current_round + 1, MAX_ROUNDS])
+	_update_round_label(tr("COUNTING_ROUND") % [_current_round + 1, _max_rounds])
 	_reset_idle_timer()
 
 
@@ -283,10 +294,38 @@ func _pick_random_letters(count: int) -> Array[String]:
 			available.append(_alphabet[i])
 		available.shuffle()
 	var picked: Array[String] = []
-	for i: int in mini(count, available.size()):
-		picked.append(available[i])
-		_used_letters.append(available[i])
+	var excluded: Array[String] = []  ## Виключені через візуальну схожість
+	for i: int in available.size():
+		if picked.size() >= count:
+			break
+		var ch: String = available[i]
+		if excluded.has(ch):
+			continue
+		picked.append(ch)
+		_used_letters.append(ch)
+		_exclude_similar(ch, excluded)
+	## Fallback: якщо similar filter занадто агресивний (A8)
+	if picked.size() < count:
+		push_warning("LetterMatch: similar filter reduced pool, filling without filter")
+		for i: int in available.size():
+			if picked.size() >= count:
+				break
+			var ch: String = available[i]
+			if not picked.has(ch):
+				picked.append(ch)
+				_used_letters.append(ch)
 	return picked
+
+
+## Виключити візуально схожі букви з поточного раунду (LAW 3)
+func _exclude_similar(letter: String, excluded: Array[String]) -> void:
+	var lang: String = TranslationServer.get_locale().left(2)
+	var groups: Array = SIMILAR_GROUPS.get(lang, [])
+	for group: Variant in groups:
+		if group is Array and (group as Array).has(letter):
+			for similar: Variant in group:
+				if similar is String and not excluded.has(similar):
+					excluded.append(similar)
 
 
 ## ---- Drag-drop callbacks ----
@@ -386,7 +425,7 @@ func _after_correct_anim(_letter_key: String) -> void:
 	if _matched_count >= _round_target_count:
 		_record_round_errors(_round_errors_count)
 		_current_round += 1
-		if _current_round >= MAX_ROUNDS:
+		if _current_round >= _max_rounds:
 			_finish_game_sequence()
 		else:
 			var tw: Tween = _create_game_tween()

@@ -205,9 +205,9 @@ func _start_round() -> void:
 	_current_round_errors = 0
 	_spots.clear()
 	## Прогресивна складність (LAW 6 / A4)
-	_total_spots = _scale_by_round_i(
+	_total_spots = _scale_stepped_i(
 		SPOTS_TODDLER_MIN, SPOTS_TODDLER_MAX, _round, _total_rounds
-	) if _is_toddler else _scale_by_round_i(
+	) if _is_toddler else _scale_stepped_i(
 		SPOTS_PRESCHOOL_MIN, SPOTS_PRESCHOOL_MAX, _round, _total_rounds
 	)
 	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
@@ -282,7 +282,7 @@ func _spawn_spots() -> void:
 	var y_offset: float = 0.42 if _is_toddler else 0.38
 	var center: Vector2 = Vector2(vp.x * 0.5, vp.y * y_offset)
 	## Збільшений spread для пізніших раундів (LAW 6)
-	var spread: float = _scale_by_round(80.0, 120.0, _round, _total_rounds)
+	var spread: float = _scale_stepped(80.0, 120.0, _round, _total_rounds)
 	## Розподіл типів плям по раунду
 	var stain_types: Array[int] = _generate_stain_types()
 

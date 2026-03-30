@@ -38,11 +38,12 @@ const PALETTE: Array[Dictionary] = [
 	{"id": "red", "color": Color("ef4444"), "name_key": "COLOR_RED", "shape": "star"},
 	{"id": "blue", "color": Color("3b82f6"), "name_key": "COLOR_BLUE", "shape": "diamond"},
 	{"id": "yellow", "color": Color("eab308"), "name_key": "COLOR_YELLOW", "shape": "circle"},
+	{"id": "green", "color": Color("22c55e"), "name_key": "COLOR_GREEN", "shape": "heart"},
 ]
 ## Додаткові кольори для Preschool у пізніших раундах (A4: прогресивна складність)
 const PALETTE_EXTRA: Array[Dictionary] = [
-	{"id": "green", "color": Color("22c55e"), "name_key": "COLOR_GREEN", "shape": "heart"},
 	{"id": "purple", "color": Color("a855f7"), "name_key": "COLOR_PURPLE", "shape": "triangle"},
+	{"id": "orange", "color": Color("f97316"), "name_key": "COLOR_ORANGE", "shape": "hexagon"},
 ]
 
 var _is_toddler: bool = false
@@ -219,7 +220,7 @@ func _start_round() -> void:
 	_input_locked = true
 	## A4: швидкість конвеєра зростає (тільки Preschool)
 	if not _is_toddler:
-		_current_conveyor_speed = _scale_by_round(
+		_current_conveyor_speed = _scale_stepped(
 			CONVEYOR_SPEED_MIN, CONVEYOR_SPEED_MAX, _round, TOTAL_ROUNDS)
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
 	var palette: Array[Dictionary] = _get_round_palette()
@@ -232,9 +233,9 @@ func _start_round() -> void:
 	## A4: прогресивна складність — більше предметів у пізніших раундах
 	var per_round: int
 	if _is_toddler:
-		per_round = _scale_by_round_i(ITEMS_TODDLER_MIN, ITEMS_TODDLER_MAX, _round, TOTAL_ROUNDS)
+		per_round = _scale_stepped_i(ITEMS_TODDLER_MIN, ITEMS_TODDLER_MAX, _round, TOTAL_ROUNDS)
 	else:
-		per_round = _scale_by_round_i(ITEMS_PRESCHOOL_MIN, ITEMS_PRESCHOOL_MAX, _round, TOTAL_ROUNDS)
+		per_round = _scale_stepped_i(ITEMS_PRESCHOOL_MIN, ITEMS_PRESCHOOL_MAX, _round, TOTAL_ROUNDS)
 	_total_items = per_round
 	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, TOTAL_ROUNDS])
 	## Генеруємо набір предметів з рівним розподілом кольорів

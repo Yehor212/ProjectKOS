@@ -6,7 +6,8 @@ extends BaseMiniGame
 ## Preschool: тварина показує рівняння візуально, дитина обирає правильну відповідь.
 
 const ITEM_SCENE: PackedScene = preload("res://scenes/components/counting_item.tscn")
-const TOTAL_ROUNDS: int = 5
+const ROUNDS_TODDLER: int = 3
+const ROUNDS_PRESCHOOL: int = 5
 const ITEM_RADIUS: float = 55.0
 const ANSWER_RADIUS: float = 65.0
 const TAP_RADIUS: float = 75.0
@@ -54,6 +55,7 @@ const ROUND_CONFIG: Array[Dictionary] = [
 ]
 
 var _is_toddler_mode: bool = false
+var _total_rounds: int = 0
 var _round: int = 0
 var _start_time: float = 0.0
 
@@ -93,6 +95,7 @@ func _ready() -> void:
 	bg_theme = "meadow"
 	super()
 	_is_toddler_mode = (SettingsManager.age_group == 1)
+	_total_rounds = ROUNDS_TODDLER if _is_toddler_mode else ROUNDS_PRESCHOOL
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
 	if _is_toddler_mode:
@@ -184,7 +187,7 @@ func _process(delta: float) -> void:
 
 func _start_round() -> void:
 	_round_errors_local = 0
-	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, TOTAL_ROUNDS])
+	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 	if _is_toddler_mode:
 		_setup_toddler_round()
 	else:
@@ -197,7 +200,7 @@ func _advance_round() -> void:
 	_round_errors.append(_round_errors_local)
 	_clear_round()
 	_round += 1
-	if _round >= TOTAL_ROUNDS:
+	if _round >= _total_rounds:
 		_finish()
 	else:
 		await get_tree().create_timer(0.5).timeout
@@ -904,7 +907,7 @@ func _finish() -> void:
 	var stats: Dictionary = {
 		"time_sec": elapsed,
 		"errors": _errors,
-		"rounds_played": TOTAL_ROUNDS,
+		"rounds_played": _total_rounds,
 		"earned_stars": earned,
 	}
 	finish_game(earned, stats)

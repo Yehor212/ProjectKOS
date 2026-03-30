@@ -9,7 +9,8 @@ const ROUNDS_TODDLER: int = 4
 const ROUNDS_PRESCHOOL: int = 5
 const IDLE_HINT_DELAY: float = 5.0
 const SAFETY_TIMEOUT_SEC: float = 120.0
-const SITUATION_DISPLAY_SEC: float = 2.5
+const SITUATION_DISPLAY_SEC_TODDLER: float = 4.0  ## Тоддлерам потрібно більше часу (Scherf et al.)
+const SITUATION_DISPLAY_SEC_PRESCHOOL: float = 2.5
 const EMOTION_CARD_SIZE: float = 100.0
 const ANIMAL_DISPLAY_SCALE: float = 0.38
 
@@ -19,64 +20,84 @@ enum Emotion { HAPPY, SAD, ANGRY, SCARED }
 ## Типи дій допомоги (Preschool)
 enum HelpAction { HUG, TALK, SPACE }
 
-## Ситуації: id, correct_emotion, ситуація (анімована), дія (Preschool)
+## 24 ситуацій, 3 тіри складності (research: Piaget, CASEL framework).
+## tier 1 = базові (раунди 1-2), tier 2 = середні (3-4), tier 3 = складні (5).
 const SITUATIONS: Array[Dictionary] = [
-	{
-		"id": "ice_cream_dropped",
-		"emotion": Emotion.SAD,
-		"best_action": HelpAction.HUG,
-		"instruction_key": "EMOTION_SIT_ICE_CREAM",
-		"icon_color": Color(0.95, 0.75, 0.85),
-	},
-	{
-		"id": "got_a_gift",
-		"emotion": Emotion.HAPPY,
-		"best_action": HelpAction.TALK,
-		"instruction_key": "EMOTION_SIT_GIFT",
-		"icon_color": Color(0.95, 0.85, 0.50),
-	},
-	{
-		"id": "lost_toy",
-		"emotion": Emotion.SAD,
-		"best_action": HelpAction.TALK,
-		"instruction_key": "EMOTION_SIT_LOST_TOY",
-		"icon_color": Color(0.65, 0.75, 0.90),
-	},
-	{
-		"id": "friend_arrived",
-		"emotion": Emotion.HAPPY,
-		"best_action": HelpAction.HUG,
-		"instruction_key": "EMOTION_SIT_FRIEND",
-		"icon_color": Color(0.70, 0.90, 0.75),
-	},
-	{
-		"id": "scary_noise",
-		"emotion": Emotion.SCARED,
-		"best_action": HelpAction.HUG,
-		"instruction_key": "EMOTION_SIT_SCARY_NOISE",
-		"icon_color": Color(0.75, 0.70, 0.85),
-	},
-	{
-		"id": "toy_broken_by_other",
-		"emotion": Emotion.ANGRY,
-		"best_action": HelpAction.TALK,
-		"instruction_key": "EMOTION_SIT_TOY_BROKEN",
-		"icon_color": Color(0.90, 0.70, 0.65),
-	},
-	{
-		"id": "dark_room",
-		"emotion": Emotion.SCARED,
-		"best_action": HelpAction.HUG,
-		"instruction_key": "EMOTION_SIT_DARK_ROOM",
-		"icon_color": Color(0.60, 0.60, 0.75),
-	},
-	{
-		"id": "new_friend",
-		"emotion": Emotion.HAPPY,
-		"best_action": HelpAction.TALK,
-		"instruction_key": "EMOTION_SIT_NEW_FRIEND",
-		"icon_color": Color(0.85, 0.90, 0.65),
-	},
+	## ============ TIER 1: BASIC (ages 2-4) ============
+	{"id": "ice_cream_dropped", "emotion": Emotion.SAD, "tier": 1,
+		"best_action": HelpAction.HUG, "instruction_key": "EMOTION_SIT_ICE_CREAM",
+		"icon_color": Color(0.95, 0.75, 0.85)},
+	{"id": "got_a_gift", "emotion": Emotion.HAPPY, "tier": 1,
+		"best_action": HelpAction.TALK, "instruction_key": "EMOTION_SIT_GIFT",
+		"icon_color": Color(0.95, 0.85, 0.50)},
+	{"id": "scary_thunder", "emotion": Emotion.SCARED, "tier": 1,
+		"best_action": HelpAction.HUG, "instruction_key": "EMOTION_SIT_THUNDER",
+		"icon_color": Color(0.60, 0.55, 0.80)},
+	{"id": "found_favorite_toy", "emotion": Emotion.HAPPY, "tier": 1,
+		"best_action": HelpAction.TALK, "instruction_key": "EMOTION_SIT_FOUND_TOY",
+		"icon_color": Color(0.90, 0.92, 0.55)},
+	{"id": "balloon_popped", "emotion": Emotion.SAD, "tier": 1,
+		"best_action": HelpAction.HUG, "instruction_key": "EMOTION_SIT_BALLOON",
+		"icon_color": Color(0.80, 0.70, 0.90)},
+	{"id": "dark_room", "emotion": Emotion.SCARED, "tier": 1,
+		"best_action": HelpAction.HUG, "instruction_key": "EMOTION_SIT_DARK_ROOM",
+		"icon_color": Color(0.60, 0.60, 0.75)},
+	{"id": "playing_in_puddles", "emotion": Emotion.HAPPY, "tier": 1,
+		"best_action": HelpAction.TALK, "instruction_key": "EMOTION_SIT_PUDDLES",
+		"icon_color": Color(0.65, 0.85, 0.95)},
+	{"id": "toy_taken_away", "emotion": Emotion.ANGRY, "tier": 1,
+		"best_action": HelpAction.TALK, "instruction_key": "EMOTION_SIT_TOY_TAKEN",
+		"icon_color": Color(0.92, 0.68, 0.62)},
+	## ============ TIER 2: INTERMEDIATE (ages 4-5) ============
+	{"id": "friend_went_home", "emotion": Emotion.SAD, "tier": 2,
+		"best_action": HelpAction.TALK, "instruction_key": "EMOTION_SIT_FRIEND_LEFT",
+		"icon_color": Color(0.65, 0.75, 0.90)},
+	{"id": "won_a_race", "emotion": Emotion.HAPPY, "tier": 2,
+		"best_action": HelpAction.TALK, "instruction_key": "EMOTION_SIT_WON_RACE",
+		"icon_color": Color(0.95, 0.90, 0.50)},
+	{"id": "not_invited_to_play", "emotion": Emotion.SAD, "tier": 2,
+		"best_action": HelpAction.HUG, "instruction_key": "EMOTION_SIT_NOT_INVITED",
+		"icon_color": Color(0.72, 0.68, 0.85)},
+	{"id": "someone_cut_in_line", "emotion": Emotion.ANGRY, "tier": 2,
+		"best_action": HelpAction.TALK, "instruction_key": "EMOTION_SIT_CUT_LINE",
+		"icon_color": Color(0.90, 0.65, 0.60)},
+	{"id": "strange_shadow", "emotion": Emotion.SCARED, "tier": 2,
+		"best_action": HelpAction.HUG, "instruction_key": "EMOTION_SIT_SHADOW",
+		"icon_color": Color(0.62, 0.58, 0.78)},
+	{"id": "helped_a_friend", "emotion": Emotion.HAPPY, "tier": 2,
+		"best_action": HelpAction.HUG, "instruction_key": "EMOTION_SIT_HELPED_FRIEND",
+		"icon_color": Color(0.75, 0.92, 0.72)},
+	{"id": "drawing_ruined", "emotion": Emotion.SAD, "tier": 2,
+		"best_action": HelpAction.TALK, "instruction_key": "EMOTION_SIT_DRAWING_RUINED",
+		"icon_color": Color(0.78, 0.72, 0.88)},
+	{"id": "pushed_by_someone", "emotion": Emotion.ANGRY, "tier": 2,
+		"best_action": HelpAction.SPACE, "instruction_key": "EMOTION_SIT_PUSHED",
+		"icon_color": Color(0.88, 0.62, 0.58)},
+	## ============ TIER 3: COMPLEX (ages 5-7) ============
+	{"id": "someone_else_got_prize", "emotion": Emotion.ANGRY, "tier": 3,
+		"best_action": HelpAction.TALK, "instruction_key": "EMOTION_SIT_JEALOUS_PRIZE",
+		"icon_color": Color(0.88, 0.70, 0.58)},
+	{"id": "lost_in_new_place", "emotion": Emotion.SCARED, "tier": 3,
+		"best_action": HelpAction.HUG, "instruction_key": "EMOTION_SIT_LOST_PLACE",
+		"icon_color": Color(0.58, 0.55, 0.78)},
+	{"id": "broke_friends_toy", "emotion": Emotion.SAD, "tier": 3,
+		"best_action": HelpAction.TALK, "instruction_key": "EMOTION_SIT_BROKE_FRIEND_TOY",
+		"icon_color": Color(0.75, 0.68, 0.82)},
+	{"id": "shared_last_cookie", "emotion": Emotion.HAPPY, "tier": 3,
+		"best_action": HelpAction.HUG, "instruction_key": "EMOTION_SIT_SHARED_COOKIE",
+		"icon_color": Color(0.92, 0.88, 0.65)},
+	{"id": "blamed_unfairly", "emotion": Emotion.ANGRY, "tier": 3,
+		"best_action": HelpAction.SPACE, "instruction_key": "EMOTION_SIT_BLAMED",
+		"icon_color": Color(0.85, 0.60, 0.55)},
+	{"id": "friend_is_crying", "emotion": Emotion.SAD, "tier": 3,
+		"best_action": HelpAction.HUG, "instruction_key": "EMOTION_SIT_FRIEND_CRYING",
+		"icon_color": Color(0.68, 0.72, 0.88)},
+	{"id": "performing_on_stage", "emotion": Emotion.SCARED, "tier": 3,
+		"best_action": HelpAction.TALK, "instruction_key": "EMOTION_SIT_STAGE",
+		"icon_color": Color(0.72, 0.62, 0.85)},
+	{"id": "promise_broken", "emotion": Emotion.ANGRY, "tier": 3,
+		"best_action": HelpAction.SPACE, "instruction_key": "EMOTION_SIT_PROMISE_BROKEN",
+		"icon_color": Color(0.85, 0.65, 0.62)},
 ]
 
 ## Кольори емоцій (LAW 25: не лише колір — є мітки-форми та текст)
@@ -221,17 +242,38 @@ func _pick_situation() -> Dictionary:
 	if SITUATIONS.size() == 0:
 		push_warning("EmotionMirror: SITUATIONS порожній — fallback")
 		return {
-			"id": "fallback", "emotion": Emotion.HAPPY,
+			"id": "fallback", "emotion": Emotion.HAPPY, "tier": 1,
 			"best_action": HelpAction.HUG, "instruction_key": "EMOTION_SIT_ICE_CREAM",
 			"icon_color": Color.WHITE,
 		}
 	if _used_situations.size() >= SITUATIONS.size():
 		_used_situations.clear()
-	## Для Preschool: гарантуємо різноманітність емоцій
+	## Tier filtering (LAW 6: progressive difficulty, A4: difficulty ramp)
+	var min_tier: int = 1
+	var max_tier: int = 1
+	if _is_toddler:
+		max_tier = 1  ## Toddler: тільки tier 1 (базові емоції)
+	else:
+		if _round < 2:
+			max_tier = 2  ## Preschool R1-2: tier 1-2
+		else:
+			max_tier = 3  ## Preschool R3+: tier 1-3
+		if _round >= 3:
+			min_tier = 2  ## Пізні раунди: пропустити тривіальний tier 1
+	## Фільтруємо по тіру
 	var available: Array[int] = []
 	for i: int in SITUATIONS.size():
-		if not _used_situations.has(i):
+		if _used_situations.has(i):
+			continue
+		var tier: int = int(SITUATIONS[i].get("tier", 1))
+		if tier >= min_tier and tier <= max_tier:
 			available.append(i)
+	## Fallback: якщо tier filter занадто суворий — усі невикористані (A8)
+	if available.size() == 0:
+		for i: int in SITUATIONS.size():
+			if not _used_situations.has(i):
+				available.append(i)
+	## Second fallback: скинути все
 	if available.size() == 0:
 		push_warning("EmotionMirror: всі ситуації використані, скидаємо")
 		_used_situations.clear()
@@ -325,15 +367,35 @@ func _spawn_situation_icon() -> void:
 
 
 func _get_situation_symbol(sit_id: String) -> String:
+	## LAW 25: символ як вторинний канал (+ = happy, ! = sad, ~ = scared, X = angry)
 	match sit_id:
+		## Tier 1
 		"ice_cream_dropped": return "!"
-		"got_a_gift": return "?"
-		"lost_toy": return "?"
-		"friend_arrived": return "+"
-		"scary_noise": return "!"
-		"toy_broken_by_other": return "X"
+		"got_a_gift": return "+"
+		"scary_thunder": return "~"
+		"found_favorite_toy": return "+"
+		"balloon_popped": return "!"
 		"dark_room": return "~"
-		"new_friend": return "+"
+		"playing_in_puddles": return "+"
+		"toy_taken_away": return "X"
+		## Tier 2
+		"friend_went_home": return "!"
+		"won_a_race": return "+"
+		"not_invited_to_play": return "!"
+		"someone_cut_in_line": return "X"
+		"strange_shadow": return "~"
+		"helped_a_friend": return "+"
+		"drawing_ruined": return "!"
+		"pushed_by_someone": return "X"
+		## Tier 3
+		"someone_else_got_prize": return "X"
+		"lost_in_new_place": return "~"
+		"broke_friends_toy": return "!"
+		"shared_last_cookie": return "+"
+		"blamed_unfairly": return "X"
+		"friend_is_crying": return "!"
+		"performing_on_stage": return "~"
+		"promise_broken": return "X"
 		_: return "?"
 
 
@@ -349,8 +411,9 @@ func _animate_situation_entrance() -> void:
 	if SettingsManager.reduced_motion:
 		_situation_icon.scale = Vector2.ONE
 		_situation_icon.modulate.a = 1.0
-		## Затримка перед показом емоцій
-		get_tree().create_timer(SITUATION_DISPLAY_SEC).timeout.connect(func() -> void:
+		## Затримка перед показом емоцій (A3: тоддлерам більше часу)
+		var display_sec: float = SITUATION_DISPLAY_SEC_TODDLER if _is_toddler else SITUATION_DISPLAY_SEC_PRESCHOOL
+		get_tree().create_timer(display_sec).timeout.connect(func() -> void:
 			if is_instance_valid(self) and not _game_over:
 				_show_emotion_choices())
 		return
@@ -361,7 +424,8 @@ func _animate_situation_entrance() -> void:
 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
 	tw.tween_property(_situation_icon, "modulate:a", 1.0, ANIM_FAST)
 	tw.chain().tween_property(_situation_icon, "scale", Vector2.ONE, ANIM_FAST)
-	tw.chain().tween_interval(SITUATION_DISPLAY_SEC)
+	var display_sec: float = SITUATION_DISPLAY_SEC_TODDLER if _is_toddler else SITUATION_DISPLAY_SEC_PRESCHOOL
+	tw.chain().tween_interval(display_sec)
 	tw.chain().tween_callback(func() -> void:
 		if is_instance_valid(self) and not _game_over:
 			_show_emotion_choices())

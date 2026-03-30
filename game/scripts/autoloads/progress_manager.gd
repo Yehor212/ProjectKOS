@@ -16,6 +16,9 @@ var games_played_today: int = 0
 var daily_quest_completed: bool = false
 var _played_games: Array[String] = []
 
+## Колекція стікерів — animal_name -> {games_earned: Array, total_stars: int}
+var sticker_collection: Dictionary = {}
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -36,6 +39,7 @@ func get_save_data() -> Dictionary:
 		"games_played_today": games_played_today,
 		"daily_quest_completed": daily_quest_completed,
 		"played_games": _played_games,
+		"sticker_collection": sticker_collection.duplicate(true),
 	}
 
 
@@ -56,6 +60,10 @@ func apply_save_data(data: Dictionary) -> void:
 	_played_games.clear()
 	for g: Variant in pg:
 		_played_games.append(str(g))
+
+	## LAW 22: Валідація sticker_collection — corrupted save не зламає гру
+	var loaded_stickers: Variant = data.get("sticker_collection", {})
+	sticker_collection = loaded_stickers if loaded_stickers is Dictionary else {}
 
 
 func has_played_game(gid: String) -> bool:
@@ -133,3 +141,38 @@ func use_hint() -> bool:
 	inventory_hints -= 1
 	SettingsManager.save_settings()
 	return true
+
+
+## ── Стікери (колекція нагород за 3+ зірки) ─────────────────────────────────
+
+## Нагороджує стікером за тварину. Повертає true якщо НОВА тварина (перший раз).
+func earn_sticker(animal_name: String, game_id: String, stars: int) -> bool:
+	if animal_name.is_empty():
+		push_warning("ProgressManager: earn_sticker — порожнє animal_name")
+		return false
+	if game_id.is_empty():
+		push_warning("ProgressManager: earn_sticker — порожній game_id")
+		return false
+
+	var is_new: bool = not sticker_collection.has(animal_name)
+	var entry: Dictionary = sticker_collection.get(animal_name, {"games_earned": [], "total_stars": 0})
+
+	## Додаємо game_id лише якщо ще не зароблений у цій грі
+	var games: Array = entry.get("games_earned", [])
+	if not games.has(game_id):
+		games.append(game_id)
+	entry["games_earned"] = games
+	entry["total_stars"] = int(entry.get("total_stars", 0)) + stars
+	sticker_collection[animal_name] = entry
+	SettingsManager.save_settings()
+	return is_new
+
+
+## Кількість унікальних тварин зі стікерами.
+func get_sticker_count() -> int:
+	return sticker_collection.size()
+
+
+## Чи є стікер для конкретної тварини.
+func has_sticker(animal_name: String) -> bool:
+	return sticker_collection.has(animal_name)

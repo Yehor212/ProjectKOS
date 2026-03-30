@@ -46,6 +46,10 @@ const BINGO_GOLD: Color = Color("ffd700")
 const PARROT_GREEN: Color = Color("00b894")
 const CROWN_GOLD: Color = Color("ffd700")
 
+## Прогресивна кількість сундуків для перемоги (LAW 6 / A4)
+## R1=5, R2=6, R3=7 (з 9 можливих). BINGO лінія = бонус, не обов'язкова.
+const CELLS_TO_WIN: Array[int] = [5, 6, 7]
+
 ## Лінії для перевірки BINGO (індекси 0-8 у сітці 3x3)
 const BINGO_LINES: Array[Array] = [
 	[0, 1, 2], [3, 4, 5], [6, 7, 8],  ## горизонтальні
@@ -64,6 +68,7 @@ var _all_round_nodes: Array[Node] = []
 var _correct_answer: int = 0
 var _equations_solved: int = 0
 var _bingo_count: int = 0
+var _opened_count: int = 0
 
 var _equation_label: PanelContainer = null
 var _idle_timer: SceneTreeTimer = null
@@ -123,6 +128,7 @@ func _start_round() -> void:
 	_input_locked = true
 	_equations_solved = 0
 	_bingo_count = 0
+	_opened_count = 0
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
 	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, TOTAL_ROUNDS])
 	var vp: Vector2 = get_viewport().get_visible_rect().size
@@ -276,7 +282,7 @@ func _generate_equation() -> void:
 	var b: int = 0
 	var op: String = "+"
 	## Прогресивна складність (LAW 6 / A4): раунд 1 = тільки додавання, пізніші — і віднімання
-	var sub_chance: float = _scale_by_round(0.0, 0.5, _round, TOTAL_ROUNDS)
+	var sub_chance: float = _scale_stepped(0.0, 0.5, _round, TOTAL_ROUNDS)
 	if _correct_answer > 2 and randf() < sub_chance:
 		## Віднімання — обмежуємо b щоб a <= 12
 		b = randi_range(1, mini(_correct_answer - 1, 3))
@@ -387,18 +393,28 @@ func _handle_correct(idx: int) -> void:
 	_register_correct(_grid_cells[idx])
 	_cell_marked[idx] = true
 	_equations_solved += 1
+	_opened_count += 1
 	## Відкриваємо сундук — змінюємо колір на золотий
 	_open_chest(idx)
-	## Перевіряємо чи є BINGO
+	## BINGO лінія = БОНУС (не обов'язкова для перемоги)
+	## Piaget: стратегічне планування 3-в-ряд = concrete operational (7+),
+	## а наша аудиторія = preoperational (4-7). Перемога = відкрити достатньо сундуків.
 	var new_bingo: bool = _check_bingo()
 	if new_bingo:
 		_bingo_count += 1
-		_input_locked = true
+		## Бонусне святкування: папуга пролітає з ключем
 		AudioManager.play_sfx("success")
 		HapticsManager.vibrate_success()
-		VFXManager.spawn_premium_celebration(get_viewport().get_visible_rect().size * 0.5)
-		## Папуга пролітає з ключем (або короною для double BINGO)
 		_spawn_parrot_flyby(_bingo_count >= 2)
+	## Перевіряємо ПЕРЕМОГУ: відкрито достатньо сундуків
+	var cells_needed: int = _get_cells_to_win()
+	if _opened_count >= cells_needed:
+		_input_locked = true
+		VFXManager.spawn_premium_celebration(get_viewport().get_visible_rect().size * 0.5)
+		if not new_bingo:
+			## Якщо BINGO не було, граємо success sfx тут
+			AudioManager.play_sfx("success")
+			HapticsManager.vibrate_success()
 		var d2: float = 0.15 if SettingsManager.reduced_motion else 1.2
 		var tw: Tween = _create_game_tween()
 		tw.tween_interval(d2)
@@ -415,6 +431,14 @@ func _handle_correct(idx: int) -> void:
 		_highlight_near_wins()
 		_generate_equation()
 		_reset_idle_timer()
+
+
+## Кількість сундуків для перемоги в поточному раунді (LAW 6: прогресивна складність)
+func _get_cells_to_win() -> int:
+	if _round >= 0 and _round < CELLS_TO_WIN.size():
+		return CELLS_TO_WIN[_round]
+	push_warning("MathBingo: _round %d поза межами CELLS_TO_WIN, fallback 7" % _round)
+	return 7
 
 
 func _open_chest(idx: int) -> void:
@@ -650,6 +674,7 @@ func _clear_round() -> void:
 	_toddler_cells.clear()
 	_toddler_correct_idx = -1
 	_equation_label = null
+	_opened_count = 0
 
 
 func _finish() -> void:
@@ -728,7 +753,7 @@ func _start_round_toddler() -> void:
 	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, total_rounds])
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	## Визначаємо цільову кількість залежно від раунду (A4: difficulty ramp)
-	var max_count: int = _scale_by_round_i(3, 4, _round, TODDLER_ROUNDS)
+	var max_count: int = _scale_stepped_i(3, 4, _round, TODDLER_ROUNDS)
 	var target: int = randi_range(1, max_count)
 	_correct_answer = target
 	## Чи це "раунд додавання" (R4-R5)?

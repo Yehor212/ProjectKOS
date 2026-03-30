@@ -5,7 +5,8 @@ extends BaseMiniGame
 ## правильне зілля → тварина випиває і "зцілюється" кольоровим сяйвом.
 ## 16 рецептів — достатньо для 3+ сесій без повторів.
 
-const TOTAL_ROUNDS: int = 5
+const ROUNDS_TODDLER: int = 3
+const ROUNDS_PRESCHOOL: int = 5
 const IDLE_HINT_DELAY: float = 5.0
 const TUBE_WIDTH: float = 62.0
 const TUBE_HEIGHT: float = 90.0
@@ -75,6 +76,7 @@ const COLOR_VALUES: Dictionary = {
 
 var _drag: UniversalDrag = null
 var _is_toddler: bool = false
+var _total_rounds: int = 0
 var _round: int = 0
 var _correct_mixes: int = 0
 var _start_time: float = 0.0
@@ -105,6 +107,7 @@ func _ready() -> void:
 	bg_theme = "science"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
+	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
 	_drag = UniversalDrag.new(self)
@@ -141,7 +144,7 @@ func _start_round() -> void:
 	_dropped_colors.clear()
 	_bubble_nodes.clear()
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
-	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, TOTAL_ROUNDS])
+	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 	## Обираємо рецепт
 	var recipe: Dictionary = _pick_recipe()
 	_target_color = recipe.result
@@ -166,9 +169,9 @@ func _pick_recipe() -> Dictionary:
 	elif _round < 4:
 		pool = tier1 + tier2
 	else:
-		pool = tier1 + tier2 + tier3
-		if not _is_toddler:
-			pool = pool + tier4
+		## R4+: тільки tier 1-2 (research: tier 3-4 неінтуїтивні для 4-7 років,
+		## blue+orange=brown не очевидний для дошкільнят)
+		pool = tier1 + tier2
 
 	## Обираємо невикористаний рецепт з відповідного пулу
 	var available: Array[String] = []
@@ -390,7 +393,7 @@ func _spawn_tubes(vp: Vector2, recipe_colors: Array[String]) -> void:
 
 	var tubes: Array[String] = recipe_colors.duplicate()
 	## LAW 2: мінімум 3 варіанти. LAW 6: прогресивна складність
-	var max_tubes: int = _scale_by_round_i(3, maxi(all_colors.size(), 3), _round, TOTAL_ROUNDS)
+	var max_tubes: int = _scale_stepped_i(3, maxi(all_colors.size(), 3), _round, _total_rounds)
 	## Додаємо відволікачі
 	for c: String in all_colors:
 		if tubes.size() >= max_tubes:
@@ -771,7 +774,7 @@ func _heal_animal_instant() -> void:
 func _advance_after_correct() -> void:
 	_clear_round()
 	_round += 1
-	if _round >= TOTAL_ROUNDS:
+	if _round >= _total_rounds:
 		_finish()
 	else:
 		_start_round()
@@ -916,7 +919,7 @@ func _finish() -> void:
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
 	var earned: int = _calculate_stars(_errors)
 	finish_game(earned, {"time_sec": elapsed, "errors": _errors,
-		"rounds_played": TOTAL_ROUNDS, "earned_stars": earned,
+		"rounds_played": _total_rounds, "earned_stars": earned,
 		"correct_mixes": _correct_mixes})
 
 

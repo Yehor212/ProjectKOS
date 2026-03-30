@@ -4,7 +4,8 @@ extends BaseMiniGame
 ## Дитина перетягує монети з гаманця на прилавок щоб заплатити точну ціну.
 ## Ка-чинг! Чек друкується, товар йде в пакет. Переплата — продавець повертає зайве.
 
-const TOTAL_ROUNDS: int = 5
+const ROUNDS_TODDLER: int = 3
+const ROUNDS_PRESCHOOL: int = 5
 const IDLE_HINT_DELAY: float = 5.0
 const COIN_SIZE: float = 64.0
 const TODDLER_COIN_SIZE: float = 90.0
@@ -64,6 +65,7 @@ const SHOP_CUSTOMERS: Array[String] = [
 ]
 
 var _is_toddler: bool = false
+var _total_rounds: int = 0
 var _drag: UniversalDrag = null
 var _round: int = 0
 var _target_price: int = 0
@@ -96,6 +98,7 @@ func _ready() -> void:
 	bg_theme = "city"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
+	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
 	_drag = UniversalDrag.new(self)
@@ -137,15 +140,15 @@ func _start_round() -> void:
 	_input_locked = true
 	_current_sum = 0
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
-	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, TOTAL_ROUNDS])
+	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 
 	## Обираємо ціну для раунду (LAW 6: прогресивна складність)
 	if _is_toddler:
-		_target_price = _scale_by_round_i(
-			TODDLER_PRICE_MIN, TODDLER_PRICE_MAX, _round, TOTAL_ROUNDS)
+		_target_price = _scale_stepped_i(
+			TODDLER_PRICE_MIN, TODDLER_PRICE_MAX, _round, _total_rounds)
 	else:
-		_target_price = _scale_by_round_i(
-			PRESCHOOL_PRICE_EASY, PRESCHOOL_PRICE_HARD, _round, TOTAL_ROUNDS)
+		_target_price = _scale_stepped_i(
+			PRESCHOOL_PRICE_EASY, PRESCHOOL_PRICE_HARD, _round, _total_rounds)
 
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	_spawn_customer(vp)
@@ -685,7 +688,7 @@ func _animate_purchase_sequence() -> void:
 func _advance_to_next_round() -> void:
 	_clear_round()
 	_round += 1
-	if _round >= TOTAL_ROUNDS:
+	if _round >= _total_rounds:
 		_finish()
 	else:
 		_start_round()
@@ -720,7 +723,7 @@ func _finish() -> void:
 	finish_game(earned, {
 		"time_sec": elapsed,
 		"errors": _errors,
-		"rounds_played": TOTAL_ROUNDS,
+		"rounds_played": _total_rounds,
 		"earned_stars": earned,
 	})
 

@@ -82,7 +82,7 @@ func _build_hud() -> void:
 	_build_instruction_pill(get_tutorial_instruction())
 	## Таймер
 	_timer_label = Label.new()
-	_timer_label.add_theme_font_size_override("font_size", 22)
+	_timer_label.add_theme_font_size_override("font_size", 24)
 	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_timer_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.5))
 	_timer_label.position = Vector2(0, _sa_top + 104)

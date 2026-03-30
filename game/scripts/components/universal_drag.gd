@@ -24,6 +24,10 @@ var magnetic_assist: bool = false
 var _correct_pairs: Dictionary = {}
 var _last_glow_target: Node2D = null
 
+## Ghost preview: drop targets пульсують під час drag (industry standard, Endless Alphabet)
+var show_drop_hints: bool = true
+var _hint_tweens: Array[Tween] = []
+
 var _scene_root: Node2D = null
 var _drag_trail: CPUParticles2D = null
 var _clicked: Node2D = null
@@ -267,6 +271,7 @@ func _try_pick(screen_pos: Vector2) -> void:
 		.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.tween_property(best, "scale", _original_scale, 0.08)\
 		.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	_start_drop_hints()
 	item_picked_up.emit(best)
 
 
@@ -277,6 +282,7 @@ func _drop() -> void:
 		assist_proximity.emit(_last_glow_target, false)
 		_kill_glow_tween()
 		_last_glow_target = null
+	_stop_drop_hints()
 	var item: Node2D = _clicked
 	_clicked = null
 	item.z_index = _original_z
@@ -308,6 +314,36 @@ func _drop() -> void:
 					if is_instance_valid(item) and item.visible:
 						_start_breathe_for(item)
 			)
+
+
+## ---- Ghost preview: drop targets пульсують під час drag ----
+
+
+func _start_drop_hints() -> void:
+	_stop_drop_hints()
+	if not show_drop_hints:
+		return
+	for t: Node2D in drop_targets:
+		if not is_instance_valid(t) or not t.visible:
+			continue
+		if not is_instance_valid(_scene_root):
+			continue
+		var tw: Tween = _scene_root.create_tween().set_loops()
+		tw.tween_property(t, "modulate:a", 0.5, 0.4)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_property(t, "modulate:a", 1.0, 0.4)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		_hint_tweens.append(tw)
+
+
+func _stop_drop_hints() -> void:
+	for tw: Tween in _hint_tweens:
+		if tw and tw.is_valid():
+			tw.kill()
+	_hint_tweens.clear()
+	for t: Node2D in drop_targets:
+		if is_instance_valid(t):
+			t.modulate.a = 1.0
 
 
 func _find_target(pos: Vector2) -> Node2D:
