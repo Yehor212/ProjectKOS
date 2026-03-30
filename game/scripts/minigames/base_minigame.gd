@@ -56,7 +56,14 @@ func _ready() -> void:
 	_game_over = false
 	_errors = 0
 	_sa_top = float(_get_safe_margins().position.y)
-	AudioManager.lower_bgm()
+	## Тематичне BGM за типом гри (3 треки: animals, numbers, colors)
+	var _bgm_map: Dictionary = {
+		"meadow": "bgm_animals", "forest": "bgm_animals", "garden": "bgm_animals",
+		"candy": "bgm_colors", "ocean": "bgm_colors", "sky": "bgm_colors",
+		"city": "bgm_numbers", "science": "bgm_numbers", "puzzle": "bgm_numbers",
+	}
+	var bgm_track: String = _bgm_map.get(bg_theme, "bgm_loop")
+	AudioManager.play_bgm(bgm_track)
 	_build_ui_layer()
 	_build_pause_menu()
 	_build_exit_confirm()
@@ -179,7 +186,7 @@ func _build_instruction_pill(text: String = "", font_size: int = 24) -> void:
 
 	_round_label = Label.new()
 	_round_label.add_theme_font_size_override("font_size", int(24.0 * s))
-	_round_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.6))
+	_round_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
 	_round_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(_round_label)
 

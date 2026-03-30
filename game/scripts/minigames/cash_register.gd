@@ -279,7 +279,7 @@ func _spawn_product(vp: Vector2) -> void:
 	_price_label.text = "%d" % _target_price
 	var price_font_sz: int = 28 if _is_toddler else 22
 	_price_label.add_theme_font_size_override("font_size", price_font_sz)
-	_price_label.add_theme_color_override("font_color", Color("c06020"))
+	_price_label.add_theme_color_override("font_color", Color("4A2C0A"))
 	_price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_price_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_price_label.position = Vector2.ZERO
@@ -356,7 +356,7 @@ func _spawn_bag(vp: Vector2) -> void:
 	var bag_lbl: Label = Label.new()
 	bag_lbl.text = tr("SHOP_BAG")
 	bag_lbl.add_theme_font_size_override("font_size", 24)
-	bag_lbl.add_theme_color_override("font_color", Color("6b4c10"))
+	bag_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.9))
 	bag_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bag_lbl.position = Vector2(-BAG_SIZE.x * 0.5, BAG_SIZE.y * 0.5 + 4.0)
 	bag_lbl.size = Vector2(BAG_SIZE.x, 20)
@@ -618,7 +618,7 @@ func _on_round_complete() -> void:
 	_drag.enabled = false
 
 	## Ка-чинг! (фірмовий звук покупки)
-	AudioManager.play_sfx("success")
+	AudioManager.play_sfx("ka_ching")
 	HapticsManager.vibrate_success()
 
 	## Анімація: чек друкується + товар летить у пакет

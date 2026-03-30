@@ -449,7 +449,7 @@ func _handle_correct(item: Node2D, target: Node2D) -> void:
 		## Burst sparkles при зборці дзеркала
 		VFXManager.spawn_match_sparkle(target.global_position)
 		VFXManager.spawn_correct_sparkle(target.global_position)
-		AudioManager.play_sfx("success")
+		AudioManager.play_sfx("snap")
 	)
 
 	## Scale bounce — тварина "прокидається"

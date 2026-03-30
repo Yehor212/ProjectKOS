@@ -236,6 +236,9 @@ func _start_stroke(pos: Vector2) -> void:
 	_canvas.add_child(_current_line)
 	HapticsManager.vibrate_light()
 	_stroke_count += 1
+	## Ambient sparkle на першому мазку — привітальний wow-ефект
+	if _stroke_count == 1 and not SettingsManager.reduced_motion:
+		VFXManager.spawn_correct_sparkle(pos)
 	_reset_idle_timer()
 
 

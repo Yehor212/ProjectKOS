@@ -377,7 +377,7 @@ func _try_tap_toddler(card: Node2D) -> void:
 		_flipped.clear()
 		_reset_idle_timer()
 		return
-	AudioManager.play_sfx("click")
+	AudioManager.play_sfx("flip")
 	HapticsManager.vibrate_light()
 	if _flipped.is_empty():
 		## Перший вибір — highlight
@@ -404,7 +404,7 @@ func _try_tap_preschool(card: Node2D) -> void:
 	if _flipped.size() == 1 and card == _flipped[0]:
 		push_warning("MemoryCards: preschool tap ignored — same card tapped twice")
 		return
-	AudioManager.play_sfx("click")
+	AudioManager.play_sfx("flip")
 	HapticsManager.vibrate_light()
 	_flipped.append(card)
 	var tw: Tween = card.flip_up()

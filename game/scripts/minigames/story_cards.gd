@@ -423,7 +423,7 @@ func _create_card_node(def: Dictionary, w: float, h: float, s: float) -> Node2D:
 	var sym_label: Label = Label.new()
 	sym_label.text = symbol
 	sym_label.add_theme_font_size_override("font_size", int(36.0 * s))
-	sym_label.add_theme_color_override("font_color", Color(0, 0, 0, 0.5))
+	sym_label.add_theme_color_override("font_color", Color(0, 0, 0, 0.8))
 	sym_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sym_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	sym_label.size = Vector2(w, h * 0.6)
@@ -435,7 +435,7 @@ func _create_card_node(def: Dictionary, w: float, h: float, s: float) -> Node2D:
 	var name_label: Label = Label.new()
 	name_label.text = tr(name_key)
 	name_label.add_theme_font_size_override("font_size", int(24.0 * s))
-	name_label.add_theme_color_override("font_color", Color(0, 0, 0, 0.6))
+	name_label.add_theme_color_override("font_color", Color(0, 0, 0, 0.8))
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.size = Vector2(w, h * 0.3)
 	name_label.position = Vector2(-w * 0.5, h * 0.12)
@@ -525,7 +525,7 @@ func _on_card_dropped(item: Node2D, target: Node2D) -> void:
 
 func _handle_correct_placement(item: Node2D, target: Node2D, slot_index: int) -> void:
 	_input_locked = true
-	AudioManager.play_sfx("success")
+	AudioManager.play_sfx("page_turn")
 	_register_correct(item)
 
 	## Помістити картку в слот

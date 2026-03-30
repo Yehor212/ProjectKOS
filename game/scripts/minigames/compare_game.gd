@@ -134,7 +134,7 @@ func _build_hud() -> void:
 	_vs_label = Label.new()
 	_vs_label.text = tr("COMPARE_VS")
 	_vs_label.add_theme_font_size_override("font_size", 48)
-	_vs_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.35))
+	_vs_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.75))
 	_vs_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_vs_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_vs_label.position = Vector2(vp.x * 0.5 - 50, vp.y * 0.44)

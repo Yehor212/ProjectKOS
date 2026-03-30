@@ -67,7 +67,7 @@ const SLOT_UNLIMITED: int = 99  ## Toddler: без ліміту
 const SLOT_EARLY_PRESCHOOL: int = 6  ## Preschool R1-R2: щедро
 const SLOT_LATE_PRESCHOOL: int = 5  ## Preschool R3-R4: оптимізуй шлях
 const SLOT_EMPTY_COLOR: Color = Color(0.78, 0.78, 0.84, 0.5)  ## Сірий порожній слот
-const SLOT_ITEM_SIZE: float = 36.0
+const SLOT_ITEM_SIZE: float = 44.0
 const SLOT_ITEM_GAP: float = 4.0
 
 ## ── Coin constants (optional collectibles, Preschool only) ──

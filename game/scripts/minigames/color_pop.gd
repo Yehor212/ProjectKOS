@@ -152,6 +152,7 @@ func _ramp_difficulty(elapsed: float) -> void:
 
 
 func _build_hud() -> void:
+	_build_instruction_pill(get_tutorial_instruction())
 	## Score (правий верхній кут, на UI layer)
 	_score_label = Label.new()
 	_score_label.text = "0"

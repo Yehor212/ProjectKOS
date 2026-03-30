@@ -23,6 +23,9 @@ func _ready() -> void:
 	add_child(_bgm_player)
 	_bgm = {
 		"bgm_loop": _try_load(BGM_DIR + "bgm_loop.wav"),
+		"bgm_animals": _try_load(BGM_DIR + "bgm_animals.wav"),
+		"bgm_numbers": _try_load(BGM_DIR + "bgm_numbers.wav"),
+		"bgm_colors": _try_load(BGM_DIR + "bgm_colors.wav"),
 	}
 	for i: int in range(16):
 		var player: AudioStreamPlayer = AudioStreamPlayer.new()
