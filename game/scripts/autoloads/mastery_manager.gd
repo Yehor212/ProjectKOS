@@ -70,6 +70,9 @@ var _session_count: int = 0
 ## Дата останньої сесії (для уникнення подвійного рахування)
 var _last_session_date: String = ""
 
+## Кеш game_id -> skill_id (уникає залежності від GameCatalog)
+var _skill_cache: Dictionary = {}
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -87,6 +90,9 @@ func record_attempt(game_id: String, skill_id: String, correct: bool) -> void:
 		push_warning("MasteryManager: record_attempt — порожній skill_id")
 		return
 
+	## Кешуємо зв'язок game_id -> skill_id (уникає залежності від GameCatalog)
+	_skill_cache[game_id] = skill_id
+
 	## Оновити вікно продуктивності для гри
 	_append_to_window(game_id, correct)
 
@@ -96,7 +102,7 @@ func record_attempt(game_id: String, skill_id: String, correct: bool) -> void:
 	## Перерахувати рівень майстерності навички
 	_recalculate_mastery(skill_id, game_id)
 
-	SettingsManager.save_settings()
+	SettingsManager.call_deferred("save_settings")
 
 
 ## Повертає поточний рівень майстерності навички (0-4).
@@ -200,7 +206,7 @@ func record_animal_interaction(animal_name: String, interaction: String) -> void
 		_collection_tiers[animal_name] = new_tier
 		collection_tier_changed.emit(animal_name, new_tier)
 		_check_collection_milestones()
-		SettingsManager.save_settings()
+		SettingsManager.call_deferred("save_settings")
 
 
 ## Повертає загальну кількість сесій.
@@ -371,8 +377,12 @@ func _filter_due_games(available_games: Array[String]) -> Array[String]:
 	return due
 
 
-## Визначає skill_id для гри через GameCatalog.
+## Визначає skill_id для гри — спочатку кеш, потім GameCatalog (фолбек).
 func _get_skill_for_game(game_id: String) -> String:
+	## Перевіряємо кеш (заповнюється через record_attempt)
+	if _skill_cache.has(game_id):
+		return _skill_cache[game_id]
+	## Фолбек: GameCatalog (для ігор, де record_attempt ще не викликався)
 	var game: Dictionary = GameCatalog.get_game_by_id(game_id)
 	if game.size() == 0:
 		push_warning("MasteryManager: _get_skill_for_game — гру '%s' не знайдено" % game_id)

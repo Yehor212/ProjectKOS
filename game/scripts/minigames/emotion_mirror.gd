@@ -721,9 +721,6 @@ func _handle_wrong_emotion(card: Node2D) -> void:
 		_errors += 1
 	_register_error(card)
 
-	## Записуємо спробу (помилка)
-	MasteryManager.record_attempt(game_id, "emotional_recognition", false)
-
 	## Тварина хитає головою (ні)
 	_animate_animal_head_shake()
 

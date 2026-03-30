@@ -73,12 +73,12 @@ func has_played_game(gid: String) -> bool:
 func mark_game_played(gid: String) -> void:
 	if not _played_games.has(gid):
 		_played_games.append(gid)
-		SettingsManager.save_settings()
+		SettingsManager.call_deferred("save_settings")
 
 
 func add_stars(amount: int) -> void:
 	stars = maxi(0, stars + amount)
-	SettingsManager.save_settings()
+	SettingsManager.call_deferred("save_settings")
 
 
 func unlock_animal(animal_name: String) -> bool:
@@ -86,7 +86,7 @@ func unlock_animal(animal_name: String) -> bool:
 		push_warning("ProgressManager: тварина '%s' вже розблокована" % animal_name)
 		return false
 	unlocked_animals.append(animal_name)
-	SettingsManager.save_settings()
+	SettingsManager.call_deferred("save_settings")
 	return true
 
 
@@ -98,7 +98,7 @@ func check_new_record(time_sec: int, errors: int) -> bool:
 	if errors < best_errors or (errors == best_errors and time_sec < best_time_sec):
 		best_errors = errors
 		best_time_sec = time_sec
-		SettingsManager.save_settings()
+		SettingsManager.call_deferred("save_settings")
 		return true
 	return false
 
@@ -109,7 +109,7 @@ func increment_animals_fed() -> bool:
 		achievement_100_fed = true
 		add_stars(500)
 		return true
-	SettingsManager.save_settings()
+	SettingsManager.call_deferred("save_settings")
 	return false
 
 
@@ -120,7 +120,7 @@ func increment_games_played() -> bool:
 		daily_quest_completed = true
 		add_stars(300)
 		return true
-	SettingsManager.save_settings()
+	SettingsManager.call_deferred("save_settings")
 	return false
 
 
@@ -130,7 +130,7 @@ func buy_hints(amount: int, cost: int) -> bool:
 		return false
 	add_stars(-cost)
 	inventory_hints += amount
-	SettingsManager.save_settings()
+	SettingsManager.call_deferred("save_settings")
 	return true
 
 
@@ -139,7 +139,7 @@ func use_hint() -> bool:
 		push_warning("ProgressManager: немає підказок для використання")
 		return false
 	inventory_hints -= 1
-	SettingsManager.save_settings()
+	SettingsManager.call_deferred("save_settings")
 	return true
 
 
@@ -164,7 +164,7 @@ func earn_sticker(animal_name: String, game_id: String, stars: int) -> bool:
 	entry["games_earned"] = games
 	entry["total_stars"] = int(entry.get("total_stars", 0)) + stars
 	sticker_collection[animal_name] = entry
-	SettingsManager.save_settings()
+	SettingsManager.call_deferred("save_settings")
 	return is_new
 
 
