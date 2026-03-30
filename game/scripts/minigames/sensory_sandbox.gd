@@ -44,6 +44,7 @@ var _warned_low_time: bool = false
 
 func _ready() -> void:
 	game_id = "sensory_sandbox"
+	_skill_id = "sensory_exploration"
 	bg_theme = "sky"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

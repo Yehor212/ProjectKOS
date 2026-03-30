@@ -42,6 +42,9 @@ var _item_positions: Dictionary = {}
 var _disguised_items: Dictionary = {}
 ## Flash overlay для "camera flash" при початку раунду
 var _flash_rect: ColorRect = null
+## Polaroid gallery strip — акумулюємо мініатюри після кожного раунду
+var _polaroid_strip: Array[Panel] = []
+var _polaroid_container: HBoxContainer = null
 
 
 func _ready() -> void:
@@ -56,6 +59,7 @@ func _ready() -> void:
 	_apply_background()
 	_build_instruction_pill(tr("PHOTO_CRASHER_FIND"), 26)
 	_update_round_label("1 / %d" % _total_rounds)
+	_build_polaroid_strip()
 	_start_round()
 	_start_safety_timeout(SAFETY_TIMEOUT_SEC)
 
@@ -200,9 +204,93 @@ func _drop_disguise(item: Node2D) -> void:
 	tw.tween_property(item, "modulate", Color.WHITE, 0.2)
 
 
+## Побудувати HBoxContainer для polaroid strip угорі екрану
+func _build_polaroid_strip() -> void:
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	_polaroid_container = HBoxContainer.new()
+	_polaroid_container.position = Vector2(vp.x * 0.5 - 180.0, 8.0)
+	_polaroid_container.size = Vector2(360.0, 66.0)
+	_polaroid_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	_polaroid_container.add_theme_constant_override("separation", 8)
+	_polaroid_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_ui_layer.add_child(_polaroid_container)
+
+
+## Додати polaroid мініатюру після знайденого crasher
+func _add_polaroid_thumbnail(round_num: int) -> void:
+	if not is_instance_valid(_polaroid_container):
+		push_warning("OddOneOut: _polaroid_container freed before polaroid add")
+		return
+	var polaroid: Panel = Panel.new()
+	polaroid.custom_minimum_size = Vector2(56, 62)
+	var pol_style: StyleBoxFlat = StyleBoxFlat.new()
+	pol_style.bg_color = Color(1.0, 0.99, 0.96, 0.92)
+	pol_style.set_corner_radius_all(4)
+	pol_style.shadow_color = Color(0, 0, 0, 0.18)
+	pol_style.shadow_size = 4
+	pol_style.shadow_offset = Vector2(1, 2)
+	pol_style.border_color = Color(0.85, 0.82, 0.78, 0.6)
+	pol_style.set_border_width_all(1)
+	## Нижня частина товщі — як у полароїда
+	pol_style.set_content_margin_all(3)
+	pol_style.content_margin_bottom = 12
+	polaroid.add_theme_stylebox_override("panel", pol_style)
+	polaroid.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	## "Фото" область — темніший внутрішній квадрат
+	var photo: Panel = Panel.new()
+	photo.position = Vector2(4, 3)
+	photo.size = Vector2(48, 38)
+	var photo_style: StyleBoxFlat = StyleBoxFlat.new()
+	## Чергуємо теплі кольори для різних раундів (LAW 3: visual distinction)
+	var photo_colors: Array[Color] = [
+		Color("e3f2fd"), Color("fce4ec"), Color("e8f5e9"),
+		Color("fff3e0"), Color("f3e5f5"),
+	]
+	var safe_idx: int = clampi(round_num, 0, photo_colors.size() - 1)
+	photo_style.bg_color = photo_colors[safe_idx]
+	photo_style.set_corner_radius_all(2)
+	photo.add_theme_stylebox_override("panel", photo_style)
+	photo.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	polaroid.add_child(photo)
+	## Номер раунду на "фото"
+	var num_label: Label = Label.new()
+	num_label.text = str(round_num + 1)
+	num_label.add_theme_font_size_override("font_size", 24)
+	num_label.add_theme_color_override("font_color", Color(0.3, 0.3, 0.35, 0.7))
+	num_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	num_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	num_label.position = Vector2(0, 0)
+	num_label.size = Vector2(48, 38)
+	num_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	photo.add_child(num_label)
+	## Checkmark зірочка внизу поляроїда
+	var check: Label = Label.new()
+	check.text = "*"
+	check.add_theme_font_size_override("font_size", 14)
+	check.add_theme_color_override("font_color", Color("66bb6a", 0.8))
+	check.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	check.position = Vector2(4, 42)
+	check.size = Vector2(48, 16)
+	check.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	polaroid.add_child(check)
+	_polaroid_container.add_child(polaroid)
+	_polaroid_strip.append(polaroid)
+	## Поява з анімацією (squash & stretch)
+	if not SettingsManager.reduced_motion:
+		polaroid.pivot_offset = Vector2(28, 31)
+		polaroid.scale = Vector2(0.0, 0.0)
+		polaroid.modulate.a = 0.0
+		var tw: Tween = _create_game_tween().set_parallel(true)
+		tw.tween_property(polaroid, "scale", Vector2.ONE, 0.35)\
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		tw.tween_property(polaroid, "modulate:a", 1.0, 0.2)
+
+
 func _advance_round() -> void:
 	if _game_over:
 		return
+	## Додати polaroid перед очисткою раунду
+	_add_polaroid_thumbnail(_round)
 	_clear_round()
 	_round += 1
 	if _round >= _total_rounds:

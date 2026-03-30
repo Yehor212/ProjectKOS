@@ -120,6 +120,13 @@ var _idle_timer: SceneTreeTimer = null
 var _earth_node: Node2D = null
 var _earth_mood: float = 0.0  ## 0.0 (сумна) → 1.0 (щаслива)
 var _flower_nodes: Array[Node2D] = []  ## Квіти що виростають на 100%
+## Прогресивні milestone ноди навколо Землі
+var _milestone_flowers: Array[Node2D] = []    ## 50%: квіти
+var _milestone_butterflies: Array[Node2D] = []  ## 75%: метелики
+var _milestone_rainbow: Node2D = null          ## 100%: райдуга
+var _milestone_50_spawned: bool = false
+var _milestone_75_spawned: bool = false
+var _milestone_100_spawned: bool = false
 
 
 func _ready() -> void:
@@ -317,6 +324,168 @@ func _update_earth_mood_on_correct() -> void:
 			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		tw.tween_property(_earth_node, "scale", Vector2.ONE, 0.15)\
 			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	## Прогресивні milestones навколо Землі
+	_check_earth_milestones()
+
+
+## Перевірка milestones: квіти при 50%, метелики при 75%, райдуга при 100%.
+## Ноди додаються як children _earth_node для автоматичного cleanup.
+func _check_earth_milestones() -> void:
+	if not is_instance_valid(_earth_node):
+		return
+	## 50% milestone: 3 квіточки навколо Землі
+	if _earth_mood >= 0.50 and not _milestone_50_spawned:
+		_milestone_50_spawned = true
+		_spawn_milestone_flowers()
+	## 75% milestone: 2 метелики
+	if _earth_mood >= 0.75 and not _milestone_75_spawned:
+		_milestone_75_spawned = true
+		_spawn_milestone_butterflies()
+	## 100% milestone: райдуга
+	if _earth_mood >= 1.0 and not _milestone_100_spawned:
+		_milestone_100_spawned = true
+		_spawn_milestone_rainbow()
+
+
+## 50% milestone: 3 маленькі квіточки виростають навколо Землі
+func _spawn_milestone_flowers() -> void:
+	if not is_instance_valid(_earth_node):
+		push_warning("EcoConveyor: _earth_node freed before 50%% flowers")
+		return
+	var flower_colors: Array[Color] = [Color("f06292"), Color("ffb74d"), Color("81c784")]
+	var angles: Array[float] = [-2.2, -0.8, 0.6]  ## Нижня напівсфера Землі
+	for i: int in 3:
+		var angle: float = angles[i]
+		var radius: float = 62.0
+		var pos: Vector2 = Vector2(cos(angle) * radius, sin(angle) * radius)
+		var flower: Node2D = Node2D.new()
+		flower.position = pos
+		flower.scale = Vector2.ZERO
+		_earth_node.add_child(flower)
+		_milestone_flowers.append(flower)
+		## Малюємо стебло + квітку
+		var fc: Color = flower_colors[i]
+		var fctrl: Control = Control.new()
+		fctrl.custom_minimum_size = Vector2(20, 30)
+		fctrl.size = Vector2(20, 30)
+		fctrl.position = Vector2(-10, -25)
+		fctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		fctrl.draw.connect(func() -> void:
+			## Стебло — зелена лінія
+			fctrl.draw_line(Vector2(10, 30), Vector2(10, 12), Color("4caf50"), 2.0)
+			## Пелюстки — 4 кружечки
+			for p: int in 4:
+				var a: float = float(p) * TAU / 4.0
+				var petal_pos: Vector2 = Vector2(10 + cos(a) * 4.5, 8 + sin(a) * 4.5)
+				fctrl.draw_circle(petal_pos, 4.0, fc)
+			## Серцевина
+			fctrl.draw_circle(Vector2(10, 8), 2.5, Color("fff176"))
+		)
+		flower.add_child(fctrl)
+		## Анімація росту
+		if not SettingsManager.reduced_motion:
+			var tw: Tween = _create_game_tween()
+			tw.tween_interval(0.15 * float(i))
+			tw.tween_property(flower, "scale", Vector2.ONE, 0.35)\
+				.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+		else:
+			flower.scale = Vector2.ONE
+
+
+## 75% milestone: 2 метелики що літають навколо Землі
+func _spawn_milestone_butterflies() -> void:
+	if not is_instance_valid(_earth_node):
+		push_warning("EcoConveyor: _earth_node freed before 75%% butterflies")
+		return
+	var bfly_colors: Array[Color] = [Color("ce93d8"), Color("4fc3f7")]
+	for i: int in 2:
+		var butterfly: Node2D = Node2D.new()
+		var start_angle: float = float(i) * PI
+		var orbit_radius: float = 75.0
+		butterfly.position = Vector2(
+			cos(start_angle) * orbit_radius,
+			sin(start_angle) * orbit_radius * 0.6)
+		butterfly.scale = Vector2.ZERO
+		_earth_node.add_child(butterfly)
+		_milestone_butterflies.append(butterfly)
+		## Малюємо метелика: 2 крильця + тіло
+		var bc: Color = bfly_colors[i]
+		var bctrl: Control = Control.new()
+		bctrl.custom_minimum_size = Vector2(18, 14)
+		bctrl.size = Vector2(18, 14)
+		bctrl.position = Vector2(-9, -7)
+		bctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		bctrl.draw.connect(func() -> void:
+			## Ліве крило
+			bctrl.draw_circle(Vector2(5, 5), 5.0, Color(bc, 0.85))
+			## Праве крило
+			bctrl.draw_circle(Vector2(13, 5), 5.0, Color(bc, 0.85))
+			## Тіло
+			bctrl.draw_circle(Vector2(9, 7), 2.0, Color("5d4037"))
+			## Вусики
+			bctrl.draw_line(Vector2(8, 5), Vector2(5, 1), Color("5d4037"), 1.0)
+			bctrl.draw_line(Vector2(10, 5), Vector2(13, 1), Color("5d4037"), 1.0)
+		)
+		butterfly.add_child(bctrl)
+		## Анімація появи + orbit
+		if not SettingsManager.reduced_motion:
+			var appear_tw: Tween = _create_game_tween()
+			appear_tw.tween_interval(0.2 * float(i))
+			appear_tw.tween_property(butterfly, "scale", Vector2.ONE, 0.3)\
+				.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+			## Орбітальний рух — повільне обертання (не через _process, а looped tween)
+			var orbit_tw: Tween = _create_game_tween()
+			orbit_tw.set_loops(0)  ## Безкінечний loop
+			var orbit_dur: float = 4.0 + float(i) * 1.5
+			## Проходимо по колу: верх -> право -> низ -> ліво
+			var steps: int = 8
+			for s: int in steps:
+				var sa: float = start_angle + (float(s + 1) / float(steps)) * TAU
+				var target: Vector2 = Vector2(
+					cos(sa) * orbit_radius,
+					sin(sa) * orbit_radius * 0.6)
+				orbit_tw.tween_property(butterfly, "position", target,
+					orbit_dur / float(steps))\
+					.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		else:
+			butterfly.scale = Vector2.ONE
+
+
+## 100% milestone: райдуга-дуга над Землею
+func _spawn_milestone_rainbow() -> void:
+	if not is_instance_valid(_earth_node):
+		push_warning("EcoConveyor: _earth_node freed before 100%% rainbow")
+		return
+	_milestone_rainbow = Node2D.new()
+	_milestone_rainbow.position = Vector2(0, -55)
+	_milestone_rainbow.scale = Vector2(0.0, 0.0)
+	_earth_node.add_child(_milestone_rainbow)
+	## Малюємо райдугу: 5 концентричних дуг (вгорі)
+	var rainbow_ctrl: Control = Control.new()
+	rainbow_ctrl.custom_minimum_size = Vector2(120, 50)
+	rainbow_ctrl.size = Vector2(120, 50)
+	rainbow_ctrl.position = Vector2(-60, -20)
+	rainbow_ctrl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var rainbow_colors: Array[Color] = [
+		Color("ef5350"), Color("ff9800"), Color("ffee58"),
+		Color("66bb6a"), Color("42a5f5"),
+	]
+	rainbow_ctrl.draw.connect(func() -> void:
+		var cx: float = 60.0
+		var cy: float = 45.0
+		for ri: int in rainbow_colors.size():
+			var arc_r: float = 40.0 - float(ri) * 5.0
+			rainbow_ctrl.draw_arc(Vector2(cx, cy), arc_r,
+				PI, TAU, 24, Color(rainbow_colors[ri], 0.75), 4.0, true)
+	)
+	_milestone_rainbow.add_child(rainbow_ctrl)
+	## Анімація появи
+	if not SettingsManager.reduced_motion:
+		var tw: Tween = _create_game_tween()
+		tw.tween_property(_milestone_rainbow, "scale", Vector2.ONE, 0.5)\
+			.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	else:
+		_milestone_rainbow.scale = Vector2.ONE
 
 
 ## Earth "кашляє" при помилці — wobble анімація

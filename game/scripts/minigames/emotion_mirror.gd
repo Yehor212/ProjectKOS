@@ -158,6 +158,7 @@ var _current_round_errors: int = 0
 
 func _ready() -> void:
 	game_id = "emotion_mirror"
+	_skill_id = "emotional_intelligence"
 	bg_theme = "garden"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)

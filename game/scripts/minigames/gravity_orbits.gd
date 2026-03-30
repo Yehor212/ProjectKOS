@@ -133,6 +133,7 @@ var _feeding_in_progress: bool = false
 
 func _ready() -> void:
 	game_id = "gravity_orbits"
+	_skill_id = "spatial_reasoning"
 	bg_theme = "space"
 	_is_toddler = (SettingsManager.age_group == 1)
 	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL

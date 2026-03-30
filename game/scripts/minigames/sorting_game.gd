@@ -681,8 +681,76 @@ func _finish() -> void:
 	## Радуга при завершенні (5 зірок = rainbow ring)
 	if earned >= 4:
 		VFXManager.spawn_rainbow_ring(get_viewport().get_visible_rect().size * 0.5)
-	finish_game(earned, {"time_sec": elapsed, "errors": _errors,
-		"rounds_played": TOTAL_ROUNDS, "earned_stars": earned})
+	## -- "Усі знайшли свій дім!" фінальна анімація --
+	_play_home_celebration(earned)
+
+
+## Фінальна "Animals arrive home" анімація: bounce тварин + glow зон + наратив.
+## Тривалість ~2с перед finish_game() для emotional payoff.
+func _play_home_celebration(earned: int) -> void:
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	## 1) Bounce кожної тварини в хабітат-зоні (staggered)
+	if not SettingsManager.reduced_motion:
+		var sorted_items: Array[Node] = []
+		for node: Node in _all_round_nodes:
+			if is_instance_valid(node) and node is Node2D:
+				sorted_items.append(node)
+		for i: int in sorted_items.size():
+			var item: Node = sorted_items[i]
+			if not is_instance_valid(item):
+				continue
+			var n2d: Node2D = item as Node2D
+			if not n2d:
+				continue
+			var delay: float = float(i) * 0.12
+			var orig_y: float = n2d.position.y
+			var tw: Tween = _create_game_tween()
+			tw.tween_property(n2d, "position:y", orig_y - 18.0, 0.15)\
+				.set_delay(delay).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+			tw.tween_property(n2d, "position:y", orig_y, 0.2)\
+				.set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+			## Squish при приземленні
+			tw.tween_property(n2d, "scale", Vector2(1.15, 0.88), 0.06)
+			tw.tween_property(n2d, "scale", Vector2.ONE, 0.12)\
+				.set_trans(Tween.TRANS_ELASTIC).set_ease(Tween.EASE_OUT)
+	## 2) Glow pulse кожної зони
+	if not SettingsManager.reduced_motion:
+		for zi: int in _zones.size():
+			var zone: Dictionary = _zones[zi]
+			var zp: Panel = zone.get("panel") as Panel
+			if not is_instance_valid(zp):
+				continue
+			var glow_delay: float = float(zi) * 0.15
+			var glow_tw: Tween = _create_game_tween()
+			glow_tw.tween_property(zp, "modulate", Color(1.6, 1.5, 1.0, 1.0), 0.2)\
+				.set_delay(glow_delay).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+			glow_tw.tween_property(zp, "modulate", Color.WHITE, 0.5)\
+				.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	## 3) Наративний лейбл "Усі знайшли свій дім!"
+	var home_label: Label = Label.new()
+	home_label.text = tr("SORTING_EVERYONE_HOME")
+	home_label.add_theme_font_size_override("font_size", 36)
+	home_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.95))
+	home_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	home_label.position = Vector2(0, vp.y * 0.02)
+	home_label.size = Vector2(vp.x, 50)
+	home_label.modulate.a = 0.0
+	_ui_layer.add_child(home_label)
+	_all_round_nodes.append(home_label)
+	var label_tw: Tween = _create_game_tween()
+	label_tw.tween_property(home_label, "modulate:a", 1.0, 0.4)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	## 4) Затримка 2с перед finish_game для emotional payoff
+	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
+	var finish_delay: float = 0.3 if SettingsManager.reduced_motion else 2.0
+	var fin_tw: Tween = _create_game_tween()
+	fin_tw.tween_interval(finish_delay)
+	fin_tw.tween_callback(func() -> void:
+		if not is_instance_valid(self):
+			return
+		finish_game(earned, {"time_sec": elapsed, "errors": _errors,
+			"rounds_played": TOTAL_ROUNDS, "earned_stars": earned})
+	)
 
 
 ## ---- IconDraw хелпер ----

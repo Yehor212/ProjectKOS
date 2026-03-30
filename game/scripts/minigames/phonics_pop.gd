@@ -327,7 +327,27 @@ func _start_round() -> void:
 		## Preschool: пузирі починають рухатись після звуку
 		if not _is_toddler:
 			_bubbles_floating = true
+		else:
+			## Toddler: gentle bobbing замість руху
+			_start_toddler_bobbing()
 	)
+
+
+## Toddler idle bobbing — пузирі ніжно гойдаються на місці
+func _start_toddler_bobbing() -> void:
+	if SettingsManager.reduced_motion:
+		return
+	for bubble: Node2D in _bubbles:
+		if not is_instance_valid(bubble):
+			continue
+		var base_y: float = bubble.position.y
+		var amp: float = 5.0 + randf() * 3.0  ## 5-8px амплітуда
+		var dur: float = 0.8 + randf() * 0.4  ## 0.8-1.2s період
+		var tw: Tween = _create_game_tween().set_loops()
+		tw.tween_property(bubble, "position:y", base_y - amp, dur)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		tw.tween_property(bubble, "position:y", base_y + amp, dur)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 ## Кількість варіантів за раундом та віком

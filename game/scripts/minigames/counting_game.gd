@@ -87,6 +87,8 @@ var _equation_label: Label = null
 var _idle_timer: SceneTreeTimer = null
 var _count_dots: Array[Panel] = []
 var _round_errors_local: int = 0
+## Ринковий прилавок — фонова декорація
+var _market_stall: Node2D = null
 
 
 func _ready() -> void:
@@ -98,6 +100,7 @@ func _ready() -> void:
 	_total_rounds = ROUNDS_TODDLER if _is_toddler_mode else ROUNDS_PRESCHOOL
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
+	_build_market_stall()
 	if _is_toddler_mode:
 		_drag = UniversalDrag.new(self)
 		_drag.snap_radius_override = TODDLER_SNAP_RADIUS
@@ -110,6 +113,90 @@ func _ready() -> void:
 
 func _build_hud() -> void:
 	_build_instruction_pill(get_tutorial_instruction())
+
+
+## Ринковий прилавок: дерев'яний прилавок + смугастий тент (awning).
+## Робить counting_game візуально схожим на РИНОК, а не просто "фрукти на фоні".
+func _build_market_stall() -> void:
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	_market_stall = Node2D.new()
+	_market_stall.z_index = -1  ## За ігровими елементами
+	add_child(_market_stall)
+	## 1) Дерев'яний прилавок (нижня третина) — коричнева панель
+	var counter: Panel = Panel.new()
+	var counter_y: float = vp.y * 0.88
+	var counter_h: float = vp.y * 0.12
+	counter.position = Vector2(vp.x * 0.08, counter_y)
+	counter.size = Vector2(vp.x * 0.84, counter_h)
+	var counter_style: StyleBoxFlat = StyleBoxFlat.new()
+	counter_style.bg_color = Color("8d6e63", 0.75)
+	counter_style.corner_radius_top_left = 10
+	counter_style.corner_radius_top_right = 10
+	counter_style.corner_radius_bottom_left = 6
+	counter_style.corner_radius_bottom_right = 6
+	counter_style.border_color = Color("6d4c41", 0.6)
+	counter_style.set_border_width_all(2)
+	counter_style.border_width_top = 4
+	counter_style.shadow_color = Color(0, 0, 0, 0.15)
+	counter_style.shadow_size = 6
+	counter_style.shadow_offset = Vector2(0, 3)
+	counter.add_theme_stylebox_override("panel", counter_style)
+	counter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_market_stall.add_child(counter)
+	## Дерев'яна текстура — горизонтальні смуги ("дошки")
+	var planks: Control = Control.new()
+	planks.position = Vector2(4, 6)
+	planks.size = Vector2(vp.x * 0.84 - 8.0, counter_h - 10.0)
+	planks.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	planks.draw.connect(func() -> void:
+		var plank_h: float = (counter_h - 10.0) / 3.0
+		for pi: int in 3:
+			var py: float = float(pi) * plank_h
+			## Чергуємо два відтінки дерева
+			var plank_color: Color = Color("a1887f", 0.25) if pi % 2 == 0 \
+				else Color("8d6e63", 0.15)
+			planks.draw_rect(Rect2(0, py, planks.size.x, plank_h - 1.0), plank_color)
+	)
+	counter.add_child(planks)
+	## 2) Смугастий тент (awning) — над областю фруктів
+	var awning: Control = Control.new()
+	var awning_x: float = vp.x * 0.08
+	var awning_y: float = vp.y * 0.48
+	var awning_w: float = vp.x * 0.84
+	var awning_h: float = 36.0
+	awning.position = Vector2(awning_x, awning_y)
+	awning.size = Vector2(awning_w, awning_h)
+	awning.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	awning.draw.connect(func() -> void:
+		## Основа тенту
+		awning.draw_rect(Rect2(0, 0, awning_w, awning_h),
+			Color("ef5350", 0.55))
+		## Білі смуги (чергування червоний/білий)
+		var stripe_w: float = 28.0
+		var stripe_count: int = int(awning_w / stripe_w) + 1
+		for si: int in stripe_count:
+			if si % 2 == 0:
+				continue  ## Пропускаємо "червоні" — залишаємо bg
+			var sx: float = float(si) * stripe_w
+			var sw: float = minf(stripe_w, awning_w - sx)
+			if sw > 0:
+				awning.draw_rect(Rect2(sx, 0, sw, awning_h),
+					Color(1, 1, 1, 0.45))
+		## Хвилястий низ тенту — трикутні "фестони"
+		var festoon_w: float = 20.0
+		var festoon_count: int = int(awning_w / festoon_w) + 1
+		for fi: int in festoon_count:
+			var fx: float = float(fi) * festoon_w
+			var fc: Color = Color("ef5350", 0.5) if fi % 2 == 0 \
+				else Color(1, 1, 1, 0.4)
+			var points: PackedVector2Array = PackedVector2Array([
+				Vector2(fx, awning_h),
+				Vector2(fx + festoon_w * 0.5, awning_h + 10.0),
+				Vector2(fx + festoon_w, awning_h),
+			])
+			awning.draw_colored_polygon(points, fc)
+	)
+	_market_stall.add_child(awning)
 
 
 func _input(event: InputEvent) -> void:

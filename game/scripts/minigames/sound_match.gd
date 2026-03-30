@@ -398,6 +398,25 @@ func _deal_items() -> void:
 				tw.set_parallel(false)
 				## Input розблокується ПІСЛЯ звуку (в _start_round)
 				## Тут тільки фіксуємо що анімація завершена
+	## Idle breathing — тварини "дихають" поки дитина думає
+	_start_idle_breathing()
+
+
+func _start_idle_breathing() -> void:
+	if SettingsManager.reduced_motion:
+		return
+	for item: Node2D in _items:
+		if not is_instance_valid(item):
+			continue
+		var base_scale: Vector2 = item.scale
+		var breathe_tw: Tween = _create_game_tween().set_loops()
+		var phase: float = randf() * TAU  ## Різна фаза для кожної тварини
+		breathe_tw.tween_property(item, "scale",
+			base_scale * Vector2(1.03, 0.97), 1.2 + randf() * 0.4)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+		breathe_tw.tween_property(item, "scale",
+			base_scale, 1.2 + randf() * 0.4)\
+			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 ## ---- Replay кнопка ----
