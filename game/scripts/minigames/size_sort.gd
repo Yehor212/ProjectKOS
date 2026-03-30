@@ -342,6 +342,7 @@ func _spawn_items(animal_name: String, sizes: Array[String]) -> bool:
 			if i == count - 1:
 				_input_locked = false
 				_drag.enabled = true
+				_start_idle_breathing(_drag.draggable_items)
 				_reset_idle_timer()
 		else:
 			item.position = Vector2(target.x, vp.y + 100.0)
@@ -355,6 +356,7 @@ func _spawn_items(animal_name: String, sizes: Array[String]) -> bool:
 				tw.chain().tween_callback(func() -> void:
 					_input_locked = false
 					_drag.enabled = true
+					_start_idle_breathing(_drag.draggable_items)
 					_reset_idle_timer())
 	_staggered_spawn(_items, 0.08)
 	return true

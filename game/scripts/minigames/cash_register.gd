@@ -437,6 +437,7 @@ func _spawn_coins(vp: Vector2) -> void:
 			if i == count - 1:
 				_input_locked = false
 				_drag.enabled = true
+				_start_idle_breathing(_drag.draggable_items)
 				_reset_idle_timer()
 		else:
 			item.position = Vector2(target_pos.x, vp.y + 100.0)
@@ -450,6 +451,7 @@ func _spawn_coins(vp: Vector2) -> void:
 				tw.chain().tween_callback(func() -> void:
 					_input_locked = false
 					_drag.enabled = true
+					_start_idle_breathing(_drag.draggable_items)
 					_reset_idle_timer())
 
 		_coin_value[item] = val

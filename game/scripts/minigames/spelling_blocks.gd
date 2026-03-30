@@ -178,6 +178,7 @@ func _start_round() -> void:
 			return
 		_input_locked = false
 		_drag.enabled = true
+		_start_idle_breathing(_drag.draggable_items)
 		_reset_idle_timer())
 
 
@@ -733,6 +734,7 @@ func _start_round_toddler() -> void:
 		if not is_instance_valid(self):
 			return
 		_input_locked = false
+		_start_idle_breathing(_toddler_cards)
 		_reset_idle_timer())
 
 

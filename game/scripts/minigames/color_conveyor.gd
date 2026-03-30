@@ -268,6 +268,7 @@ func _spawn_items(toy_entries: Array[Dictionary]) -> void:
 			item.modulate.a = 1.0
 			if i == count - 1:
 				_input_locked = false
+				_start_idle_breathing(_drag.draggable_items)
 				_reset_idle_timer()
 		else:
 			item.position = Vector2(target.x, -80.0)
@@ -280,6 +281,7 @@ func _spawn_items(toy_entries: Array[Dictionary]) -> void:
 			if i == count - 1:
 				tw.chain().tween_callback(func() -> void:
 					_input_locked = false
+					_start_idle_breathing(_drag.draggable_items)
 					_reset_idle_timer())
 
 

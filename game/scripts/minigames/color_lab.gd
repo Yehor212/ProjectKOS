@@ -456,6 +456,7 @@ func _spawn_tubes(vp: Vector2, recipe_colors: Array[String]) -> void:
 			if i == count - 1:
 				_input_locked = false
 				_drag.enabled = true
+				_start_idle_breathing(_drag.draggable_items)
 				_reset_idle_timer()
 		else:
 			item.position = Vector2(target_pos.x, vp.y + ITEM_SPAWN_Y_OFFSET)
@@ -469,6 +470,7 @@ func _spawn_tubes(vp: Vector2, recipe_colors: Array[String]) -> void:
 				tw.chain().tween_callback(func() -> void:
 					_input_locked = false
 					_drag.enabled = true
+					_start_idle_breathing(_drag.draggable_items)
 					_reset_idle_timer())
 
 		_tube_color[item] = color_name

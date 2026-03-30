@@ -132,6 +132,7 @@ func _start_round() -> void:
 			return
 		_input_locked = false
 		_drag.enabled = true
+		_start_idle_breathing(_drag.draggable_items)
 		_reset_idle_timer())
 
 

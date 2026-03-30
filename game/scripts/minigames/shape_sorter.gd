@@ -363,6 +363,7 @@ func _start_toddler_round() -> void:
 					break
 	_drag.set_correct_pairs(pairs)
 	_staggered_spawn(_slots + _shapes)
+	_start_idle_breathing(_shapes)
 	_reset_idle_timer()
 	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, TODDLER_ROUNDS])
 
@@ -445,6 +446,7 @@ func _start_preschool_round() -> void:
 		_finish()
 		return
 	_staggered_spawn(_slots + _shapes)
+	_start_idle_breathing(_shapes)
 	_reset_idle_timer()
 	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, PRESCHOOL_ROUNDS])
 

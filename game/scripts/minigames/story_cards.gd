@@ -461,6 +461,7 @@ func _deal_card_in(node: Node2D, target: Vector2, delay: float, unlock_on_finish
 		node.modulate.a = 1.0
 		if unlock_on_finish:
 			_input_locked = false
+			_start_idle_breathing(_card_nodes)
 			_reset_idle_timer()
 		return
 
@@ -479,6 +480,7 @@ func _deal_card_in(node: Node2D, target: Vector2, delay: float, unlock_on_finish
 		stw.tween_callback(func() -> void:
 			if is_instance_valid(self):
 				_input_locked = false
+				_start_idle_breathing(_card_nodes)
 				_reset_idle_timer())
 
 

@@ -257,9 +257,10 @@ func _deal_cards() -> void:
 			card.modulate.a = 1.0
 			if i == pairs.size() - 1:
 				_input_locked = false
+				_start_idle_breathing(_cards)
 				_reset_idle_timer()
 		else:
-			## Стартова позиція — з правого боку за екраном
+			## Стартова позиція �� з правого боку за екран��м
 			card.position = Vector2(vp.x + 120.0, vp.y * 0.3)
 			card.scale = Vector2(0.6, 0.6)
 			card.modulate.a = 0.0
@@ -273,10 +274,11 @@ func _deal_cards() -> void:
 			tw.tween_property(card, "modulate:a", 1.0, 0.15).set_delay(delay)
 			tw.tween_property(card, "rotation", 0.0, DEAL_DURATION * 0.8) \
 				.set_delay(delay).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-			## Розблокувати після останньої картки
+			## ��озблокувати після останньої картки
 			if i == pairs.size() - 1:
 				tw.chain().tween_callback(func() -> void:
 					_input_locked = false
+					_start_idle_breathing(_cards)
 					_reset_idle_timer()
 				)
 

@@ -350,6 +350,7 @@ func _spawn_right_halves(animals: Array[String], sprite_scale: Vector2) -> void:
 			if i == count - 1:
 				_input_locked = false
 				_drag.enabled = true
+				_start_idle_breathing(_drag.draggable_items)
 				_reset_idle_timer()
 		else:
 			item.position = Vector2(vp.x + 100.0, target_pos.y)
@@ -364,6 +365,7 @@ func _spawn_right_halves(animals: Array[String], sprite_scale: Vector2) -> void:
 				tw.chain().tween_callback(func() -> void:
 					_input_locked = false
 					_drag.enabled = true
+					_start_idle_breathing(_drag.draggable_items)
 					_reset_idle_timer())
 
 

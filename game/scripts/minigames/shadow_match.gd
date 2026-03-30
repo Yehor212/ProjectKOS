@@ -304,6 +304,7 @@ func _generate_round() -> void:
 			return
 		_drag.enabled = true
 		_input_locked = false
+		_start_idle_breathing(_drag.draggable_items)
 		_reset_idle_timer())
 	## Оновити HUD
 	_update_round_label(tr("COUNTING_ROUND") % [_current_round + 1, _max_rounds])

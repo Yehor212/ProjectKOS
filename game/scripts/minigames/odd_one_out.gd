@@ -487,6 +487,7 @@ func _deal_items() -> void:
 			item.modulate.a = 1.0 if not _disguised_items.has(item) else DISGUISE_TINT.a
 			if i == total - 1:
 				_input_locked = false
+				_start_idle_breathing(_items)
 				_reset_idle_timer()
 		else:
 			## Photo pose entry — items прилітають з різних боків
@@ -510,6 +511,7 @@ func _deal_items() -> void:
 				tw.set_parallel(false)
 				tw.tween_callback(func() -> void:
 					_input_locked = false
+					_start_idle_breathing(_items)
 					_reset_idle_timer()
 				)
 

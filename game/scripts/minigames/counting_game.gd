@@ -967,6 +967,7 @@ func _deal_item_in(item: Node2D, pos: Vector2, idx: int, total: int) -> void:
 		item.modulate.a = 1.0
 		if idx == total - 1:
 			_input_locked = false
+			_start_idle_breathing(_drag.draggable_items)
 			_reset_idle_timer()
 		return
 	item.position = Vector2(pos.x, -200.0)
@@ -982,6 +983,7 @@ func _deal_item_in(item: Node2D, pos: Vector2, idx: int, total: int) -> void:
 	if idx == total - 1:
 		tw.chain().tween_callback(func() -> void:
 			_input_locked = false
+			_start_idle_breathing(_drag.draggable_items)
 			_reset_idle_timer())
 
 

@@ -582,6 +582,7 @@ func _deal_node_in(node: Node2D, target: Vector2, delay: float, unlock_on_finish
 		node.modulate.a = 1.0
 		if unlock_on_finish:
 			_input_locked = false
+			_start_idle_breathing(_tray_nodes)
 			_reset_idle_timer()
 		return
 
@@ -603,6 +604,7 @@ func _deal_node_in(node: Node2D, target: Vector2, delay: float, unlock_on_finish
 	if unlock_on_finish:
 		tw.chain().tween_callback(func() -> void:
 			_input_locked = false
+			_start_idle_breathing(_tray_nodes)
 			_reset_idle_timer()
 		)
 
