@@ -915,7 +915,7 @@ func _update_cmd_display() -> void:
 			f1_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 			f1_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 			f1_lbl.size = Vector2(item_size, item_size)
-			f1_lbl.add_theme_font_size_override("font_size", 14)
+			f1_lbl.add_theme_font_size_override("font_size", 24)
 			f1_lbl.add_theme_color_override("font_color", Color.WHITE)
 			cmd_panel.add_child(f1_lbl)
 		else:
@@ -1013,7 +1013,7 @@ func _update_slot_display() -> void:
 				f1_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 				f1_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 				f1_lbl.size = Vector2(SLOT_ITEM_SIZE, SLOT_ITEM_SIZE)
-				f1_lbl.add_theme_font_size_override("font_size", 16)
+				f1_lbl.add_theme_font_size_override("font_size", 24)
 				f1_lbl.add_theme_color_override("font_color", Color.WHITE)
 				slot_panel.add_child(f1_lbl)
 			else:

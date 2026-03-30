@@ -145,7 +145,7 @@ func _build_tool_palette() -> void:
 		var btn: Button = Button.new()
 		btn.custom_minimum_size = Vector2(90.0, 80.0)
 		btn.text = tr(td.get("label_key", ""))
-		btn.add_theme_font_size_override("font_size", 16)
+		btn.add_theme_font_size_override("font_size", 24)
 		var tool_type: int = td.get("type", ToolType.SPONGE)
 		btn.pressed.connect(_on_tool_selected.bind(tool_type))
 		var sb: StyleBoxFlat = StyleBoxFlat.new()
@@ -317,7 +317,7 @@ func _spawn_spots() -> void:
 			var type_label: Label = Label.new()
 			type_label.text = _get_stain_emoji(stain_type)
 			type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			type_label.add_theme_font_size_override("font_size", 14)
+			type_label.add_theme_font_size_override("font_size", 24)
 			type_label.position = Vector2(-sz * 0.3, -sz * 0.3)
 			type_label.size = Vector2(sz * 0.6, sz * 0.6)
 			spot.add_child(type_label)

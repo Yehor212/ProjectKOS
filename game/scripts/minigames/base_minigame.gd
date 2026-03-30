@@ -178,7 +178,7 @@ func _build_instruction_pill(text: String = "", font_size: int = 24) -> void:
 	vbox.add_child(_instruction_label)
 
 	_round_label = Label.new()
-	_round_label.add_theme_font_size_override("font_size", int(20.0 * s))
+	_round_label.add_theme_font_size_override("font_size", int(24.0 * s))
 	_round_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.6))
 	_round_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(_round_label)
@@ -1244,7 +1244,7 @@ func _show_achievement_toast(text: String) -> void:
 	## Label всередині pill
 	var toast: Label = Label.new()
 	toast.text = text
-	toast.add_theme_font_size_override("font_size", int(22.0 * s))
+	toast.add_theme_font_size_override("font_size", int(24.0 * s))
 	toast.add_theme_color_override("font_color", ThemeManager.COLOR_GOLD)
 	toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	toast.mouse_filter = Control.MOUSE_FILTER_IGNORE

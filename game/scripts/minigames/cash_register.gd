@@ -195,7 +195,7 @@ func _spawn_customer(vp: Vector2) -> void:
 	## Мітка "покупець" з емоджі гаманця (A12: i18n, LAW 25: не тільки колір)
 	var wallet_lbl: Label = Label.new()
 	wallet_lbl.text = tr("SHOP_WALLET")
-	wallet_lbl.add_theme_font_size_override("font_size", 18)
+	wallet_lbl.add_theme_font_size_override("font_size", 24)
 	wallet_lbl.add_theme_color_override("font_color", Color.WHITE)
 	wallet_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	wallet_lbl.position = Vector2(-sz * 0.5, sz * 0.5 + 4.0)
@@ -355,7 +355,7 @@ func _spawn_bag(vp: Vector2) -> void:
 	## Мітка
 	var bag_lbl: Label = Label.new()
 	bag_lbl.text = tr("SHOP_BAG")
-	bag_lbl.add_theme_font_size_override("font_size", 16)
+	bag_lbl.add_theme_font_size_override("font_size", 24)
 	bag_lbl.add_theme_color_override("font_color", Color("6b4c10"))
 	bag_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bag_lbl.position = Vector2(-BAG_SIZE.x * 0.5, BAG_SIZE.y * 0.5 + 4.0)

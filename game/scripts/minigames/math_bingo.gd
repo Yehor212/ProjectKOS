@@ -171,7 +171,7 @@ func _spawn_map_board(vp: Vector2) -> void:
 	## Декоративний компас у кутку карти (лейбл "N" з стрілкою)
 	var compass: Label = Label.new()
 	compass.text = "N"
-	compass.add_theme_font_size_override("font_size", 20)
+	compass.add_theme_font_size_override("font_size", 24)
 	compass.add_theme_color_override("font_color", MAP_DECO_COLOR)
 	compass.position = Vector2(start_x + grid_total + board_pad - 30.0, start_y - board_pad + 6.0)
 	compass.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -226,7 +226,7 @@ func _spawn_grid(vp: Vector2) -> void:
 		var lock_icon: Label = Label.new()
 		lock_icon.name = "LockIcon"
 		lock_icon.text = "X"
-		lock_icon.add_theme_font_size_override("font_size", 16)
+		lock_icon.add_theme_font_size_override("font_size", 24)
 		lock_icon.add_theme_color_override("font_color", CHEST_LOCK_COLOR)
 		lock_icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lock_icon.vertical_alignment = VERTICAL_ALIGNMENT_CENTER

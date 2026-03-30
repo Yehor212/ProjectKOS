@@ -274,7 +274,7 @@ func _spawn_chairs(sizes: Array[String]) -> void:
 		## Підпис розміру під стільцем (LAW 25: текст + розмір для accessibility)
 		var lbl: Label = Label.new()
 		lbl.text = tr("SIZE_%s" % sid.to_upper())
-		lbl.add_theme_font_size_override("font_size", 20)
+		lbl.add_theme_font_size_override("font_size", 24)
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
 		lbl.position = Vector2(-seat_sz.x * 0.5, seat_sz.y * 0.5 + 8)
@@ -628,7 +628,7 @@ func _build_gallery_frame(photo_data: Dictionary, index: int) -> Node2D:
 	## Номер фото знизу
 	var num_label: Label = Label.new()
 	num_label.text = str(index + 1)
-	num_label.add_theme_font_size_override("font_size", 16)
+	num_label.add_theme_font_size_override("font_size", 24)
 	num_label.add_theme_color_override("font_color", Color(0.6, 0.5, 0.4, 0.8))
 	num_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	num_label.position = Vector2(-total_sz.x * 0.5, total_sz.y * 0.5 + 2)

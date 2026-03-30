@@ -182,7 +182,7 @@ func _build_buckets() -> void:
 		## Підпис кольору (LAW 10)
 		var name_lbl: Label = Label.new()
 		name_lbl.text = tr(c.get("name_key", ""))
-		name_lbl.add_theme_font_size_override("font_size", 22)
+		name_lbl.add_theme_font_size_override("font_size", 24)
 		name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		name_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
 		name_lbl.position = Vector2(x, bucket_y + BUCKET_H * 0.5 - 36)

@@ -250,7 +250,7 @@ func _spawn_palette() -> void:
 		var color_label: Label = Label.new()
 		var color_key: String = "COLOR_%s" % _ids[i].to_upper()
 		color_label.text = tr(color_key)
-		color_label.add_theme_font_size_override("font_size", 20)
+		color_label.add_theme_font_size_override("font_size", 24)
 		color_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		color_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
 		color_label.position = Vector2(0, PALETTE_SIZE + 2.0)
@@ -322,7 +322,7 @@ func _spawn_peek_button() -> void:
 ## Індикатор поточної зони — показує яку частину тварини розмальовувати
 func _spawn_zone_indicator() -> void:
 	_zone_indicator = Label.new()
-	_zone_indicator.add_theme_font_size_override("font_size", 20)
+	_zone_indicator.add_theme_font_size_override("font_size", 24)
 	_zone_indicator.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_zone_indicator.add_theme_color_override("font_color", Color(1, 1, 1, 0.9))
 	var vp: Vector2 = get_viewport().get_visible_rect().size

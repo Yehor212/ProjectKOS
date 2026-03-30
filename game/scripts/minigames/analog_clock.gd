@@ -662,7 +662,7 @@ func _spawn_clock(vp: Vector2) -> void:
 		var num_pos: Vector2 = Vector2(cos(angle) * num_r, sin(angle) * num_r)
 		var lbl: Label = Label.new()
 		lbl.text = str(h)
-		lbl.add_theme_font_size_override("font_size", 24 if _is_toddler else 22)
+		lbl.add_theme_font_size_override("font_size", 24)
 		lbl.add_theme_color_override("font_color", MARK_COLOR)
 		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -904,7 +904,7 @@ func _create_ctrl_button(text: String, pos: Vector2, color: Color,
 	btn.text = text
 	btn.position = pos
 	btn.size = BTN_SIZE
-	btn.add_theme_font_size_override("font_size", 20)
+	btn.add_theme_font_size_override("font_size", 24)
 	btn.add_theme_stylebox_override("normal",
 		ThemeManager.make_soft_style(color, color.darkened(0.2), 16, false))
 	btn.add_theme_stylebox_override("hover",

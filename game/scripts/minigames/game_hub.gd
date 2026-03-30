@@ -94,7 +94,7 @@ func _build_collection_button() -> void:
 	var btn: Button = Button.new()
 	btn.text = tr("BTN_COLLECTION")
 	btn.custom_minimum_size = Vector2(120, 48)
-	btn.add_theme_font_size_override("font_size", 20)
+	btn.add_theme_font_size_override("font_size", 24)
 	btn.add_theme_color_override("font_color", Color.WHITE)
 	btn.add_theme_stylebox_override("normal", ThemeManager.make_soft_style(
 		ThemeManager.COLOR_GOLD, ThemeManager.COLOR_GOLD_DEPTH, 16, false))
@@ -332,7 +332,7 @@ func _show_info_panel(data: Dictionary) -> void:
 	## 3. "Що робити:" — заголовок секції
 	var what_label: Label = Label.new()
 	what_label.text = tr("INFO_WHAT_TO_DO")
-	what_label.add_theme_font_size_override("font_size", 20)
+	what_label.add_theme_font_size_override("font_size", 24)
 	what_label.add_theme_color_override("font_color", Color(0.3, 0.3, 0.3))
 	what_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(what_label)
@@ -340,7 +340,7 @@ func _show_info_panel(data: Dictionary) -> void:
 	## 4. Опис гри
 	var desc_label: Label = Label.new()
 	desc_label.text = tr(desc_key) if desc_key != "" else ""
-	desc_label.add_theme_font_size_override("font_size", 22)
+	desc_label.add_theme_font_size_override("font_size", 24)
 	desc_label.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
 	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -355,7 +355,7 @@ func _show_info_panel(data: Dictionary) -> void:
 	## 6. "Розвиває:" — заголовок секції
 	var skill_header: Label = Label.new()
 	skill_header.text = tr("INFO_DEVELOPS")
-	skill_header.add_theme_font_size_override("font_size", 20)
+	skill_header.add_theme_font_size_override("font_size", 24)
 	skill_header.add_theme_color_override("font_color", Color(0.3, 0.3, 0.3))
 	skill_header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(skill_header)
@@ -363,7 +363,7 @@ func _show_info_panel(data: Dictionary) -> void:
 	## 7. Навичка
 	var skill_label: Label = Label.new()
 	skill_label.text = tr(skill_key) if skill_key != "" else ""
-	skill_label.add_theme_font_size_override("font_size", 22)
+	skill_label.add_theme_font_size_override("font_size", 24)
 	skill_label.add_theme_color_override("font_color", Color("0a8a5e"))
 	skill_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	skill_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -398,7 +398,7 @@ func _show_info_panel(data: Dictionary) -> void:
 	close_btn.custom_minimum_size = Vector2(40, 40)
 	close_btn.size = Vector2(40, 40)
 	close_btn.position = Vector2(INFO_PANEL_W - 48, 8)
-	close_btn.add_theme_font_size_override("font_size", 22)
+	close_btn.add_theme_font_size_override("font_size", 24)
 	close_btn.add_theme_color_override("font_color", Color(0.3, 0.3, 0.3))
 	var close_style: StyleBoxFlat = StyleBoxFlat.new()
 	close_style.bg_color = Color(0.92, 0.92, 0.92, 1.0)

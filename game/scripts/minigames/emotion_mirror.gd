@@ -519,7 +519,7 @@ func _create_emotion_card(emo: int) -> Node2D:
 	var label_key: String = EMOTION_LABEL_KEYS.get(emo, "EMOTION_HAPPY")
 	var lbl: Label = Label.new()
 	lbl.text = tr(label_key)
-	lbl.add_theme_font_size_override("font_size", int(16.0 * s))
+	lbl.add_theme_font_size_override("font_size", int(24.0 * s))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	lbl.size = Vector2(card_size, 24.0 * s)
 	lbl.position = Vector2(-card_size * 0.5, card_size * 0.45)
@@ -774,7 +774,7 @@ func _show_action_phase() -> void:
 		btn.custom_minimum_size = Vector2(90.0 * s, 80.0 * s)
 		var key: String = ACTION_LABEL_KEYS.get(act, "EMOTION_ACTION_HUG")
 		btn.text = tr(key)
-		btn.add_theme_font_size_override("font_size", int(16.0 * s))
+		btn.add_theme_font_size_override("font_size", int(24.0 * s))
 		var act_color: Color = ACTION_COLORS.get(act, Color.WHITE)
 		var sb: StyleBoxFlat = StyleBoxFlat.new()
 		sb.bg_color = act_color

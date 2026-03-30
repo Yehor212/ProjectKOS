@@ -149,7 +149,7 @@ func _build_hud() -> void:
 	_build_instruction_pill(get_tutorial_instruction(), 26)
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	_moves_label = Label.new()
-	_moves_label.add_theme_font_size_override("font_size", 22)
+	_moves_label.add_theme_font_size_override("font_size", 24)
 	_moves_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_moves_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.7))
 	_moves_label.position = Vector2(0, _sa_top + 123)

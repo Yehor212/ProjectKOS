@@ -434,7 +434,7 @@ func _create_card_node(def: Dictionary, w: float, h: float, s: float) -> Node2D:
 	var name_key: String = "STORY_CARD_%s" % card_id.to_upper()
 	var name_label: Label = Label.new()
 	name_label.text = tr(name_key)
-	name_label.add_theme_font_size_override("font_size", int(14.0 * s))
+	name_label.add_theme_font_size_override("font_size", int(24.0 * s))
 	name_label.add_theme_color_override("font_color", Color(0, 0, 0, 0.6))
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.size = Vector2(w, h * 0.3)
@@ -445,7 +445,7 @@ func _create_card_node(def: Dictionary, w: float, h: float, s: float) -> Node2D:
 	if is_distractor:
 		var cross: Label = Label.new()
 		cross.text = "?"
-		cross.add_theme_font_size_override("font_size", int(16.0 * s))
+		cross.add_theme_font_size_override("font_size", int(24.0 * s))
 		cross.add_theme_color_override("font_color", Color(0.5, 0.2, 0.2, 0.4))
 		cross.size = Vector2(24.0 * s, 24.0 * s)
 		cross.position = Vector2(w * 0.5 - 20.0 * s, -h * 0.5 + 4.0 * s)

@@ -120,7 +120,7 @@ func setup(data: Dictionary, recommended: bool = true) -> void:
 	else:
 		badge.text = tr("BADGE_COMING_SOON")
 		badge.add_theme_color_override("font_color", ThemeManager.COLOR_SECONDARY)
-	badge.add_theme_font_size_override("font_size", 20)
+	badge.add_theme_font_size_override("font_size", 24)
 	vbox.add_child(badge)
 
 	## Played indicator — зірочка для зіграних ігор (LAW 28 depth feedback)
@@ -133,7 +133,7 @@ func setup(data: Dictionary, recommended: bool = true) -> void:
 		played_hbox.add_child(played_star)
 		var played_label: Label = Label.new()
 		played_label.text = tr("BADGE_PLAYED")
-		played_label.add_theme_font_size_override("font_size", 16)
+		played_label.add_theme_font_size_override("font_size", 24)
 		played_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.5))
 		played_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		played_hbox.add_child(played_label)

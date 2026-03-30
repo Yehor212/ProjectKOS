@@ -441,7 +441,7 @@ func _spawn_tubes(vp: Vector2, recipe_colors: Array[String]) -> void:
 		var tube_label: Label = Label.new()
 		var tube_color_key: String = "COLOR_" + color_name.to_upper()
 		tube_label.text = tr(tube_color_key)
-		tube_label.add_theme_font_size_override("font_size", 16)
+		tube_label.add_theme_font_size_override("font_size", 24)
 		tube_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tube_label.position = Vector2(-TUBE_WIDTH * 0.5, TUBE_HEIGHT * 0.5 + 2.0)
 		tube_label.size = Vector2(TUBE_WIDTH, 20)
