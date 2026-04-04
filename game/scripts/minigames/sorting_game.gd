@@ -328,7 +328,7 @@ func _spawn_items(animals: Array[Dictionary]) -> void:
 		unlock_tw.tween_interval(unlock_delay)
 		unlock_tw.tween_callback(func() -> void:
 			_input_locked = false
-			_start_idle_breathing(_drag.draggable_items)
+			_start_idle_breathing(_items)
 			_reset_idle_timer())
 
 

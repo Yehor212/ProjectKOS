@@ -230,8 +230,8 @@ func _start_round() -> void:
 	_update_weather_display(weather)
 	_spawn_weather_particles(weather)
 	## Прогресивна складність (LAW 6, A4)
-	var correct_count: int = _scale_stepped_i(2, 3, _round, _total_rounds)
-	var wrong_count: int = _scale_stepped_i(1, 4, _round, _total_rounds)
+	var correct_count: int = _scale_adaptive_i(2, 3, _round, _total_rounds)
+	var wrong_count: int = _scale_adaptive_i(1, 4, _round, _total_rounds)
 	## LAW 2: мінімум 3 вибори
 	if correct_count + wrong_count < 3:
 		wrong_count = 3 - correct_count
@@ -742,7 +742,7 @@ static func _clothing_icon(id: String, size: float) -> Control:
 
 
 ## Локалізована назва зони (A12: i18n)
-static func _zone_name(zone: int) -> String:
+func _zone_name(zone: int) -> String:
 	match zone:
 		BodyZone.HEAD: return tr("ZONE_HEAD")
 		BodyZone.BODY: return tr("ZONE_BODY")
@@ -786,7 +786,7 @@ class TofieDrawer extends Node2D:
 	## Малює Тофі як paper-doll (LAW 28: premium multi-layer)
 	func _draw() -> void:
 		## Тінь під Тофі
-		draw_ellipse(Vector2(0, 85), Vector2(40, 10), Color(0, 0, 0, 0.12))
+		_draw_ellipse(Vector2(0, 85), Vector2(40, 10), Color(0, 0, 0, 0.12))
 		## Ноги
 		_draw_leg(Vector2(-18, 45), Vector2(14, 45))
 		_draw_leg(Vector2(18, 45), Vector2(14, 45))
@@ -888,7 +888,7 @@ class TofieDrawer extends Node2D:
 		draw_rect(rect, Color("ffd0a8"), true)
 
 	## Допоміжна — малює еліпс через polygon approximation
-	func draw_ellipse(center: Vector2, radii: Vector2, color: Color) -> void:
+	func _draw_ellipse(center: Vector2, radii: Vector2, color: Color) -> void:
 		var points: PackedVector2Array = PackedVector2Array()
 		var segments: int = 24
 		for i: int in segments:

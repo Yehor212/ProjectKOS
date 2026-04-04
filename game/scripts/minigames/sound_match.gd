@@ -6,7 +6,7 @@ extends BaseMiniGame
 ## Preschool: 4-5 тварин, 5 раундів, R4-5 — тихіший звук (harder listening).
 ## Наратив: "Хто так каже? Натисни на тваринку!" — тварина радіє при вірній відповіді.
 
-const ROUNDS_TODDLER: int = 3
+const ROUNDS_TODDLER: int = 5  ## Was 3 → 45-90s sessions too short for 2-3yo
 const ROUNDS_PRESCHOOL: int = 5
 const ITEM_SCALE_BASE: Vector2 = Vector2(0.42, 0.42)
 const GRID_GAP: float = 50.0
@@ -64,6 +64,8 @@ var _idle_timer: SceneTreeTimer = null
 var _current_round_errors: int = 0
 ## Replay кнопка (speaker icon)
 var _replay_btn: Button = null
+## Visual hint — показує ім'я тварини для dual coding (Mayer) + звук вимкнений (accessibility)
+var _visual_hint_label: Label = null
 ## Локальний AudioStreamPlayer для тваринних звуків з контролем гучності
 var _animal_player: AudioStreamPlayer = null
 ## Кешовані звуки тварин (lazy load)
@@ -283,7 +285,7 @@ func _get_choice_count() -> int:
 	if _is_toddler:
 		return 3  ## Toddler: завжди 3 (LAW 2: мінімум 3 варіанти)
 	## Preschool: R1-2=4, R3-5=5 (stepped)
-	return _scale_stepped_i(4, 5, _round, _total_rounds)
+	return _scale_adaptive_i(4, 5, _round, _total_rounds)
 
 
 ## Гучність звуку за раундом — Preschool R4-5 тихіше (harder listening)
@@ -399,10 +401,10 @@ func _deal_items() -> void:
 				## Input розблокується ПІСЛЯ звуку (в _start_round)
 				## Тут тільки фіксуємо що анімація завершена
 	## Idle breathing — тварини "дихають" поки дитина думає
-	_start_idle_breathing()
+	_start_item_breathing()
 
 
-func _start_idle_breathing() -> void:
+func _start_item_breathing() -> void:
 	if SettingsManager.reduced_motion:
 		return
 	for item: Node2D in _items:
@@ -440,6 +442,19 @@ func _build_replay_button() -> void:
 	JuicyEffects.button_press_squish(_replay_btn, self)
 	JuicyEffects.button_hover_scale(_replay_btn, self)
 	_ui_layer.add_child(_replay_btn)
+	## Visual hint label — dual coding (Mayer): audio + visual reinforcement
+	## Accessibility: makes game playable with sound OFF
+	_visual_hint_label = Label.new()
+	_visual_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_visual_hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_visual_hint_label.add_theme_font_size_override("font_size", int(28.0 * s))
+	_visual_hint_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.9))
+	_visual_hint_label.add_theme_constant_override("outline_size", int(4.0 * s))
+	_visual_hint_label.add_theme_color_override("font_outline_color", Color(0.1, 0.1, 0.2, 0.7))
+	_visual_hint_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_visual_hint_label.offset_top = _sa_top + 190.0 * s
+	_visual_hint_label.visible = false
+	_ui_layer.add_child(_visual_hint_label)
 
 
 func _show_replay_button() -> void:
@@ -456,11 +471,34 @@ func _show_replay_button() -> void:
 		## Розблокувати input після появи кнопки
 		_input_locked = false
 		_reset_idle_timer()
+	## Показати visual hint (dual coding: audio + visual)
+	_show_visual_hint()
+
+
+func _show_visual_hint() -> void:
+	if not is_instance_valid(_visual_hint_label) or _correct_animal_name.is_empty():
+		return
+	## Показати ім'я тварини через tr() для i18n — "Хто каже: Кіт?"
+	var animal_key: String = "ANIMAL_" + _correct_animal_name.to_upper()
+	_visual_hint_label.text = "? " + tr(animal_key) + " ?"
+	_visual_hint_label.visible = true
+	_visual_hint_label.modulate.a = 0.0
+	if not SettingsManager.reduced_motion:
+		var tw: Tween = _create_game_tween()
+		tw.tween_property(_visual_hint_label, "modulate:a", 1.0, 0.3).set_delay(0.5)
+	else:
+		_visual_hint_label.modulate.a = 1.0
+
+
+func _hide_visual_hint() -> void:
+	if is_instance_valid(_visual_hint_label):
+		_visual_hint_label.visible = false
 
 
 func _hide_replay_button() -> void:
 	if is_instance_valid(_replay_btn):
 		_replay_btn.visible = false
+	_hide_visual_hint()
 
 
 func _on_replay_pressed() -> void:

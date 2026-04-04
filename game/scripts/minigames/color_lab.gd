@@ -393,7 +393,7 @@ func _spawn_tubes(vp: Vector2, recipe_colors: Array[String]) -> void:
 
 	var tubes: Array[String] = recipe_colors.duplicate()
 	## LAW 2: мінімум 3 варіанти. LAW 6: прогресивна складність
-	var max_tubes: int = _scale_stepped_i(3, maxi(all_colors.size(), 3), _round, _total_rounds)
+	var max_tubes: int = _scale_adaptive_i(3, maxi(all_colors.size(), 3), _round, _total_rounds)
 	## Додаємо відволікачі
 	for c: String in all_colors:
 		if tubes.size() >= max_tubes:

@@ -7,7 +7,7 @@ extends BaseMiniGame
 ## Наратив: "Тофі вчить букви! Лопни правильний пузир!"
 ## Навичка: phonemic_awareness (зв'язок літера-звук).
 
-const ROUNDS_TODDLER: int = 3
+const ROUNDS_TODDLER: int = 5  ## Was 3 → 30-60s sessions too short for 2-3yo
 const ROUNDS_PRESCHOOL: int = 5
 const SAFETY_TIMEOUT_SEC: float = 120.0
 const IDLE_HINT_DELAY: float = 5.0
@@ -68,6 +68,8 @@ var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var _idle_timer: SceneTreeTimer = null
 var _current_round_errors: int = 0
 var _replay_btn: Button = null
+## Visual hint — показує цільову літеру для dual coding + sound-off accessibility
+var _target_hint_label: Label = null
 ## Phoneme audio player
 var _phoneme_player: AudioStreamPlayer = null
 var _phoneme_cache: Dictionary = {}
@@ -355,7 +357,7 @@ func _get_choice_count() -> int:
 	if _is_toddler:
 		return 3  ## LAW 2: мінімум 3
 	## Preschool: R1-2=4, R3-5=5
-	return _scale_stepped_i(4, 5, _round, _total_rounds)
+	return _scale_adaptive_i(4, 5, _round, _total_rounds)
 
 
 ## Обрати літери для раунду за категорією
@@ -495,6 +497,19 @@ func _build_replay_button() -> void:
 	JuicyEffects.button_press_squish(_replay_btn, self)
 	JuicyEffects.button_hover_scale(_replay_btn, self)
 	_ui_layer.add_child(_replay_btn)
+	## Target hint label — dual coding (Mayer): audio phoneme + visual letter
+	## Accessibility: makes game playable with sound OFF (WCAG 2.2, EAA June 2025)
+	_target_hint_label = Label.new()
+	_target_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_target_hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_target_hint_label.add_theme_font_size_override("font_size", int(48.0 * s))
+	_target_hint_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.7, 0.95))
+	_target_hint_label.add_theme_constant_override("outline_size", int(6.0 * s))
+	_target_hint_label.add_theme_color_override("font_outline_color", Color(0.2, 0.1, 0.3, 0.8))
+	_target_hint_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_target_hint_label.offset_top = _sa_top + 190.0 * s
+	_target_hint_label.visible = false
+	_ui_layer.add_child(_target_hint_label)
 
 
 func _show_replay_button() -> void:
@@ -510,11 +525,33 @@ func _show_replay_button() -> void:
 		## Розблокувати input
 		_input_locked = false
 		_reset_idle_timer()
+	## Показати visual hint (dual coding: audio phoneme + visual letter)
+	_show_target_hint()
+
+
+func _show_target_hint() -> void:
+	if not is_instance_valid(_target_hint_label) or _correct_letter.is_empty():
+		return
+	## Показати цільову літеру великим шрифтом: "Знайди: B"
+	_target_hint_label.text = tr("PHONICS_FIND") + " " + _correct_letter
+	_target_hint_label.visible = true
+	_target_hint_label.modulate.a = 0.0
+	if not SettingsManager.reduced_motion:
+		var tw: Tween = _create_game_tween()
+		tw.tween_property(_target_hint_label, "modulate:a", 1.0, 0.3).set_delay(0.5)
+	else:
+		_target_hint_label.modulate.a = 1.0
+
+
+func _hide_target_hint() -> void:
+	if is_instance_valid(_target_hint_label):
+		_target_hint_label.visible = false
 
 
 func _hide_replay_button() -> void:
 	if is_instance_valid(_replay_btn):
 		_replay_btn.visible = false
+	_hide_target_hint()
 
 
 func _on_replay_pressed() -> void:

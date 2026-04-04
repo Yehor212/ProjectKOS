@@ -8,7 +8,8 @@ extends BaseMiniGame
 ## Toddler: R1=1, R2=2, R3=2, R4=2 пари. Preschool: R1=1, R2=2, R3=2, R4=3 пари.
 ## A3: вікова розвилка. A4: прогресивна складність (більше пар, менший розмір, поворот).
 
-const TOTAL_ROUNDS: int = 4
+const ROUNDS_TODDLER: int = 3   ## Toddler needs fewer rounds (shorter attention)
+const ROUNDS_PRESCHOOL: int = 5  ## Preschool benefits from more rounds + rotation challenge
 const DEAL_STAGGER: float = 0.12
 const DEAL_DURATION: float = 0.35
 const IDLE_HINT_DELAY: float = 5.0
@@ -33,6 +34,7 @@ const ANIMAL_NAMES: Array[String] = [
 ]
 
 var _is_toddler: bool = false
+var _total_rounds: int = 4
 var _drag: UniversalDrag = null
 var _round: int = 0
 var _matched: int = 0
@@ -61,6 +63,7 @@ func _ready() -> void:
 	bg_theme = "puzzle"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
+	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
 	_drag = UniversalDrag.new(self)
@@ -126,7 +129,7 @@ func _start_round() -> void:
 	var pairs: int = _get_round_pairs()
 	var current_scale: Vector2 = _get_round_scale()
 
-	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, TOTAL_ROUNDS])
+	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
 
 	var animals: Array[String] = _pick_animals(pairs)
@@ -138,7 +141,7 @@ func _start_round() -> void:
 	if _total == 0:
 		push_warning("MagneticHalves: жодна пара не створена, пропускаємо раунд")
 		_round += 1
-		if _round >= TOTAL_ROUNDS:
+		if _round >= _total_rounds:
 			_finish()
 		else:
 			_start_round()
@@ -568,7 +571,7 @@ func _on_round_complete() -> void:
 	tw.tween_callback(func() -> void:
 		_clear_round()
 		_round += 1
-		if _round >= TOTAL_ROUNDS:
+		if _round >= _total_rounds:
 			_finish()
 		else:
 			_start_round())
@@ -612,7 +615,7 @@ func _finish() -> void:
 		if not is_instance_valid(self):
 			return
 		finish_game(earned, {"time_sec": elapsed, "errors": _errors,
-			"rounds_played": TOTAL_ROUNDS, "earned_stars": earned}))
+			"rounds_played": _total_rounds, "earned_stars": earned}))
 
 
 ## Фінальна анімація — усі звільнені тварини підстрибують (святкування)

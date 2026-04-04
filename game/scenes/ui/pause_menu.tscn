@@ -37,13 +37,13 @@ vertical_alignment = 1
 
 [node name="ResumeButton" type="Button" parent="Overlay/VBoxContainer"]
 layout_mode = 2
-custom_minimum_size = Vector2(280, 70)
+custom_minimum_size = Vector2(280, 80)
 theme_type_variation = &"AccentButton"
 text = "Продовжити"
 
 [node name="QuitToMenuButton" type="Button" parent="Overlay/VBoxContainer"]
 layout_mode = 2
-custom_minimum_size = Vector2(280, 70)
+custom_minimum_size = Vector2(280, 80)
 theme_type_variation = &"SecondaryButton"
 text = "До меню"
 

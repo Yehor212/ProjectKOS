@@ -127,6 +127,14 @@ func _show_break_overlay() -> void:
 func _input(event: InputEvent) -> void:
 	if not _gate_active:
 		return
+	## Debug bypass: Ctrl+Shift+G для проходження session gate на десктопі
+	if OS.is_debug_build() and event is InputEventKey:
+		var key: InputEventKey = event as InputEventKey
+		if key.pressed and key.ctrl_pressed and key.shift_pressed and key.keycode == KEY_G:
+			_active_touches = {0: true, 1: true, 2: true}
+		elif not key.pressed:
+			_active_touches.clear()
+			_gate_progress = 0.0
 	if event is InputEventScreenTouch:
 		var touch: InputEventScreenTouch = event as InputEventScreenTouch
 		if touch.pressed:

@@ -198,6 +198,16 @@ func _ensure_gate_ui() -> void:
 func _input(event: InputEvent) -> void:
 	if not _gate_active:
 		return
+	## Debug bypass: Ctrl+Shift+G утримати для проходження gate на десктопі
+	## (3-finger touch неможливий з мишкою, тому debug bypass необхідний для тестування)
+	if OS.is_debug_build() and event is InputEventKey:
+		var key: InputEventKey = event as InputEventKey
+		if key.pressed and key.ctrl_pressed and key.shift_pressed and key.keycode == KEY_G:
+			## Симулювати 3 пальці для gate
+			_active_touches = {0: true, 1: true, 2: true}
+		elif not key.pressed:
+			_active_touches.clear()
+			_gate_progress = 0.0
 	## Відстежувати кількість одночасних дотиків
 	if event is InputEventScreenTouch:
 		var touch: InputEventScreenTouch = event as InputEventScreenTouch

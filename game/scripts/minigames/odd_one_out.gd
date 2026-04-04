@@ -5,7 +5,7 @@ extends BaseMiniGame
 ## Preschool: категорійний інтрудер (їжа серед тварин, дике серед домашніх).
 ## R1: 4 items, obvious. R2: 5. R3: category. R4: 6, subtle. R5: 2 crashers.
 
-const ROUNDS_TODDLER: int = 3
+const ROUNDS_TODDLER: int = 6  ## Was 3 → ~30s sessions. Now ~60-120s (Brain Balance: 2yo attention 4-6min)
 const ROUNDS_PRESCHOOL: int = 5
 const ITEM_SCALE: Vector2 = Vector2(0.4, 0.4)
 const GRID_GAP: float = 40.0
@@ -329,7 +329,7 @@ func _start_round() -> void:
 ## Toddler: візуально інша тварина серед однакових
 func _generate_toddler_round(crasher_count: int) -> void:
 	## Кількість majority items зростає з раундами (LAW 6 / A4)
-	var majority_count: int = _scale_stepped_i(3, 5, _round, _total_rounds)
+	var majority_count: int = _scale_adaptive_i(3, 5, _round, _total_rounds)
 	var total_unique: int = 1 + crasher_count
 	var indices: Array[int] = _pick_indices(total_unique)
 	## A8: fallback guard
@@ -368,7 +368,7 @@ func _generate_toddler_round(crasher_count: int) -> void:
 
 ## Preschool: категорійний інтрудер (їжа серед тварин, або навпаки)
 func _generate_preschool_round(crasher_count: int) -> void:
-	var majority_count: int = _scale_stepped_i(3, 5, _round, _total_rounds)
+	var majority_count: int = _scale_adaptive_i(3, 5, _round, _total_rounds)
 	var total_needed: int = majority_count + crasher_count
 	var indices: Array[int] = _pick_indices(total_needed)
 	## A8: guard

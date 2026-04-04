@@ -243,7 +243,7 @@ func _start_round() -> void:
 	_mirror_line = null
 
 	## A4: прогресивна складність
-	_brush_width = _scale_stepped(
+	_brush_width = _scale_adaptive(
 		BRUSH_TODDLER if _is_toddler else BRUSH_PRESCHOOL,
 		(BRUSH_TODDLER * 0.7) if _is_toddler else (BRUSH_PRESCHOOL * 0.7),
 		_round, _total_rounds)
@@ -330,7 +330,7 @@ func _spawn_template_left() -> void:
 		var screen_p: Vector2 = _normalized_to_screen_left(p)
 		_template_line_node.add_point(screen_p)
 	## A4: зменшити alpha в пізніших раундах (складніше зрозуміти шаблон)
-	var alpha: float = _scale_stepped(TEMPLATE_ALPHA, TEMPLATE_ALPHA * 0.5, _round, _total_rounds)
+	var alpha: float = _scale_adaptive(TEMPLATE_ALPHA, TEMPLATE_ALPHA * 0.5, _round, _total_rounds)
 	_template_line_node.default_color.a = alpha
 	_canvas.add_child(_template_line_node)
 	_all_round_nodes.append(_template_line_node)
@@ -341,7 +341,7 @@ func _spawn_guide_dots() -> void:
 	## A4: менше dots = складніше (потрібно здогадуватись де малювати)
 	var dot_count: int = _template_points.size()
 	## В останніх раундах показуємо менше dots
-	var show_ratio: float = _scale_stepped(1.0, 0.5, _round, _total_rounds)
+	var show_ratio: float = _scale_adaptive(1.0, 0.5, _round, _total_rounds)
 	var dots_to_show: int = maxi(int(float(dot_count) * show_ratio), 3)  ## LAW 13: мінімум 3
 	## Визначити які точки показувати (рівномірно розподілені)
 	var step: float = float(dot_count) / maxf(float(dots_to_show), 1.0)  ## LAW 13
@@ -535,7 +535,7 @@ func _mirror_point(pos: Vector2) -> Vector2:
 
 ## Preschool: перевірити чи штрих покриває guide dot
 func _check_guide_dot_coverage(draw_pos: Vector2) -> void:
-	var hit_radius: float = _scale_stepped(
+	var hit_radius: float = _scale_adaptive(
 		GUIDE_DOT_HIT_RADIUS_P, GUIDE_DOT_HIT_RADIUS_P * 0.6,
 		_round, _total_rounds)  ## A4: менший radius = складніше
 	for i: int in _guide_dots.size():

@@ -13,7 +13,7 @@ const CARD_GAP: float = 20.0
 const TOP_BAR_HEIGHT: float = 64.0
 const IDLE_HINT_DELAY: float = 5.0
 const VICTORY_STAGGER: float = 0.08
-const SAFETY_TIMEOUT_SEC: float = 120.0
+const SAFETY_TIMEOUT_SEC: float = 300.0  ## Preschool sessions run 4-7.5min — 120s was too short
 const CELEBRATION_MEET_DUR: float = 0.5
 const CELEBRATION_HUG_DUR: float = 0.6
 
@@ -120,7 +120,7 @@ func _start_round() -> void:
 
 	## Peek duration для Preschool зменшується з раундами (A4)
 	if not _is_toddler_mode:
-		_peek_duration = _scale_stepped(
+		_peek_duration = _scale_adaptive(
 			PEEK_DURATION_EASY, PEEK_DURATION_HARD, _round, _total_rounds)
 
 	_update_progress()
@@ -297,7 +297,7 @@ func _add_hiding_overlay(card: Node2D, spot_type: int) -> void:
 	overlay.spot_type = spot_type
 
 	## Прозорість залежить від раунду — стає менш прозорою (A4 difficulty ramp)
-	var alpha: float = _scale_stepped(
+	var alpha: float = _scale_adaptive(
 		TODDLER_ALPHA_EASY, TODDLER_ALPHA_HARD, _round, _total_rounds)
 	overlay.modulate.a = alpha
 	overlay.z_index = 1  ## Поверх спрайту тварини

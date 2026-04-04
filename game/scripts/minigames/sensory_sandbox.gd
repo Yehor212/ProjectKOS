@@ -40,6 +40,8 @@ var _stroke_count: int = 0
 var _idle_timer: SceneTreeTimer = null
 var _game_timer: float = 0.0
 var _warned_low_time: bool = false
+var _challenge_shown: bool = false  ## L1: optional "draw this" challenge
+var _challenge_label: Label = null
 
 
 func _ready() -> void:
@@ -172,6 +174,10 @@ func _process(delta: float) -> void:
 		if not _warned_low_time:
 			_warned_low_time = true
 			AudioManager.play_sfx("click")
+	## L1: Optional "draw this" challenge after 30s of free play — gentle suggestion, not requirement
+	if not _challenge_shown and _game_timer < (_game_duration - 30.0):
+		_challenge_shown = true
+		_show_drawing_challenge()
 	## Toddler: авто-зміна кольору з часом
 	if _is_toddler and _drawing:
 		var time: float = Time.get_ticks_msec() / 1000.0
@@ -262,6 +268,35 @@ func _end_stroke() -> void:
 	if _current_line and _current_line.get_point_count() < 2:
 		_current_line.queue_free()
 	_current_line = null
+
+
+## L1: Gentle drawing challenge — optional suggestion (not blocking, just inspiring)
+func _show_drawing_challenge() -> void:
+	var challenges: Array[String] = ["DRAW_STAR", "DRAW_HEART", "DRAW_CIRCLE", "DRAW_HOUSE", "DRAW_SUN"]
+	var key: String = challenges[randi() % challenges.size()]
+	if not is_instance_valid(_ui_layer):
+		push_warning("SensorySandbox: _show_drawing_challenge — _ui_layer not valid")
+		return
+	_challenge_label = Label.new()
+	_challenge_label.text = tr(key)
+	_challenge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var s: float = _ui_scale()
+	_challenge_label.add_theme_font_size_override("font_size", int(22.0 * s))
+	_challenge_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 0.7))
+	_challenge_label.add_theme_constant_override("outline_size", int(3.0 * s))
+	_challenge_label.add_theme_color_override("font_outline_color", Color(0.1, 0.1, 0.2, 0.5))
+	_challenge_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_challenge_label.offset_top = _sa_top + 60.0 * s
+	_ui_layer.add_child(_challenge_label)
+	## Fade in then fade out after 5s (non-intrusive)
+	_challenge_label.modulate.a = 0.0
+	if not SettingsManager.reduced_motion:
+		var tw: Tween = _create_game_tween()
+		tw.tween_property(_challenge_label, "modulate:a", 1.0, 0.5)
+		tw.tween_interval(5.0)
+		tw.tween_property(_challenge_label, "modulate:a", 0.0, 1.0)
+	else:
+		_challenge_label.modulate.a = 1.0
 
 
 ## ---- Finish ----

@@ -306,7 +306,7 @@ func _start_toddler_round() -> void:
 	_matched = 0
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	## A4: прогресивна складність — 3->4->5 деталей істоти
-	var target_count: int = _scale_stepped_i(3, 5, _round, TODDLER_ROUNDS)
+	var target_count: int = _scale_adaptive_i(3, 5, _round, TODDLER_ROUNDS)
 	var creature: Dictionary = _pick_creature_for_round(target_count)
 	var parts: Array = creature.get("parts", [])
 	if parts.size() == 0:
@@ -406,7 +406,7 @@ func _start_preschool_round() -> void:
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	var center: Vector2 = Vector2(vp.x * 0.5, vp.y * 0.38)
 	## A4: прогресивна складність — 4->5->6 деталей
-	var target_count: int = _scale_stepped_i(4, 6, _round, PRESCHOOL_ROUNDS)
+	var target_count: int = _scale_adaptive_i(4, 6, _round, PRESCHOOL_ROUNDS)
 	var parts: Array[Dictionary] = _pick_constructor_for_round(target_count)
 	if parts.size() == 0:
 		push_warning("ShapeSorter: constructor has no parts, skipping round")

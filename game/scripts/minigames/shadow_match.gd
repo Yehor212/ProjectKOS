@@ -7,7 +7,7 @@ extends BaseMiniGame
 ## Неправильний: тінь хитає пальцем (wag animation).
 ## R5 фінал: всі matched тварини виходять і танцюють синхронно.
 
-const ROUNDS_TODDLER: int = 3
+const ROUNDS_TODDLER: int = 5  ## Was 3 → 45-75s sessions too short for 2-3yo
 const ROUNDS_PRESCHOOL: int = 5
 const SAFETY_TIMEOUT_SEC: float = 120.0
 const SHADOW_Y_CENTER: float = 0.32

@@ -203,6 +203,12 @@ func _start_round() -> void:
 
 	_current_sequence = _pick_sequence()
 	var cards_arr: Array = _current_sequence.get("cards", [])
+	## M7: Toddler R1 = 2 cards (Cowan limit for 3yo = 2 objects in working memory)
+	if _is_toddler and _round == 0 and cards_arr.size() > 2:
+		cards_arr = cards_arr.slice(0, 2)
+		_current_sequence = _current_sequence.duplicate()
+		_current_sequence["cards"] = cards_arr
+		_current_sequence["colors"] = _current_sequence.get("colors", []).slice(0, 2)
 	_card_count = cards_arr.size()
 
 	## A3: вікова розвилка — Preschool R3+ має distractor

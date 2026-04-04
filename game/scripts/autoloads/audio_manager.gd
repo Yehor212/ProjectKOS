@@ -13,6 +13,7 @@ var _sfx: Dictionary = {}
 var _bgm: Dictionary = {}
 var _bgm_player: AudioStreamPlayer = null
 var _last_sfx_frame: Dictionary = {}  ## sfx_name → frame (дебаунс дублів)
+var _bgm_tween: Tween = null  ## Єдиний tween для volume_db — kill() перед кожним новим
 
 
 func _ready() -> void:
@@ -138,18 +139,27 @@ func play_bgm(track_name: String = "bgm_loop") -> void:
 
 func stop_bgm() -> void:
 	if _bgm_player.playing:
-		var tw: Tween = create_tween()
-		tw.tween_property(_bgm_player, "volume_db", -40.0, 0.5)
-		tw.tween_callback(_bgm_player.stop)
+		_kill_bgm_tween()
+		_bgm_tween = create_tween()
+		_bgm_tween.tween_property(_bgm_player, "volume_db", -40.0, 0.5)
+		_bgm_tween.tween_callback(_bgm_player.stop)
 
 
 func lower_bgm() -> void:
 	if _bgm_player.playing:
-		var tw: Tween = create_tween()
-		tw.tween_property(_bgm_player, "volume_db", BGM_LOWERED_DB, 0.3)
+		_kill_bgm_tween()
+		_bgm_tween = create_tween()
+		_bgm_tween.tween_property(_bgm_player, "volume_db", BGM_LOWERED_DB, 0.3)
 
 
 func restore_bgm() -> void:
 	if _bgm_player.playing:
-		var tw: Tween = create_tween()
-		tw.tween_property(_bgm_player, "volume_db", BGM_NORMAL_DB, 0.3)
+		_kill_bgm_tween()
+		_bgm_tween = create_tween()
+		_bgm_tween.tween_property(_bgm_player, "volume_db", BGM_NORMAL_DB, 0.3)
+
+
+func _kill_bgm_tween() -> void:
+	if _bgm_tween and _bgm_tween.is_valid():
+		_bgm_tween.kill()
+	_bgm_tween = null

@@ -298,8 +298,13 @@ func _generate_puzzle() -> void:
 	_robot_pos = Vector2i(0, 0)
 	## Ціль — рандомна позиція не на старті
 	## Прогресивна складність: більше кроків у пізніших раундах
-	var steps: int = _scale_adaptive_i(2, 3, _round, _total_rounds) if _is_toddler \
-		else _scale_adaptive_i(2, 5, _round, _total_rounds)
+	## Toddler R1: тільки 1 крок (Piaget: irreversibility — 2-3yo не можуть планувати послідовності)
+	## Toddler R2+: 2-3 кроки (3-4yo справляються з replay коротких послідовностей)
+	var steps: int
+	if _is_toddler:
+		steps = 1 if _round == 0 else _scale_adaptive_i(2, 3, _round, _total_rounds)
+	else:
+		steps = _scale_adaptive_i(2, 5, _round, _total_rounds)
 	var pos: Vector2i = Vector2i.ZERO
 	for _i: int in steps:
 		var dirs: Array[String] = ["up", "down", "left", "right"]

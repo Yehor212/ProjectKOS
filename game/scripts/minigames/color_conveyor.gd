@@ -6,7 +6,8 @@ extends BaseMiniGame
 ## LAW 25: кожен колір прив'язаний до унікальної ФОРМИ (зірка, ромб, коло, серце, трикутник).
 ## LAW 1: предмети починають сірими — дія гравця РОЗКРИВАЄ колір.
 
-const TOTAL_ROUNDS: int = 3
+const ROUNDS_TODDLER: int = 3
+const ROUNDS_PRESCHOOL: int = 5  ## Was flat 3 — preschool benefits from more rounds
 const ITEMS_TODDLER_MIN: int = 3
 const ITEMS_TODDLER_MAX: int = 5
 const ITEMS_PRESCHOOL_MIN: int = 4
@@ -66,6 +67,7 @@ var _item_origins: Dictionary = {}
 var _item_color_layers: Dictionary = {}  ## item -> color Panel (для анімації фарбування)
 var _buckets: Array[Dictionary] = []
 
+var _total_rounds: int = 3
 var _current_conveyor_speed: float = CONVEYOR_SPEED_MIN
 var _idle_timer: SceneTreeTimer = null
 var _conveyor_panel: Panel = null
@@ -78,6 +80,7 @@ func _ready() -> void:
 	bg_theme = "candy"
 	super()
 	_is_toddler = (SettingsManager.age_group == 1)
+	_total_rounds = ROUNDS_TODDLER if _is_toddler else ROUNDS_PRESCHOOL
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
 	_build_hud()
@@ -220,24 +223,24 @@ func _start_round() -> void:
 	_input_locked = true
 	## A4: швидкість конвеєра зростає (тільки Preschool)
 	if not _is_toddler:
-		_current_conveyor_speed = _scale_stepped(
-			CONVEYOR_SPEED_MIN, CONVEYOR_SPEED_MAX, _round, TOTAL_ROUNDS)
+		_current_conveyor_speed = _scale_adaptive(
+			CONVEYOR_SPEED_MIN, CONVEYOR_SPEED_MAX, _round, _total_rounds)
 	_fade_instruction(_instruction_label, get_tutorial_instruction())
 	var palette: Array[Dictionary] = _get_round_palette()
 	if palette.is_empty():
 		push_warning("ColorConveyor: _start_round — empty palette, skipping")
 		_round += 1
-		if _round >= TOTAL_ROUNDS:
+		if _round >= _total_rounds:
 			_finish()
 		return
 	## A4: прогресивна складність — більше предметів у пізніших раундах
 	var per_round: int
 	if _is_toddler:
-		per_round = _scale_stepped_i(ITEMS_TODDLER_MIN, ITEMS_TODDLER_MAX, _round, TOTAL_ROUNDS)
+		per_round = _scale_adaptive_i(ITEMS_TODDLER_MIN, ITEMS_TODDLER_MAX, _round, _total_rounds)
 	else:
-		per_round = _scale_stepped_i(ITEMS_PRESCHOOL_MIN, ITEMS_PRESCHOOL_MAX, _round, TOTAL_ROUNDS)
+		per_round = _scale_adaptive_i(ITEMS_PRESCHOOL_MIN, ITEMS_PRESCHOOL_MAX, _round, _total_rounds)
 	_total_items = per_round
-	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, TOTAL_ROUNDS])
+	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, _total_rounds])
 	## Генеруємо набір предметів з рівним розподілом кольорів
 	var toy_entries: Array[Dictionary] = []
 	for j: int in per_round:
@@ -268,7 +271,7 @@ func _spawn_items(toy_entries: Array[Dictionary]) -> void:
 			item.modulate.a = 1.0
 			if i == count - 1:
 				_input_locked = false
-				_start_idle_breathing(_drag.draggable_items)
+				_start_idle_breathing(_items)
 				_reset_idle_timer()
 		else:
 			item.position = Vector2(target.x, -80.0)
@@ -281,7 +284,7 @@ func _spawn_items(toy_entries: Array[Dictionary]) -> void:
 			if i == count - 1:
 				tw.chain().tween_callback(func() -> void:
 					_input_locked = false
-					_start_idle_breathing(_drag.draggable_items)
+					_start_idle_breathing(_items)
 					_reset_idle_timer())
 
 
@@ -726,7 +729,7 @@ func _on_round_complete() -> void:
 	tw.tween_callback(func() -> void:
 		_clear_round()
 		_round += 1
-		if _round >= TOTAL_ROUNDS:
+		if _round >= _total_rounds:
 			_finish()
 		else:
 			_start_round())
@@ -753,7 +756,7 @@ func _finish() -> void:
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
 	var earned: int = _calculate_stars(_errors)
 	finish_game(earned, {"time_sec": elapsed, "errors": _errors,
-		"rounds_played": TOTAL_ROUNDS, "earned_stars": earned})
+		"rounds_played": _total_rounds, "earned_stars": earned})
 
 
 ## ---- Idle hint ----

@@ -29,7 +29,9 @@ func _ready() -> void:
 			JuicyEffects.button_press_squish(btn_node, self)
 		else:
 			push_warning("ParentalGate: button not found at %s" % btn_path)
-	JuicyEffects.button_press_squish($Overlay/PanelContainer/VBoxContainer/CancelButton, self)
+	var cancel_btn: Button = $Overlay/PanelContainer/VBoxContainer/CancelButton
+	cancel_btn.text = tr("BTN_CANCEL")
+	JuicyEffects.button_press_squish(cancel_btn, self)
 
 
 func show_gate() -> void:

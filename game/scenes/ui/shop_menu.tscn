@@ -26,9 +26,9 @@ layout_mode = 1
 anchors_preset = 0
 offset_left = 16.0
 offset_top = 16.0
-offset_right = 80.0
-offset_bottom = 80.0
-custom_minimum_size = Vector2(64, 64)
+offset_right = 96.0
+offset_bottom = 96.0
+custom_minimum_size = Vector2(80, 80)
 theme_type_variation = &"CircleButton"
 text = ""
 

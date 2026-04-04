@@ -22,7 +22,7 @@ const MELODIES: Array[Array] = [
 	[0, 0, 2, 2],            ## Рівень 2: C-C-G-G (Twinkle Twinkle мотив)
 	[0, 1, 2, 1, 0],         ## Рівень 3: C-E-G-E-C (арпеджіо вгору-вниз)
 	[2, 1, 0, 1, 2, 2],      ## Рівень 4: G-E-C-E-G-G (Mary Had a Little Lamb мотив)
-	[0, 0, 2, 2, 3, 3, 2],   ## Рівень 5: C-C-G-G-A-A-G (Twinkle повний, 7 нот)
+	[0, 0, 2, 2, 3],          ## Рівень 5: C-C-G-G-A (Twinkle скорочений, 5 нот — Cowan limit 3-4 для 5-7yo)
 ]
 
 ## Simon Says параметри (preschool)
@@ -278,7 +278,7 @@ func _next_level() -> void:
 	## Fallback: якщо мелодія порожня — випадкова послідовність
 	if _sequence.is_empty():
 		push_warning("ForestOrchestra: мелодія для рівня %d порожня, fallback" % _current_level)
-		var seq_len: int = _scale_stepped_i(2, 6, _current_level, MAX_LEVELS)
+		var seq_len: int = _scale_adaptive_i(2, 6, _current_level, MAX_LEVELS)
 		for _i: int in range(seq_len):
 			if _musicians.size() > 0:
 				_sequence.append(randi() % _musicians.size())

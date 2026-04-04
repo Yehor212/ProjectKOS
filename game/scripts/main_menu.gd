@@ -92,6 +92,7 @@ func _ready() -> void:
 
 	# Субтитр — затримана поява з depth treatment
 	var subtitle: Label = $CenterVBox/SubtitleLabel
+	subtitle.text = tr("SPLASH_SUBTITLE")
 	subtitle.add_theme_constant_override("outline_size", 3)
 	subtitle.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.15))
 	subtitle.modulate.a = 0.0

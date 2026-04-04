@@ -144,10 +144,10 @@ func _start_round() -> void:
 
 	## Обираємо ціну для раунду (LAW 6: прогресивна складність)
 	if _is_toddler:
-		_target_price = _scale_stepped_i(
+		_target_price = _scale_adaptive_i(
 			TODDLER_PRICE_MIN, TODDLER_PRICE_MAX, _round, _total_rounds)
 	else:
-		_target_price = _scale_stepped_i(
+		_target_price = _scale_adaptive_i(
 			PRESCHOOL_PRICE_EASY, PRESCHOOL_PRICE_HARD, _round, _total_rounds)
 
 	var vp: Vector2 = get_viewport().get_visible_rect().size

@@ -183,9 +183,9 @@ func _generate_round_data() -> Dictionary:
 	## LAW 6: кількість бусин зростає з раундами
 	var bead_count: int
 	if _is_toddler:
-		bead_count = _scale_stepped_i(4, 6, _round, _total_rounds)
+		bead_count = _scale_adaptive_i(4, 6, _round, _total_rounds)
 	else:
-		bead_count = _scale_stepped_i(4, 7, _round, _total_rounds)
+		bead_count = _scale_adaptive_i(4, 7, _round, _total_rounds)
 
 	## Побудувати послідовність бусин
 	var sequence: Array[Dictionary] = []
@@ -203,7 +203,7 @@ func _generate_round_data() -> Dictionary:
 		missing_idx = maxi(sequence.size() - 1, 0)
 	else:
 		## Пропуск у другій половині для кращої читабельності паттерну
-		missing_idx = _scale_stepped_i(
+		missing_idx = _scale_adaptive_i(
 			maxi(sequence.size() / 2, 1),
 			maxi(sequence.size() - 2, 1),
 			_round, _total_rounds)
@@ -220,9 +220,9 @@ func _generate_round_data() -> Dictionary:
 	## LAW 2: мінімум 3 вибори у лотку
 	var distractor_count: int
 	if _is_toddler:
-		distractor_count = _scale_stepped_i(1, 2, _round, _total_rounds)
+		distractor_count = _scale_adaptive_i(1, 2, _round, _total_rounds)
 	else:
-		distractor_count = _scale_stepped_i(2, 4, _round, _total_rounds)
+		distractor_count = _scale_adaptive_i(2, 4, _round, _total_rounds)
 	distractor_count = maxi(distractor_count, 2)  ## LAW 2: мінімум 3 вибори (1 correct + 2 wrong)
 
 	## Зібрати дистрактори — інші бусини, що НЕ є правильною відповіддю

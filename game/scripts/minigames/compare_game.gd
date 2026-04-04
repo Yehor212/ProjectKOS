@@ -7,7 +7,7 @@ extends BaseMiniGame
 ## Preschool: R1-R2 more, R3 less, R4 equal, R5 mixed.
 
 const ITEM_SCENE: PackedScene = preload("res://scenes/components/counting_item.tscn")
-const ROUNDS_TODDLER: int = 3
+const ROUNDS_TODDLER: int = 5  ## Was 3 → 30-60s sessions too short for 2-3yo
 const ROUNDS_PRESCHOOL: int = 5
 const ITEM_RADIUS: float = 36.0
 const DEAL_STAGGER: float = 0.08
@@ -253,9 +253,9 @@ func _generate_round() -> void:
 			_compare_type = CompareType.MORE
 
 	## Прогресивна складність — числа ростуть з раундами (LAW 6)
-	var lo: int = 1 if _is_toddler else _scale_stepped_i(1, 2, _round, _total_rounds)
-	var hi: int = _scale_stepped_i(3, 5, _round, _total_rounds) if _is_toddler \
-		else _scale_stepped_i(4, 7, _round, _total_rounds)
+	var lo: int = 1 if _is_toddler else _scale_adaptive_i(1, 2, _round, _total_rounds)
+	var hi: int = _scale_adaptive_i(3, 5, _round, _total_rounds) if _is_toddler \
+		else _scale_adaptive_i(4, 7, _round, _total_rounds)
 
 	## Генерація кількостей за типом порівняння
 	match _compare_type:
@@ -277,6 +277,14 @@ func _generate_round() -> void:
 			_ensure_unequal(lo, hi)
 			_correct_side = 0 if _left_count < _right_count else 1
 			_fade_instruction(_instruction_label, tr("COMPARE_WHICH_FEWER"))
+			## L5: Brief visual hint for "less" concept — pulse the smaller pile's panel
+			## Piaget centration: children naturally focus on "more". "Less" needs scaffolding.
+			if _round == 2 and not SettingsManager.reduced_motion:
+				var hint_panel: Control = _left_tap if _correct_side == 0 else _right_tap
+				if is_instance_valid(hint_panel):
+					var htw: Tween = _create_game_tween()
+					htw.tween_property(hint_panel, "modulate", Color(0.7, 0.9, 1.0, 1.0), 0.3).set_delay(1.0)
+					htw.tween_property(hint_panel, "modulate", Color.WHITE, 0.5)
 
 	## Показати/сховати кнопку "рівно"
 	if _equal_tap:

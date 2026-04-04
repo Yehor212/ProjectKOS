@@ -128,7 +128,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 60)
 theme_type_variation = &"SecondaryButton"
 theme_override_font_sizes/font_size = 20
-text = "Cancel"
+text = ""
 
 [connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/KeypadGrid/Btn1" to="." method="_on_keypad_pressed" binds= [1]]
 [connection signal="pressed" from="Overlay/PanelContainer/VBoxContainer/KeypadGrid/Btn2" to="." method="_on_keypad_pressed" binds= [2]]

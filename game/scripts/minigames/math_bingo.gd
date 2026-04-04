@@ -282,7 +282,7 @@ func _generate_equation() -> void:
 	var b: int = 0
 	var op: String = "+"
 	## Прогресивна складність (LAW 6 / A4): раунд 1 = тільки додавання, пізніші — і віднімання
-	var sub_chance: float = _scale_stepped(0.0, 0.5, _round, TOTAL_ROUNDS)
+	var sub_chance: float = _scale_adaptive(0.0, 0.5, _round, TOTAL_ROUNDS)
 	if _correct_answer > 2 and randf() < sub_chance:
 		## Віднімання — обмежуємо b щоб a <= 12
 		b = randi_range(1, mini(_correct_answer - 1, 3))
@@ -753,7 +753,7 @@ func _start_round_toddler() -> void:
 	_update_round_label(tr("COUNTING_ROUND") % [_round + 1, total_rounds])
 	var vp: Vector2 = get_viewport().get_visible_rect().size
 	## Визначаємо цільову кількість залежно від раунду (A4: difficulty ramp)
-	var max_count: int = _scale_stepped_i(3, 4, _round, TODDLER_ROUNDS)
+	var max_count: int = _scale_adaptive_i(3, 4, _round, TODDLER_ROUNDS)
 	var target: int = randi_range(1, max_count)
 	_correct_answer = target
 	## Чи це "раунд додавання" (R4-R5)?

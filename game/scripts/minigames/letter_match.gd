@@ -6,7 +6,7 @@ extends BaseMiniGame
 ## Букви рисуються кодом (draw_string + googly eyes). При drag буква "говорить" свій звук.
 ## Після всіх букв: буквеферна анімація — букви формують слово, з'являється тварина.
 
-const ROUNDS_TODDLER: int = 3
+const ROUNDS_TODDLER: int = 5  ## Was 3 → 45-75s sessions too short for 2-3yo
 const ROUNDS_PRESCHOOL: int = 5
 const SAFETY_TIMEOUT_SEC: float = 120.0
 const SLOT_Y_CENTER: float = 0.32
