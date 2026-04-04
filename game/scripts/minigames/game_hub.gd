@@ -73,6 +73,8 @@ func _ready() -> void:
 	## Відкладаємо анімацію входу карток — GridContainer має спершу виконати layout
 	call_deferred("_animate_cards_entrance")
 	call_deferred("_check_scroll_overflow")
+	## Session narrative arc — show mood/progress message
+	_update_session_narrative()
 
 
 func _apply_safe_area() -> void:
@@ -552,3 +554,51 @@ func _on_back_pressed() -> void:
 	_buttons_disabled = true
 	AudioManager.play_sfx("click")
 	SceneManager.goto_scene("res://scenes/ui/main_menu.tscn")
+
+
+## ========== SESSION NARRATIVE ARC ==========
+## Research: Csikszentmihalyi flow state + SDT autonomy = session-level engagement.
+## Shows mood progression: arrival → playing → great session!
+## Session milestones at 3 and 5 games trigger VFX celebration.
+
+var _narrative_label: Label = null
+
+func _update_session_narrative() -> void:
+	var played: int = ProgressManager.games_played_today
+	## Narrative text based on session progress
+	var narrative_key: String
+	if played == 0:
+		narrative_key = "SESSION_WELCOME"
+	elif played < 3:
+		narrative_key = "SESSION_PLAYING"
+	elif played < 5:
+		narrative_key = "SESSION_DOING_GREAT"
+	else:
+		narrative_key = "SESSION_AMAZING"
+	## Create/update narrative label under header
+	if not _narrative_label:
+		_narrative_label = Label.new()
+		_narrative_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_narrative_label.add_theme_font_size_override("font_size", 20)
+		_narrative_label.add_theme_color_override("font_color", Color(1, 1, 1, 0.75))
+		_narrative_label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.2))
+		_narrative_label.add_theme_constant_override("shadow_offset_x", 1)
+		_narrative_label.add_theme_constant_override("shadow_offset_y", 1)
+		_narrative_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+		_narrative_label.offset_top = 52.0
+		_narrative_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_narrative_label)
+	_narrative_label.text = tr(narrative_key)
+	## Session milestone celebrations (3 and 5 games)
+	if played == 3 or played == 5:
+		_celebrate_session_milestone(played)
+
+
+func _celebrate_session_milestone(games: int) -> void:
+	## Session-only celebration (no persistence = COPPA-safe, no daily streak pressure)
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	VFXManager.spawn_premium_confetti_rain(vp)
+	if games >= 5:
+		VFXManager.spawn_rainbow_ring(vp / 2.0)
+	AudioManager.play_sfx("success", 1.0)
+	HapticsManager.vibrate_celebration()

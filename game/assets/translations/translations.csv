@@ -612,3 +612,95 @@ MIRROR_DRAW_SNOWFLAKE,Snowflake,Сніжинка,Flocon de neige,Copo de nieve
 MIRROR_DRAW_FLOWER,Flower,Квітка,Fleur,Flor
 MIRROR_DRAW_CAR,Car,Машина,Voiture,Coche
 MIRROR_DRAW_CAT,Cat,Кіт,Chat,Gato
+ROUND_N,Round %d / %d,Раунд %d / %d,Manche %d / %d,Ronda %d / %d
+SORTING_EVERYONE_HOME,Everyone is home!,Усі вдома!,Tout le monde est rentré !,¡Todos en casa!
+BTN_CANCEL,Cancel,Скасувати,Annuler,Cancelar
+PHONICS_FIND,Find:,Знайди:,Trouve :,Encuentra:
+LETTER_TRACING_NARRATIVE,Help Tofie learn letters!,Допоможи Тофі вивчити літери!,Aide Tofie à apprendre les lettres !,¡Ayuda a Tofie a aprender las letras!
+LETTER_TRACING_TUTORIAL_TODDLER,Trace the letter with your finger!,Обведи літеру пальчиком!,Trace la lettre avec ton doigt !,¡Traza la letra con tu dedo!
+LETTER_TRACING_TUTORIAL_PRESCHOOL,Follow the dots to trace the letter!,Слідуй за точками щоб обвести літеру!,Suis les points pour tracer la lettre !,¡Sigue los puntos para trazar la letra!
+LETTER_TRACING_INSTRUCTION,Trace: %s,Обведи: %s,Trace : %s,Traza: %s
+GAME_LETTER_TRACING,Tofie's Letters,Літери Тофі,Les lettres de Tofie,Las letras de Tofie
+DESC_LETTER_TRACING,Trace letters with your finger!,Обводь літери пальчиком!,Trace les lettres avec ton doigt !,¡Traza las letras con tu dedo!
+SKILL_LETTER_TRACING,Letter Formation,Формування літер,Formation des lettres,Formación de letras
+GAME_RHYME_MATCH,Rhyme Time,Час римів,Temps des rimes,Hora de rimas
+DESC_RHYME_MATCH,Find the word that rhymes!,Знайди слово що римується!,Trouve le mot qui rime !,¡Encuentra la palabra que rima!
+SKILL_RHYME_MATCH,Phonological Awareness,Фонологічна обізнаність,Conscience phonologique,Conciencia fonológica
+RHYME_MATCH_INSTRUCTION,Which word sounds like this one?,Яке слово звучить схоже?,Quel mot rime avec celui-ci ?,¿Qué palabra rima con esta?
+RHYME_MATCH_TUTORIAL_TODDLER,Tap the picture that sounds like the top one!,Натисни на картинку що звучить схоже!,Touche l'image qui rime !,¡Toca la imagen que suena parecida!
+RHYME_MATCH_TUTORIAL_PRESCHOOL,Find the word that rhymes with the target!,Знайди слово що римується з цільовим!,Trouve le mot qui rime avec la cible !,¡Encuentra la palabra que rima con la de arriba!
+GAME_FREEZE_DANCE,Freeze Dance,Танець заморозки,Danse gelée,Baile congelado
+DESC_FREEZE_DANCE,Dance when the music plays — freeze when it stops!,Танцюй коли грає музика — завмри коли зупиниться!,Danse quand la musique joue — gèle quand elle s'arrête !,¡Baila cuando suene la música — congélate cuando pare!
+SKILL_FREEZE_DANCE,Self-Regulation,Саморегуляція,Autorégulation,Autorregulación
+FREEZE_ROUND,Round %d / %d,Раунд %d / %d,Manche %d / %d,Ronda %d / %d
+FREEZE_TAP_ANIMALS,Tap the animals to dance!,Натискай на тваринок — вони танцюють!,Touche les animaux pour danser !,¡Toca los animales para bailar!
+FREEZE_DONT_TOUCH,Don't touch! Freeze!,Не чіпай! Завмри!,Ne touche pas ! Gèle !,¡No toques! ¡Congélate!
+FREEZE_STOP,FREEZE!,ЗАВМРИ!,GÈLE !,¡CONGÉLATE!
+FREEZE_TUTORIAL_TODDLER,Tap the animals when they dance!,Натискай на тваринок коли вони танцюють!,Touche les animaux quand ils dansent !,¡Toca los animales cuando bailen!
+FREEZE_TUTORIAL_PRESCHOOL,Tap to dance — but freeze when the music stops!,Натискай щоб танцювати — але завмри коли музика зупиниться!,Touche pour danser — mais gèle quand la musique s'arrête !,¡Toca para bailar — pero congélate cuando pare la música!
+DRAW_STAR,Try drawing a star!,Спробуй намалювати зірку!,Essaie de dessiner une étoile !,¡Intenta dibujar una estrella!
+DRAW_HEART,Try drawing a heart!,Спробуй намалювати серце!,Essaie de dessiner un cœur !,¡Intenta dibujar un corazón!
+DRAW_CIRCLE,Try drawing a circle!,Спробуй намалювати коло!,Essaie de dessiner un cercle !,¡Intenta dibujar un círculo!
+DRAW_HOUSE,Try drawing a house!,Спробуй намалювати будинок!,Essaie de dessiner une maison !,¡Intenta dibujar una casa!
+DRAW_SUN,Try drawing a sun!,Спробуй намалювати сонце!,Essaie de dessiner un soleil !,¡Intenta dibujar un soleil!
+GAME_PLANT_GROW,Magic Garden,Чарівний сад,Jardin magique,Jardin magico
+DESC_PLANT_GROW,Plant seeds and watch them grow!,Саджай насіння і дивись як росте!,Plante des graines et regarde-les pousser !,¡Planta semillas y miralas crecer!
+SKILL_PLANT_GROW,Cause & Effect,Причина і наслідок,Cause et effet,Causa y efecto
+PLANT_GROW_TUTORIAL_TODDLER,Tap buttons to grow the plant!,Натискай кнопки щоб виростити рослину!,Touche les boutons pour faire pousser la plante !,¡Toca los botones para hacer crecer la planta!
+PLANT_GROW_TUTORIAL_PRESCHOOL,Choose the right action for each step!,Обери правильну дію для кожного кроку!,Choisis la bonne action pour chaque etape !,¡Elige la accion correcta para cada paso!
+PLANT_GROW_INSTRUCTION,Help the plant grow!,Допоможи рослині вирости!,Aide la plante a pousser !,¡Ayuda a la planta a crecer!
+PLANT_ACTION_DIG,Dig,Копати,Creuser,Cavar
+PLANT_ACTION_SEED,Seed,Насіння,Graine,Semilla
+PLANT_ACTION_WATER,Water,Полити,Arroser,Regar
+PLANT_ACTION_SUN,Sun,Сонце,Soleil,Sol
+PLANT_ACTION_SCISSORS,Cut,Різати,Couper,Cortar
+PLANT_ACTION_ICE,Ice,Лід,Glace,Hielo
+GAME_MEASURE_UP,How Tall?,Яка висота?,Quelle taille ?,¿Qué altura?
+DESC_MEASURE_UP,Measure objects with colorful blocks!,Вимірюй предмети кольоровими блоками!,Mesure les objets avec des blocs colorés !,¡Mide objetos con bloques de colores!
+SKILL_MEASURE_UP,Measurement,Вимірювання,Mesure,Medición
+MEASURE_UP_TUTORIAL_TODDLER,Which is taller? Tap it!,Хто вищий? Натисни!,Lequel est plus grand ? Appuie !,¿Cuál es más alto? ¡Tócalo!
+MEASURE_UP_TUTORIAL_PRESCHOOL,Count the blocks and tap the number!,Порахуй блоки і натисни число!,Compte les blocs et appuie sur le nombre !,¡Cuenta los bloques y toca el número!
+MEASURE_UP_HELP_BUILDER,Help the builder measure!,Допоможи будівельнику виміряти!,Aide le constructeur a mesurer !,¡Ayuda al constructor a medir!
+MEASURE_UP_WHICH_TALLER,Which is TALLER?,Хто ВИЩИЙ?,Lequel est PLUS GRAND ?,¿Cuál es MÁS ALTO?
+MEASURE_UP_HOW_MANY_BLOCKS,How many blocks tall?,Скільки блоків у висоту?,Combien de blocs de haut ?,¿Cuántos bloques de alto?
+MEASURE_UP_COMPARE_TWO,Which is taller? Count blocks!,Хто вищий? Порахуй блоки!,Lequel est plus grand ? Compte !,¿Cuál es más alto? ¡Cuenta!
+MEASURE_UP_ESTIMATE,How tall? Guess!,Яка висота? Вгадай!,Quelle taille ? Devine !,¿Qué altura? ¡Adivina!
+MEASURE_UP_CORRECT,Great measuring!,Чудове вимірювання!,Super mesure !,¡Gran medición!
+MEASURE_UP_OBJ_TREE,Tree,Дерево,Arbre,Árbol
+MEASURE_UP_OBJ_HOUSE,House,Дім,Maison,Casa
+MEASURE_UP_OBJ_GIRAFFE,Giraffe,Жирафа,Girafe,Jirafa
+MEASURE_UP_OBJ_FLOWER,Flower,Квітка,Fleur,Flor
+MEASURE_UP_OBJ_ROCKET,Rocket,Ракета,Fusée,Cohete
+MEASURE_UP_OBJ_SNOWMAN,Snowman,Сніговик,Bonhomme de neige,Muñeco de nieve
+MEASURE_UP_OBJ_CASTLE,Castle,Замок,Château,Castillo
+MEASURE_UP_OBJ_PENGUIN,Penguin,Пінгвін,Pingouin,Pingüino
+MEASURE_UP_OBJ_ROBOT,Robot,Робот,Robot,Robot
+MEASURE_UP_OBJ_MUSHROOM,Mushroom,Гриб,Champignon,Seta
+GAME_PREMIUM_DEMO,Tofie's Kitchen,Кухня Тофі,La cuisine de Tofie,La cocina de Tofie
+DESC_PREMIUM_DEMO,Feed the animals their favorite food!,Нагодуй тваринок їхньою улюбленою їжею!,Nourris les animaux avec leur nourriture préférée !,¡Alimenta a los animales con su comida favorita!
+SKILL_PREMIUM_DEMO,Animal Feeding,Годування тварин,Nourrir les animaux,Alimentar animales
+PREMIUM_TUTORIAL_TODDLER,Drag the food to the hungry animal!,Перетягни їжу до голодної тваринки!,Glisse la nourriture vers l'animal affamé !,¡Arrastra la comida al animal hambriento!
+PREMIUM_TUTORIAL_PRESCHOOL,Which food does this animal eat? Drag it!,Яку їжу їсть ця тваринка? Перетягни!,Quelle nourriture mange cet animal ? Glisse-la !,¿Qué come este animal? ¡Arrástralo!
+GAME_PEEK_A_BOO,Tofie's Hide & Seek,Хованки Тофі,Cache-cache de Tofie,Escondite de Tofie
+DESC_PEEK_A_BOO,Find the hiding animals!,Знайди тваринок що сховалися!,Trouve les animaux cachés !,¡Encuentra a los animales escondidos!
+SKILL_PEEK_A_BOO,Visual Search,Візуальний пошук,Recherche visuelle,Búsqueda visual
+PEEK_A_BOO_TUTORIAL,Tap to find the animals!,Тапни щоб знайти тваринок!,Touche pour trouver les animaux !,¡Toca para encontrar a los animales!
+GAME_WHATS_MISSING,Who's Missing?,Хто Сховався?,Qui Manque ?,¿Quién Falta?
+DESC_WHATS_MISSING,Remember the animals and find who sneaked away!,Запам'ятай тваринок і знайди хто втік!,Mémorise les animaux et trouve qui s'est enfui !,¡Recuerda a los animales y encuentra quién se escapó!
+SKILL_WHATS_MISSING,Visual Memory,Візуальна пам'ять,Mémoire visuelle,Memoria visual
+WHATS_MISSING_TUTORIAL_T,Remember who's here!,Запам'ятай хто тут!,Mémorise qui est là !,¡Recuerda quién está aquí!
+WHATS_MISSING_TUTORIAL_P,Remember all animals — one will hide!,Запам'ятай всіх — хтось сховається!,Mémorise tous — un se cachera !,¡Recuerda a todos — uno se esconderá!
+WHATS_MISSING_MEMORIZE,Look carefully!,Дивись уважно!,Regarde bien !,¡Mira con atención!
+WHATS_MISSING_HIDING,Someone is hiding...,Хтось ховається...,Quelqu'un se cache...,Alguien se esconde...
+WHATS_MISSING_WHO,Who's missing? Tap!,Хто зник? Тапни!,Qui manque ? Touche !,¿Quién falta? ¡Toca!
+GAME_ANIMAL_POP,Catch the Animals!,Злови Тваринок!,Attrape les Animaux !,¡Atrapa a los Animales!
+DESC_ANIMAL_POP,Animals pop up from holes — catch them quickly!,Тваринки визирають з нірок — лови швидко!,Les animaux sortent des trous — attrape-les vite !,¡Los animales salen de los agujeros — atrápalos rápido!
+SKILL_ANIMAL_POP,Reaction Speed,Швидкість реакції,Vitesse de réaction,Velocidad de reacción
+ANIMAL_POP_TUTORIAL_T,Tap the animals when they pop up!,Тапни тваринок коли визирають!,Touche les animaux quand ils apparaissent !,¡Toca a los animales cuando aparezcan!
+ANIMAL_POP_TUTORIAL_P,Catch awake animals — don't wake the sleeping ones!,Лови прокинутих — не буди сонних!,Attrape les éveillés — ne réveille pas les endormis !,¡Atrapa a los despiertos — no despiertes a los dormidos!
+ANIMAL_POP_CATCH,Tap the animals!,Тапни тваринок!,Touche les animaux !,¡Toca a los animales!
+ANIMAL_POP_CATCH_NOT_SLEEPY,Catch awake animals only!,Лови лише прокинутих!,Attrape seulement les éveillés !,¡Atrapa solo a los despiertos!
+SESSION_WELCOME,Let's play with the animals!,Пограємо з тваринками!,Jouons avec les animaux !,¡Juguemos con los animales!
+SESSION_PLAYING,Great start! Keep going!,Чудовий початок! Продовжуй!,Bon début ! Continue !,¡Buen comienzo! ¡Sigue así!
+SESSION_DOING_GREAT,You're doing amazing!,Ти молодець!,Tu es formidable !,¡Lo estás haciendo genial!
+SESSION_AMAZING,What a wonderful session!,Яка чудова гра!,Quelle session magnifique !,¡Qué sesión maravillosa!

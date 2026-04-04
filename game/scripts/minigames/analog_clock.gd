@@ -10,7 +10,7 @@ extends BaseMiniGame
 
 ## ---- Константи ----
 
-const TODDLER_ROUNDS: int = 3
+const TODDLER_ROUNDS: int = 5  ## Was 3 → 45-90s sessions too short for 2-3yo
 const PRESCHOOL_ROUNDS: int = 5
 const IDLE_HINT_DELAY: float = 5.0
 const SAFETY_TIMEOUT_SEC: float = 120.0
@@ -442,6 +442,11 @@ func _spawn_toddler_scene(vp: Vector2) -> void:
 	var target_24h: int = _current_activity.get("hour", 7) as int
 	if target_24h >= 20:
 		_spawn_stars(pw, ph)
+	## Incidental clock exposure — маленький годинник у кутку сцени.
+	## Research: passive clock face exposure accelerates temporal awareness
+	## in preoperational children (Piaget). Non-interactive, purely decorative.
+	var clock_hour: int = _current_activity.get("hour", 7) as int
+	_spawn_mini_clock(Vector2(pw * 0.12, ph * 0.13), 28.0, clock_hour)
 	## Сірий оверлей — «сцена ще не ожила» (зникає при правильній відповіді)
 	_scene_overlay = ColorRect.new()
 	_scene_overlay.color = Color(0.2, 0.2, 0.25, 0.45)
@@ -864,6 +869,40 @@ func _spawn_stars(pw: float, ph: float) -> void:
 		star_dot.color = Color(1, 1, 0.85, randf_range(0.5, 0.9))
 		star_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_scene_panel.add_child(star_dot)
+
+
+## Міні-годинник для toddler incidental exposure — passive, non-interactive.
+## Показує правильний час для поточної активності маленьким годинничком у кутку.
+func _spawn_mini_clock(pos: Vector2, radius: float, hour_24: int) -> void:
+	if not is_instance_valid(_scene_panel):
+		push_warning("analog_clock: _spawn_mini_clock — scene panel invalid")
+		return
+	var clock_node: Node2D = Node2D.new()
+	clock_node.position = pos
+	var r: float = radius
+	var h12: int = hour_24 % 12
+	var hour_angle: float = (float(h12) / 12.0) * TAU - PI * 0.5
+	clock_node.draw.connect(func() -> void:
+		## Тінь
+		clock_node.draw_circle(Vector2(1, 1.5), r + 1.0, Color(0, 0, 0, 0.15))
+		## Циферблат
+		clock_node.draw_circle(Vector2.ZERO, r, Color("f8f9fa", 0.85))
+		clock_node.draw_arc(Vector2.ZERO, r, 0, TAU, 24, Color("636e72", 0.6), 1.5, true)
+		## 12 міток
+		for i: int in 12:
+			var angle: float = float(i) / 12.0 * TAU - PI * 0.5
+			var outer: Vector2 = Vector2(cos(angle), sin(angle)) * (r - 2)
+			var inner: Vector2 = Vector2(cos(angle), sin(angle)) * (r - 6)
+			clock_node.draw_line(inner, outer, Color("636e72", 0.5), 1.0)
+		## Годинна стрілка
+		var h_end: Vector2 = Vector2(cos(hour_angle), sin(hour_angle)) * r * 0.48
+		clock_node.draw_line(Vector2.ZERO, h_end, Color("e74c3c", 0.8), 3.0, true)
+		## Хвилинна стрілка (завжди на 12 = :00)
+		var m_end: Vector2 = Vector2(0, -r * 0.65)
+		clock_node.draw_line(Vector2.ZERO, m_end, Color("3498db", 0.6), 2.0, true)
+		## Центральна точка
+		clock_node.draw_circle(Vector2.ZERO, 2.5, Color("2d3436", 0.7)))
+	_scene_panel.add_child(clock_node)
 
 
 ## ---- Кнопки (Preschool) ----

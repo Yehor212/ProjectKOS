@@ -10,7 +10,8 @@ const ROUNDS_TODDLER: int = 3
 const ROUNDS_PRESCHOOL: int = 5
 const ITEM_RADIUS: float = 55.0
 const ANSWER_RADIUS: float = 65.0
-const TAP_RADIUS: float = 75.0
+const TAP_RADIUS_TODDLER: float = 120.0  ## Vatavu 2015: 240px diameter ≈ 29mm
+const TAP_RADIUS_PRESCHOOL: float = 75.0  ## 150px diameter ≈ 18mm
 const DEAL_STAGGER: float = 0.1
 const DEAL_DURATION: float = 0.4
 const IDLE_HINT_DELAY: float = 5.0
@@ -55,6 +56,7 @@ const ROUND_CONFIG: Array[Dictionary] = [
 ]
 
 var _is_toddler_mode: bool = false
+var _tap_r: float = 75.0  ## Обчислюється в _ready()
 var _total_rounds: int = 0
 var _round: int = 0
 var _start_time: float = 0.0
@@ -97,6 +99,7 @@ func _ready() -> void:
 	bg_theme = "city"  ## Фруктовий ринок = міська тема
 	super()
 	_is_toddler_mode = (SettingsManager.age_group == 1)
+	_tap_r = TAP_RADIUS_TODDLER if _is_toddler_mode else TAP_RADIUS_PRESCHOOL
 	_total_rounds = ROUNDS_TODDLER if _is_toddler_mode else ROUNDS_PRESCHOOL
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
@@ -227,7 +230,7 @@ func _input(event: InputEvent) -> void:
 	for node: Node2D in _answer_nodes:
 		if not is_instance_valid(node) or node.get_meta("disabled", false):
 			continue
-		if pos.distance_to(node.global_position) < TAP_RADIUS:
+		if pos.distance_to(node.global_position) < _tap_r:
 			_handle_answer_tap(node)
 			return
 
@@ -247,7 +250,7 @@ func _handle_toddler_tap_input(event: InputEvent) -> void:
 	for item: Node2D in _items:
 		if not is_instance_valid(item):
 			continue
-		if pos.distance_to(item.global_position) < TAP_RADIUS:
+		if pos.distance_to(item.global_position) < _tap_r:
 			_on_toddler_tap(item)
 			return
 

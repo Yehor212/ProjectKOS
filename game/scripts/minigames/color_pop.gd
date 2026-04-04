@@ -7,7 +7,9 @@ extends BaseMiniGame
 ## 30 правильних: гігантський пузир → 3 тапи → 5 рибок одразу.
 
 const BUBBLE_SCENE: PackedScene = preload("res://scenes/components/bubble.tscn")
-const GAME_DURATION: float = 45.0
+const GAME_DURATION_TODDLER: float = 60.0  ## Toddler: slower pace needs more time
+const GAME_DURATION_PRESCHOOL: float = 45.0
+var _game_duration: float = 45.0  ## Set in _ready() based on age
 const MARGIN_X: float = 100.0
 const SAFETY_TIMEOUT_SEC: float = 120.0
 const IDLE_HINT_DELAY: float = 5.0
@@ -31,13 +33,13 @@ const COLOR_IDS: Array[String] = ["red", "blue", "green", "yellow", "purple"]
 const TODDLER_SPAWN_INTERVAL: float = 1.5
 const TODDLER_SPEED_MIN: float = 60.0
 const TODDLER_SPEED_MAX: float = 100.0
-const TODDLER_RADIUS: float = 70.0
+const TODDLER_RADIUS: float = 80.0  ## Vatavu 2015: 160px diameter ≈ 19mm on 7" tablet
 
 ## Preschool параметри
 const PRESCHOOL_SPAWN_INTERVAL: float = 0.8
 const PRESCHOOL_SPEED_MIN: float = 90.0
 const PRESCHOOL_SPEED_MAX: float = 160.0
-const PRESCHOOL_RADIUS: float = 55.0
+const PRESCHOOL_RADIUS: float = 70.0  ## Nacher 2015: 140px diameter ≈ 17mm on 7" tablet
 
 ## Difficulty phases (elapsed seconds) — A4: прогресивна складність
 const PHASE_1_END: float = 15.0
@@ -86,6 +88,7 @@ func _ready() -> void:
 	super()
 	var group: int = SettingsManager.age_group
 	_is_toddler = (group == 1)
+	_game_duration = GAME_DURATION_TODDLER if _is_toddler else GAME_DURATION_PRESCHOOL
 	_start_time = Time.get_ticks_msec() / 1000.0
 	_apply_background()
 	_build_hud()
@@ -101,16 +104,16 @@ func _process(_delta: float) -> void:
 		if not is_instance_valid(_bubbles[i]):
 			_bubbles.remove_at(i)
 	var elapsed: float = Time.get_ticks_msec() / 1000.0 - _start_time
-	var remaining: float = GAME_DURATION - elapsed
+	var remaining: float = _game_duration - elapsed
 	## A4: прогресивна складність за фазами
 	_ramp_difficulty(elapsed)
 	if _timer_bar:
-		if GAME_DURATION > 0.0:
-			_timer_bar.value = remaining / GAME_DURATION * 100.0
+		if _game_duration > 0.0:
+			_timer_bar.value = remaining / _game_duration * 100.0
 		else:
 			_timer_bar.value = 0.0
-		## UX: Попередження при <10с
-		if remaining <= 10.0 and remaining > 0.0:
+		## UX: Попередження при <10с (Preschool only — toddler: no time pressure anxiety)
+		if remaining <= 10.0 and remaining > 0.0 and not _is_toddler:
 			_timer_bar.modulate = Color("ff6b6b")
 			if not _warned_low_time:
 				_warned_low_time = true
@@ -136,7 +139,7 @@ func _ramp_difficulty(elapsed: float) -> void:
 	## Фаза 1 (0-15с): 3 кольори, повільно
 	## Фаза 2 (15-30с): 4 кольори, швидше, target змінюється (preschool)
 	## Фаза 3 (30+с): 5 кольорів + golden bonus, ще швидше
-	var progress: float = clampf(elapsed / maxf(GAME_DURATION, 1.0), 0.0, 1.0)
+	var progress: float = clampf(elapsed / maxf(_game_duration, 1.0), 0.0, 1.0)
 	_speed_multiplier = lerpf(1.0, 1.4, progress)
 	var base_interval: float = TODDLER_SPAWN_INTERVAL if _is_toddler else PRESCHOOL_SPAWN_INTERVAL
 	var new_interval: float = lerpf(base_interval, base_interval * 0.6, progress)

@@ -17,6 +17,7 @@ var reduced_motion: bool = false
 var has_rated_app: bool = false
 var age_group: int = 0  ## 0=Unset, 1=Toddler, 2=Preschool
 var color_blind_mode: bool = false  ## LAW 25: secondary encoding via patterns in color-dependent games
+var slow_mode: bool = false  ## Accessibility: reduces moving target speeds by 50% for motor-impaired children
 var session_limit_minutes: int = 20  ## LAW 26: таймер здоров'я сесії (0=вимкнено)
 var _save_dirty: bool = false
 
@@ -49,7 +50,7 @@ func _do_save() -> void:
 		"haptics_enabled": haptics_enabled, "reduced_motion": reduced_motion,
 		"has_rated_app": has_rated_app,
 		"age_group": age_group,
-		"color_blind_mode": color_blind_mode,
+		"color_blind_mode": color_blind_mode, "slow_mode": slow_mode,
 		"session_limit_minutes": session_limit_minutes,
 	}
 	data.merge(ProgressManager.get_save_data(), false)  ## false = не перезаписувати settings ключі
@@ -76,24 +77,16 @@ func _do_save() -> void:
 			push_error("SettingsManager: fallback запис також невдалий")
 
 func load_settings() -> void:
-	var migrating: bool = false
 	var file: FileAccess = FileAccess.open_encrypted_with_pass(
 		SAVE_PATH, FileAccess.READ, SAVE_KEY)
 	if not file:
-		## Спроба міграції зі старого ключа (OS.get_unique_id)
-		var legacy_key: String = _derive_legacy_key()
-		file = FileAccess.open_encrypted_with_pass(SAVE_PATH, FileAccess.READ, legacy_key)
-		if not file:
-			push_warning("SettingsManager: no save file found, using defaults")
-			var os_locale: String = OS.get_locale().substr(0, 2).to_lower()
-			if LOCALES.has(os_locale):
-				current_language = os_locale
-			_apply_volume()
-			TranslationServer.set_locale(current_language)
-			return
-		## Міграція успішна — після завантаження перезапишемо з новим ключем
-		push_warning("SettingsManager: migrating save from legacy key")
-		migrating = true
+		push_warning("SettingsManager: no save file found, using defaults")
+		var os_locale: String = OS.get_locale().substr(0, 2).to_lower()
+		if LOCALES.has(os_locale):
+			current_language = os_locale
+		_apply_volume()
+		TranslationServer.set_locale(current_language)
+		return
 	var data: Variant = file.get_var()
 	if data is Dictionary:
 		## LAW 22: Валідація збережених значень — corrupted save не зламає гру
@@ -119,6 +112,7 @@ func load_settings() -> void:
 		has_rated_app = data.get("has_rated_app", false)
 		age_group = clampi(data.get("age_group", 0), 0, 2)
 		color_blind_mode = data.get("color_blind_mode", false)
+		slow_mode = data.get("slow_mode", false)
 		session_limit_minutes = clampi(data.get("session_limit_minutes", 20), 0, 60)
 		ProgressManager.apply_save_data(data)
 		RewardManager.apply_save_data(data)
@@ -128,8 +122,6 @@ func load_settings() -> void:
 		save_settings()
 	_apply_volume()
 	TranslationServer.set_locale(current_language)
-	if migrating:
-		save_settings()
 
 func set_bgm_volume(value: float) -> void:
 	bgm_volume = clampf(value, 0.0, 1.0)
@@ -197,12 +189,6 @@ func _derive_key() -> String:
 		push_warning("SettingsManager: не вдалося зберегти enc.key")
 	return key
 
-func _derive_legacy_key() -> String:
-	## Старий ключ для міграції — видалити після масового оновлення
-	var device_id: String = OS.get_unique_id()
-	if device_id.is_empty():
-		device_id = "fallback_device_id"
-	return (device_id + "KOS_2026_salt").sha256_text().substr(0, 32)
 
 
 func _apply_volume() -> void:
